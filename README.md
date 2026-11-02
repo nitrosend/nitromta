@@ -11,7 +11,7 @@ Keep your SES code, change the endpoint, and deliver from IP addresses you contr
 [![Release](https://img.shields.io/github/v/release/nitrosend/nitromta?style=flat-square&label=release&labelColor=111&color=111)](https://github.com/nitrosend/nitromta/releases/latest)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-111?style=flat-square)](LICENSE)
 
-[Try it](#try-it) · [Run it on your servers](#run-it-on-your-own-servers) · [Benchmarks](#benchmarks) · [Compatibility](docs/compatibility.md) · [nitromta.com](https://nitromta.com)
+[Try it](#try-it) · [Run it on your servers](#run-it-on-your-own-servers) · [Benchmarks](#benchmarks) · [Docs](https://nitromta.com/docs/) · [nitromta.com](https://nitromta.com)
 
 </div>
 
@@ -20,10 +20,10 @@ Keep your SES code, change the endpoint, and deliver from IP addresses you contr
 - **SES v2 compatible:** `SendEmail`, `SendBulkEmail`, email templates,
   identities, configuration sets, tenants, the suppression list, dedicated
   IPs and SES-shaped events through an SNS subset, tested with the official
-  SDKs. See [compatibility](docs/compatibility.md).
+  SDKs. See [compatibility](https://nitromta.com/docs/compatibility/).
 - **Durable:** a submission is answered only once it is committed to disk,
   and survives a crash, a power cut, and the loss of its host when its disk
-  survives. See [durability](docs/durability.md).
+  survives. See [durability](https://nitromta.com/docs/durability/).
 - **Fast:** 3,313 messages a second on 4 CPUs, each committed to disk
   before it is accepted: 3.16 times KumoMTA and 4.11 times Postfix on the
   same machine. See [benchmarks](#benchmarks).
@@ -65,14 +65,14 @@ print(sent["MessageId"])
 ```
 
 Open `http://127.0.0.1:9090/capture` to see the message as its receiver
-would have been given it. The [capture quickstart](docs/capture.md) has
+would have been given it. The [capture quickstart](https://nitromta.com/docs/quickstart/) has
 every step, the account and key among them, and SMTP too.
 
 ## Run it on your own servers
 
 What any sending host needs: outbound port 25, which many cloud providers
 block until asked; a reverse DNS name for each sending IP; and a domain
-whose DNS you control. [Choosing a host](docs/hosting.md) says which
+whose DNS you control. [Choosing a host](https://nitromta.com/docs/hosting/) says which
 providers open port 25 and how.
 
 | Where | How |
@@ -85,10 +85,10 @@ providers open port 25 and how.
 | Any Linux | the x86_64 and arm64 archives on the releases page |
 
 Every archive and package carries build provenance signed by GitHub.
-[Installation](docs/install.md) takes a host to its first delivered message
+[Installation](https://nitromta.com/docs/install/) takes a host to its first delivered message
 in six steps, ending with `nitromta doctor`, which checks reverse DNS, SPF,
 DKIM, DMARC and the bounce MX, and tells you what to publish. Moving an application from SES is
-[a change of endpoint and keys](docs/migrate-from-ses.md).
+[a change of endpoint and keys](https://nitromta.com/docs/migrate-from-ses/).
 
 Followed step by step on a fresh server, those steps delivered every
 message they sent, to Gmail, Outlook, Yahoo, AOL, iCloud and Office 365
@@ -96,32 +96,33 @@ mailboxes among others, signed and passing DKIM, SPF and DMARC.
 
 ## Documentation
 
-The same pages are at [nitromta.com/docs](https://nitromta.com/docs/).
+Every page is at [nitromta.com/docs](https://nitromta.com/docs/), for the
+latest release.
 
 Guides:
 
-- [Capture quickstart](docs/capture.md): the whole engine on your machine,
+- [Capture quickstart](https://nitromta.com/docs/quickstart/): the whole engine on your machine,
   no DNS or IP needed
-- [Installation](docs/install.md): a server to its first delivered message
-- [Choosing a host](docs/hosting.md): port 25, reverse DNS and the
+- [Installation](https://nitromta.com/docs/install/): a server to its first delivered message
+- [Choosing a host](https://nitromta.com/docs/hosting/): port 25, reverse DNS and the
   providers that allow them
-- [Migrating from SES](docs/migrate-from-ses.md): endpoint, keys,
+- [Migrating from SES](https://nitromta.com/docs/migrate-from-ses/): endpoint, keys,
   identities and events
-- [Benchmarks](docs/benchmarks.md): the comparison, how it is measured, and
+- [Benchmarks](https://nitromta.com/docs/benchmarks/): the comparison, how it is measured, and
   its raw results
 
 Reference:
 
-- [Operations](docs/operations.md): explaining a message, the queue,
+- [Operations](https://nitromta.com/docs/operations/): explaining a message, the queue,
   metrics, holds, warmup and keys
-- [Compatibility](docs/compatibility.md): the SES operations, SMTP, events,
+- [Compatibility](https://nitromta.com/docs/compatibility/): the SES operations, SMTP, events,
   and where the engine differs from SES
-- [Durability](docs/durability.md): what an acceptance promises, and the
+- [Durability](https://nitromta.com/docs/durability/): what an acceptance promises, and the
   limits
-- [Command line](docs/reference/cli.md): every command and its options
-- [Configuration](docs/reference/configuration.md): what `nitromta setup`
+- [Command line](https://nitromta.com/docs/reference/cli/): every command and its options
+- [Configuration](https://nitromta.com/docs/reference/configuration/): what `nitromta setup`
   writes, every setting explained
-- [Changelog](CHANGELOG.md)
+- [Changelog](https://nitromta.com/docs/changelog/)
 
 ## Benchmarks
 
@@ -143,7 +144,7 @@ To run it yourself, on any machine with rustup and Docker:
 cargo harness quick
 ```
 
-[Benchmarks](docs/benchmarks.md) has the method and every run.
+[Benchmarks](https://nitromta.com/docs/benchmarks/) has the method and every run.
 
 ## Building
 
