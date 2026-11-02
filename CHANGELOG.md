@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.5 - 2026-11-03
+
+### Added
+
+- **Reference pages:** the [command line](docs/reference/cli.md) and the
+  [configuration](docs/reference/configuration.md) `nitromta setup` writes,
+  each checked against the binary by a test, and the guides at
+  [nitromta.com/docs](https://nitromta.com/docs/).
+- **Raw benchmark results:** the published session as the harness wrote it,
+  in `docs/results`.
+
+### Fixed
+
+- `nitromta --help` prints every command and its options, where it answered
+  that `--help` needs a value.
+- `nitromta doctor`'s warning for an identity whose return path is outside
+  its domain ended mid-sentence.
+- The `.deb` and `.rpm` packages create the engine's user on a host without
+  systemd, such as a container.
+
 ## 0.1.4 - 2026-11-02
 
 ### Added
