@@ -83,13 +83,19 @@ block until asked; a reverse DNS name for each sending IP; and a domain
 whose DNS you control. [Choosing a host](docs/hosting.md) says which
 providers open port 25 and how.
 
-Release archives for x86_64 and arm64 Linux, with signed build provenance,
-are on the [releases page](https://github.com/nitrosend/nitromta/releases),
-and a container image is `ghcr.io/nitrosend/nitromta`.
-[Installation](docs/install.md) takes a host from the archive to its first
-delivered message in six steps, ending with `nitromta doctor`, which checks
-reverse DNS, SPF, DKIM, DMARC and the bounce MX, and tells you what to
-publish. Moving an application from SES is
+| Where | How |
+|---|---|
+| Debian, Ubuntu | the `.deb` from the [latest release](https://github.com/nitrosend/nitromta/releases/latest), `sudo apt install ./nitromta_<version>_amd64.deb` |
+| RHEL, Fedora | the `.rpm` from the latest release, `sudo dnf install ./nitromta-<version>-1.x86_64.rpm` |
+| Arch | `nitromta-bin` from the AUR |
+| Docker | `ghcr.io/nitrosend/nitromta` |
+| macOS or Linux, to try it | `brew install nitrosend/tap/nitromta` |
+| Any Linux | the x86_64 and arm64 archives on the releases page |
+
+Every archive and package carries build provenance signed by GitHub.
+[Installation](docs/install.md) takes a host to its first delivered message
+in six steps, ending with `nitromta doctor`, which checks reverse DNS, SPF,
+DKIM, DMARC and the bounce MX, and tells you what to publish. Moving an application from SES is
 [a change of endpoint and keys](docs/migrate-from-ses.md).
 
 Followed step by step on a fresh server, those steps delivered every

@@ -20,7 +20,26 @@ To try the engine first, without any of this, use
 
 ## 1. Install the release
 
-Each release publishes an archive for each architecture,
+On Debian or Ubuntu, and on RHEL or Fedora, install the release's package,
+after checking its build provenance, signed by GitHub:
+
+```sh
+gh attestation verify nitromta_<version>_amd64.deb --repo nitrosend/nitromta
+sudo apt install ./nitromta_<version>_amd64.deb
+```
+
+```sh
+gh attestation verify nitromta-<version>-1.x86_64.rpm --repo nitrosend/nitromta
+sudo dnf install ./nitromta-<version>-1.x86_64.rpm
+```
+
+On arm64 they are `nitromta_<version>_arm64.deb` and
+`nitromta-<version>-1.aarch64.rpm`. On Arch, `nitromta-bin` from the AUR. The
+package installs the binary, the systemd unit and the engine's system user,
+and starts nothing. Then go on to [step 2](#2-write-the-configuration).
+
+On any other Linux, each release also publishes an archive for each
+architecture,
 `nitromta-<version>-x86_64-linux.tar.gz` and
 `nitromta-<version>-aarch64-linux.tar.gz`, with build provenance signed by
 GitHub. Check it before installing:

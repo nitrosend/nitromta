@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.4 - 2026-11-02
+
+### Added
+
+- **Packages:** each release publishes `.deb` and `.rpm` packages for
+  x86_64 and arm64, which install the binary, the systemd unit and the
+  engine's system user; `nitromta-bin` on the AUR; and macOS binaries for
+  Apple silicon and Intel, for capture mode.
+- **Homebrew:** `brew install nitrosend/tap/nitromta`, on macOS and Linux.
+
 ## 0.1.3 - 2026-11-02
 
 ### Added

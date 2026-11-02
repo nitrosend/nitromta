@@ -1,0 +1,30 @@
+# The Debian and RPM packages, built by nfpm in the release workflow from the
+# release's own binary: the engine, its systemd unit and its system user,
+# installed where docs/install.md installs them by hand. VERSION and ARCH
+# (amd64 or arm64) come from the workflow.
+name: nitromta
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+section: mail
+priority: optional
+maintainer: auscaster <hi@auscaster.com>
+description: Self-hosted mail delivery engine that speaks the Amazon SES v2 API
+vendor: Nitrosend
+homepage: https://nitromta.com
+license: Apache-2.0
+contents:
+  - src: ./nitromta
+    dst: /usr/bin/nitromta
+    file_info:
+      mode: 0755
+  - src: ./packaging/nitromta.service
+    dst: /usr/lib/systemd/system/nitromta.service
+  - src: ./packaging/nitromta.sysusers
+    dst: /usr/lib/sysusers.d/nitromta.conf
+  - src: ./LICENSE
+    dst: /usr/share/doc/nitromta/LICENSE
+  - src: ./NOTICE
+    dst: /usr/share/doc/nitromta/NOTICE
+scripts:
+  postinstall: ./packaging/postinstall.sh

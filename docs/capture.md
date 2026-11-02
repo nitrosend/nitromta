@@ -5,8 +5,10 @@ DNS records or certificate authority. Every message is accepted, signed,
 scheduled and recorded exactly as it would be for real delivery, then
 written to a directory instead of being sent, and shown in a browser.
 
-You need the `nitromta` binary on your path (see [installation](install.md),
-or build it with `cargo build --release`) and a directory to work in.
+You need the `nitromta` binary on your path and a directory to work in. On
+macOS or Linux, `brew install nitrosend/tap/nitromta` installs it; on a
+server, see [installation](install.md); or build it with
+`cargo build --release`.
 
 ## 1. Write an installation
 

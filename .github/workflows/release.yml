@@ -1,8 +1,11 @@
 # A release, from a tag `v<version>` naming the workspace's version: the
 # binary for each architecture, built on Debian bookworm and checked to need
 # no glibc newer than 2.34, as docs/install.md promises, packed with its
-# systemd files, with build provenance signed by GitHub, and published with
-# its changelog section; and the container image built from those binaries.
+# systemd files and as Debian and RPM packages; the macOS binaries, for
+# capture mode; each with build provenance signed by GitHub, published with
+# its changelog section; the container image built from the Linux binaries;
+# and the Homebrew formula and the AUR package, rendered from the published
+# archives by URL and SHA-256 (packaging/channels.py).
 name: release
 
 on:
@@ -46,13 +49,65 @@ jobs:
           mkdir "$name"
           cp target/release/nitromta packaging/nitromta.service packaging/nitromta.sysusers LICENSE NOTICE README.md "$name"/
           tar -czf "$name.tar.gz" "$name"
+      - name: Package for Debian and RPM, with nfpm
+        env:
+          NFPM: "2.48.0"
+        run: |
+          case "${{ matrix.arch }}" in
+            x86_64) asset=Linux_x86_64; sum=6d7f9a28b2f397934403950fcbba83f598b08d02edbe79a0815b3b4897341750; export ARCH=amd64 ;;
+            aarch64) asset=Linux_arm64; sum=a9a75213763783b7669719e505474c748c5ad7dc66591a195619deb50f85c2f4; export ARCH=arm64 ;;
+          esac
+          curl -fsSLo nfpm.tar.gz "https://github.com/goreleaser/nfpm/releases/download/v$NFPM/nfpm_${NFPM}_${asset}.tar.gz"
+          echo "$sum  nfpm.tar.gz" | sha256sum -c -
+          tar -xzf nfpm.tar.gz nfpm
+          cp target/release/nitromta nitromta
+          export VERSION="${GITHUB_REF_NAME#v}"
+          ./nfpm package --config packaging/nfpm.yaml --packager deb --target .
+          ./nfpm package --config packaging/nfpm.yaml --packager rpm --target .
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: nitromta-*.tar.gz
+          subject-path: |
+            nitromta-*.tar.gz
+            nitromta*.deb
+            nitromta*.rpm
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ matrix.arch }}
-          path: nitromta-*.tar.gz
+          path: |
+            nitromta-*.tar.gz
+            nitromta*.deb
+            nitromta*.rpm
+
+  macos:
+    runs-on: macos-15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build for Apple silicon and Intel
+        run: |
+          rustup toolchain install
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          for target in aarch64-apple-darwin x86_64-apple-darwin; do
+            cargo build --locked --release --package engine --target "$target"
+          done
+      - name: Pack
+        run: |
+          for pair in aarch64-apple-darwin:aarch64 x86_64-apple-darwin:x86_64; do
+            name="nitromta-${GITHUB_REF_NAME#v}-${pair##*:}-macos"
+            mkdir "$name"
+            cp "target/${pair%%:*}/release/nitromta" LICENSE NOTICE README.md "$name"/
+            tar -czf "$name.tar.gz" "$name"
+          done
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: nitromta-*-macos.tar.gz
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos
+          path: nitromta-*-macos.tar.gz
 
   image:
     needs: build
@@ -66,6 +121,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
+          pattern: "*64"
           merge-multiple: true
       - name: Build and push the image, for both architectures, from the release's binaries
         id: push
@@ -92,7 +148,7 @@ jobs:
           push-to-registry: true
 
   publish:
-    needs: build
+    needs: [build, macos]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -108,4 +164,43 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           awk -v heading="## $version " 'index($0, heading) == 1 { kept = 1; next } /^## / { kept = 0 } kept' CHANGELOG.md > notes.md
           test -s notes.md || { echo "CHANGELOG.md has no section for $version"; exit 1; }
-          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md nitromta-*.tar.gz
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md \
+            nitromta-*.tar.gz nitromta*.deb nitromta*.rpm
+
+  channels:
+    needs: publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Render the formula and the AUR package from the published archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" --pattern 'nitromta-*.tar.gz' --dir archives
+          python3 packaging/channels.py "${GITHUB_REF_NAME#v}" "$GITHUB_REPOSITORY" archives channels
+      - name: Publish the formula to nitrosend/homebrew-tap
+        env:
+          KEY: ${{ secrets.HOMEBREW_TAP_KEY }}
+        run: |
+          test -n "$KEY" || { echo "::warning::HOMEBREW_TAP_KEY is not set, so the formula is not published"; exit 0; }
+          install -m 600 /dev/null tap.key && printf '%s\n' "$KEY" > tap.key
+          export GIT_SSH_COMMAND="ssh -i $PWD/tap.key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git clone -q git@github.com:nitrosend/homebrew-tap.git tap
+          mkdir -p tap/Formula && cp channels/homebrew/nitromta.rb tap/Formula/nitromta.rb
+          git -C tap add Formula/nitromta.rb
+          git -C tap -c user.name=auscaster -c user.email=hi@auscaster.com diff --cached --quiet || \
+            { git -C tap -c user.name=auscaster -c user.email=hi@auscaster.com commit -q -m "nitromta ${GITHUB_REF_NAME#v}"; git -C tap push -q; }
+      - name: Publish nitromta-bin to the AUR
+        env:
+          KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          test -n "$KEY" || { echo "::warning::AUR_SSH_PRIVATE_KEY is not set, so the AUR package is not published"; exit 0; }
+          install -m 600 /dev/null aur.key && printf '%s\n' "$KEY" > aur.key
+          export GIT_SSH_COMMAND="ssh -i $PWD/aur.key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git clone -q ssh://aur@aur.archlinux.org/nitromta-bin.git aur
+          cp channels/aur/PKGBUILD channels/aur/.SRCINFO aur/
+          git -C aur add PKGBUILD .SRCINFO
+          git -C aur -c user.name=auscaster -c user.email=hi@auscaster.com diff --cached --quiet || \
+            { git -C aur -c user.name=auscaster -c user.email=hi@auscaster.com commit -q -m "nitromta ${GITHUB_REF_NAME#v}"; git -C aur push -q origin HEAD:master; }
