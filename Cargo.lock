@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "ceilings"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "base64",
@@ -585,7 +585,7 @@ dependencies = [
 
 [[package]]
 name = "engine"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "aws-smithy-http-server",
@@ -627,7 +627,7 @@ dependencies = [
 
 [[package]]
 name = "engine-api"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "base64",
@@ -643,14 +643,14 @@ dependencies = [
 
 [[package]]
 name = "engine-core"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
 ]
 
 [[package]]
 name = "engine-events"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "base64",
@@ -662,7 +662,7 @@ dependencies = [
 
 [[package]]
 name = "engine-feedback"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "base64",
@@ -673,7 +673,7 @@ dependencies = [
 
 [[package]]
 name = "engine-message"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "base64",
@@ -683,7 +683,7 @@ dependencies = [
 
 [[package]]
 name = "engine-rules"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "engine-core",
  "regex",
@@ -693,7 +693,7 @@ dependencies = [
 
 [[package]]
 name = "engine-scheduler"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "engine-core",
@@ -725,7 +725,7 @@ dependencies = [
 
 [[package]]
 name = "engine-sim"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "engine-core",
@@ -738,7 +738,7 @@ dependencies = [
 
 [[package]]
 name = "engine-smtp"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "base64",
@@ -750,7 +750,7 @@ dependencies = [
 
 [[package]]
 name = "engine-store"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "bytes",
@@ -760,7 +760,7 @@ dependencies = [
 
 [[package]]
 name = "engine-warmup"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "engine-core",
  "engine-rules",
@@ -886,7 +886,7 @@ dependencies = [
 
 [[package]]
 name = "fuzz"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "engine-api",
@@ -964,7 +964,7 @@ dependencies = [
 
 [[package]]
 name = "harness"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "aws-lc-rs",
  "base64",
@@ -1514,7 +1514,7 @@ dependencies = [
 
 [[package]]
 name = "measure-store"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "engine-core",
@@ -2888,7 +2888,7 @@ checksum = "66fee0b777b0f5ac1c69bb06d361268faafa61cd4682ae064a171c16c433e9e4"
 
 [[package]]
 name = "xtask"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "serde",
  "serde_json",

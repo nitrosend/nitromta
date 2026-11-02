@@ -23,7 +23,7 @@
 "architecture.toml" = "this file"
 "bench" = "the benchmark harness and the measurements"
 "crates" = "the engine's crates, and the determinism rules that govern them"
-"docs" = "the user's documentation: its guides, its reference and the brand's artwork"
+"docs" = "the user's documentation: its guides, its reference, the benchmark results and the brand's artwork"
 "deny.toml" = "the licenses, sources and advisories allowed for third-party code"
 "fixtures" = "recorded provider fixtures and generated golden formats"
 "fuzz" = "a fuzz target for every parser"

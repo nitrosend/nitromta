@@ -10,7 +10,7 @@
 
 [Nitrosend](https://nitrosend.com)'s mail delivery engine, open sourced.
 
-[Try locally](#try-it) · [Run it on your servers](#run-it-on-your-own-servers) · [Compatibility](docs/compatibility.md)
+[Try locally](#try-it) · [Run it on your servers](#run-it-on-your-own-servers) · [Benchmarks](#benchmarks) · [Compatibility](docs/compatibility.md)
 
 A self-hosted mail delivery engine that speaks the Amazon SES v2 API. Point
 an application built for SES, or any SMTP client, at it by changing the
@@ -24,6 +24,9 @@ addresses you control.
 - **Durable:** a submission is answered only once it is committed to disk,
   and survives a crash, a power cut, and the loss of its host when its disk
   survives. See [durability](docs/durability.md).
+- **Fast:** 3,313 messages a second on 4 CPUs, each committed to disk
+  before it is accepted: 3.16 times KumoMTA and 4.11 times Postfix on the
+  same machine. See [benchmarks](#benchmarks).
 - **Deliverability built in:** a new IP warms up receiver by receiver from
   50 messages a day, rising after clean days and backing off when
   complaints, bounces or throttling climb. Each provider gets its own
@@ -100,6 +103,8 @@ Guides:
   providers that allow them
 - [Migrating from SES](docs/migrate-from-ses.md): endpoint, keys,
   identities and events
+- [Benchmarks](docs/benchmarks.md): the comparison, how it is measured, and
+  its raw results
 
 Reference:
 
@@ -110,6 +115,27 @@ Reference:
 - [Durability](docs/durability.md): what an acceptance promises, and the
   limits
 - [Changelog](CHANGELOG.md)
+
+## Benchmarks
+
+Each system on 4 CPUs of an AWS c7gd.metal server, its queue on local NVMe,
+committing every message to disk before accepting it: 16 KiB messages,
+DKIM-signed, TLS in and out. The highest rate each sustained, median of
+three runs.
+
+| | Messages a second | CPU per message |
+|---|--:|--:|
+| **NitroMTA** | **3,313** | 1.169 ms |
+| KumoMTA 2026.09.29 | 1,048 | 2.492 ms |
+| Postfix 3.11.7 with OpenDKIM | 806 | 4.969 ms |
+
+To run it yourself, on any machine with rustup and Docker:
+
+```sh
+cargo harness quick
+```
+
+[Benchmarks](docs/benchmarks.md) has the method and every run.
 
 ## Building
 

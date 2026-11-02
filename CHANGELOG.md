@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.3 - 2026-11-02
+
+### Added
+
+- **Benchmarks:** NitroMTA, KumoMTA and Postfix measured by the harness on
+  an AWS c7gd.metal server, each committing every message to disk before
+  accepting it: 3,313, 1,048 and 806 messages a second
+  ([benchmarks](docs/benchmarks.md)).
+
 ## 0.1.2 - 2026-11-02
 
 ### Added
