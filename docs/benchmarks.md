@@ -22,6 +22,23 @@ The harness judged every flush durable, and the CPU gauges were within
 | KumoMTA | 1,048 | 1,048 · 1,110 · 1,048 | 2.492 ms |
 | Postfix | 806 | 813 · 806 · 806 | 4.969 ms |
 
+The session sent 1,352,423 messages across the nine runs, about 275,000 in
+each of NitroMTA's, and every one was delivered once, its DKIM signature
+verified and its body intact. None was refused or lost.
+
+## Raw results
+
+[`results/2026-11-02-c7gd-metal.json`](results/2026-11-02-c7gd-metal.json)
+is the session above as the harness wrote it: every step of every run, with
+its rates, latency percentiles, CPU, memory and disk writes, and the
+versions, image ids and machine. It records the SHA-256 of every
+configuration file the systems ran with, and each matches the file in
+[`bench/harness/images`](../bench/harness/images): KumoMTA's
+[`init.lua`](../bench/harness/images/kumomta/init.lua), Postfix's
+[`main.cf`](../bench/harness/images/postfix/main.cf) and
+[`master.cf`](../bench/harness/images/postfix/master.cf), and NitroMTA's
+[`config.toml`](../bench/harness/images/nitromta/config.toml).
+
 ## What is measured
 
 Each system's highest sustained rate: the load is offered at a fixed rate,

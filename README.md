@@ -131,7 +131,8 @@ Reference:
 Each system on 4 CPUs of an AWS c7gd.metal server, its queue on local NVMe,
 committing every message to disk before accepting it: 16 KiB messages,
 DKIM-signed, TLS in and out. The highest rate each sustained, median of
-three runs.
+three runs: 1.35 million messages across the nine, every one delivered once
+and DKIM-verified.
 
 | | Messages a second | CPU per message |
 |---|--:|--:|
@@ -166,4 +167,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately, as
 ## License
 
 Apache-2.0, by [Nitrosend](https://nitrosend.com) and
-[auscaster](https://auscaster.com).
+[Kam](https://auscaster.com).

@@ -1,0 +1,5073 @@
+{
+  "schema": 1,
+  "profile": "quick",
+  "command": [
+    "target/release/harness",
+    "run",
+    "quick"
+  ],
+  "started": "2026-11-02T05:44:27Z",
+  "finished": "2026-11-02T06:26:02Z",
+  "harness": {
+    "commit": "9dcfb6204230e8d9e6371ca227ef592ae09ebf9f",
+    "modified": false
+  },
+  "environment": {
+    "os": "linux",
+    "arch": "aarch64",
+    "cpu": null,
+    "cores": 64,
+    "core_types": [],
+    "memory_bytes": 134799839232,
+    "kernel": "Linux 6.12.113+deb13-cloud-arm64",
+    "power": null,
+    "thermal": null,
+    "runtime": {
+      "Architecture": "aarch64",
+      "CgroupVersion": "2",
+      "Driver": "overlayfs",
+      "KernelVersion": "6.12.113+deb13-cloud-arm64",
+      "MemTotal": 134799839232,
+      "NCPU": 64,
+      "OperatingSystem": "Debian GNU/Linux 13 (trixie)",
+      "ServerVersion": "29.9.2"
+    }
+  },
+  "placement": {
+    "sut_cpus": "0-3",
+    "sut_memory_mib": 2048,
+    "tool_cpus": "4-63"
+  },
+  "images": {
+    "ceilings": {
+      "id": "sha256:fa75b0ecdde0db37fb0de53ada154594eaa5fedbb3392df0a4b22cdcd1364d7f",
+      "sources": {},
+      "base": {}
+    },
+    "harness": {
+      "id": "sha256:16ffb856252ed73bcbd29aed35c651128806fde64accdfc68e6a2a33d0f8fd1a",
+      "sources": {},
+      "base": {}
+    },
+    "kumomta": {
+      "id": "sha256:011dd7b2f21cb78ec95b96dc115fff156d3f2529808d82e04aa1ad47458c437c",
+      "sources": {
+        "kumomta": "b90d8bc1f3eb5e4562a9a06a9943d20163afc3d6"
+      },
+      "base": {}
+    },
+    "nitromta": {
+      "id": "sha256:a0e85eb3b599921b844641ed29dcc501fb311496a07b886f7b0a3439b6174684",
+      "sources": {},
+      "base": {}
+    },
+    "postfix": {
+      "id": "sha256:4229d6c2c9eb84bce57f43352dc11e9038522fa0a390b0e1473226a7c1450c49",
+      "sources": {
+        "opendkim": "ba29fa57b2455143dd86973c2229d6f7b8e16d9b",
+        "postfix": "2324a9e97a727bf95690c9fb8fdca0f52301940e"
+      },
+      "base": {}
+    },
+    "unbound": {
+      "id": "sha256:7454c1f792a43ef2df509c72df8d43727a302b41e6162b4f1cc12595253fa6d1",
+      "sources": {
+        "unbound": "f0cd7067d950921427c91ade4ecf060e944f88eb"
+      },
+      "base": {}
+    }
+  },
+  "configuration": {
+    "images/ceilings/Dockerfile": "60bd98cf965b52cc482e355628aec28bc307bb81144faf3dbc365f75b4a1ae68",
+    "images/ceilings/Dockerfile.dockerignore": "77d0631b454923ca428c73fe2613162d43544f9722f56ce53897f4122fa1ed95",
+    "images/harness/Dockerfile": "ea993215eacea4362233dfb15eb240f9f63a8a3ac19392e8b3d52b9111758c9d",
+    "images/harness/Dockerfile.dockerignore": "77d0631b454923ca428c73fe2613162d43544f9722f56ce53897f4122fa1ed95",
+    "images/kumomta/Dockerfile": "8e8ee7eb878fc31857fe104340168338e454eeef978cb94475a2a82d75ff0e11",
+    "images/kumomta/init.lua": "570da7c82e14f79dbcf7f537fe599399b8d5e9f5d2d706d97a73bcee7c141521",
+    "images/kumomta/start": "8e2309509a1a9e499f58d2eb1042313b0f38ad7e2875f8e8c90bdd64abaa97d5",
+    "images/kumomta/tsa_init.lua": "6283ec54e170a7588e1dc45348e284705b05b1d763bdef2030a3dbd6d9ca6859",
+    "images/nitromta/Dockerfile": "a3fc78e8d366cd5ee5ad87fad879720266cd4b9e3509591be6f18f8d3453644f",
+    "images/nitromta/Dockerfile.dockerignore": "77d0631b454923ca428c73fe2613162d43544f9722f56ce53897f4122fa1ed95",
+    "images/nitromta/config.toml": "e6dac53659f8a9bf4deac732c354369b6d9d536280de0d92564d011ef539137b",
+    "images/nitromta/start": "12c7514bd5cdce352bcc401a7ce9b0a9a417a3fb48b239360adb9f6dc15a1b67",
+    "images/postfix/Dockerfile": "7a7003ac8c610aac7fa5c5076bcc77b8661f7080e74a33d710bd20af3a1bdb53",
+    "images/postfix/main.cf": "b061bf2260c0aa620ba5b2a3e18e1e2757c5cc77c14880bf7f6e96a22d82c2d1",
+    "images/postfix/master.cf": "2087deda16848d9f2d6cd7b2ab5990454976e2cdb9b39f33270efd81b39daedf",
+    "images/postfix/opendkim.conf": "0a3bc4e43deeaf521e213206def0bdf630baf07719d183389fc84c3dfe0cd8a3",
+    "images/postfix/smtpd.conf": "a9f3933623fc0cc4d477dff93c49a769eabd14354bc239d9f4efdb76c09d72a4",
+    "images/postfix/start": "c4a360870a0bced74954649f511b33256007448f8014384a3f8a7ad5ec522e4a",
+    "images/unbound/Dockerfile": "ebe28e57b4813e3a53084ad184828c98d560953957da233525fdf53e897bb3b1"
+  },
+  "durability": {
+    "label": "durable",
+    "reason": "no hypervisor is visible, so a flush goes to the device"
+  },
+  "host_full_sync_us": null,
+  "capacity": 49950.4,
+  "ceilings": {
+    "dkim_rsa2048_signs_per_second": 1189.2473360064014,
+    "message_bytes": 16384,
+    "sha256_mb_per_second": 1652.1957617057617,
+    "sigv4_verifies_per_second": 46127.242498423686
+  },
+  "gauge_spread": 0.0005100449688850706,
+  "settings": {
+    "summary": "Minutes on one machine: the systems measured under the same rules, interleaved and repeated, for development, regression checks and comparisons labelled with that machine",
+    "systems": [
+      "nitromta",
+      "postfix",
+      "kumomta"
+    ],
+    "repetitions": 3,
+    "placement": {
+      "sut_cpus": 4,
+      "sut_memory_mib": 2048,
+      "tool_cpus": 4,
+      "tool_memory_mib": 2048
+    },
+    "workload": {
+      "message_bytes": 16384,
+      "connections": 64,
+      "domains": 1,
+      "recipients": 1,
+      "sites": 1,
+      "round_trip_ms": 0
+    },
+    "delivery": {
+      "connections": 64,
+      "retry_first_seconds": 10,
+      "retry_max_seconds": 60
+    },
+    "without": [],
+    "throttle": null,
+    "backlog": null,
+    "fixed": null,
+    "crash": null,
+    "ceilings": true,
+    "search": {
+      "warmup_rate": 100.0,
+      "warmup_seconds": 5.0,
+      "start_rate": 250.0,
+      "step_seconds": 10.0,
+      "bisections": 6,
+      "drain_seconds": 30.0,
+      "headroom_seconds": 5.0,
+      "headroom": 2.0,
+      "cooldown_seconds": 90.0
+    },
+    "budgets": {
+      "submit_p99_ms": 1000.0,
+      "delivery_p99_ms": 2000.0,
+      "accepted_share": 0.99,
+      "backlog_anon_mib": null
+    }
+  },
+  "recipe": {
+    "base": {
+      "build": "rust:trixie",
+      "runtime": "debian:trixie-slim"
+    },
+    "sources": {
+      "kumomta": {
+        "url": "https://github.com/KumoCorp/kumomta",
+        "tag": "2026.09.29-b90d8bc1"
+      },
+      "lazyfs": {
+        "url": "https://github.com/dsrhaslab/lazyfs",
+        "tag": "0.3.1"
+      },
+      "opendkim": {
+        "url": "https://github.com/trusteddomainproject/OpenDKIM",
+        "tag": "rel-opendkim-2-11-0-Beta2"
+      },
+      "postfix": {
+        "url": "https://github.com/vdukhovni/postfix",
+        "tag": "v3.11.7"
+      },
+      "unbound": {
+        "url": "https://github.com/NLnetLabs/unbound",
+        "tag": "release-1.26.2"
+      }
+    },
+    "images": {
+      "ceilings": {
+        "sources": [],
+        "repository": true
+      },
+      "harness": {
+        "sources": [],
+        "repository": true
+      },
+      "kumomta": {
+        "sources": [
+          "kumomta"
+        ],
+        "repository": false
+      },
+      "lazyfs": {
+        "sources": [
+          "lazyfs"
+        ],
+        "repository": false
+      },
+      "nitromta": {
+        "sources": [],
+        "repository": true
+      },
+      "postfix": {
+        "sources": [
+          "postfix",
+          "opendkim"
+        ],
+        "repository": false
+      },
+      "unbound": {
+        "sources": [
+          "unbound"
+        ],
+        "repository": false
+      }
+    },
+    "systems": {
+      "kumomta": {
+        "summary": "KumoMTA with its RocksDB spool, every message saved with a synced write before the 250 reply",
+        "image": "kumomta",
+        "durability": "sync",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/kumomta",
+        "log": null,
+        "credentials": null,
+        "production": false,
+        "env": {
+          "FORCE_SYNC": "1"
+        }
+      },
+      "kumomta-async": {
+        "summary": "KumoMTA as it ships: the 250 reply follows a spool write that is not synced",
+        "image": "kumomta",
+        "durability": "async",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/kumomta",
+        "log": null,
+        "credentials": null,
+        "production": false,
+        "env": {
+          "FORCE_SYNC": "0"
+        }
+      },
+      "kumomta-http": {
+        "summary": "KumoMTA's HTTP injection API (/api/inject/v1) over HTTPS, each request with Basic authentication, every message saved with a synced write before its answer",
+        "image": "kumomta",
+        "durability": "sync",
+        "ingress": "kumomta",
+        "port": 8443,
+        "spool": "/var/spool/kumomta",
+        "log": null,
+        "credentials": null,
+        "production": false,
+        "env": {
+          "FORCE_SYNC": "1"
+        }
+      },
+      "nitromta": {
+        "summary": "NitroMTA's SMTP path: every acceptance committed with a synced write before the 250 reply",
+        "image": "nitromta",
+        "durability": "sync",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/nitromta",
+        "log": null,
+        "credentials": "/run/bench/credentials.json",
+        "production": true,
+        "env": {}
+      },
+      "nitromta-sealed": {
+        "summary": "NitroMTA's SMTP path, as nitromta, with personal data sealed under the installation's key",
+        "image": "nitromta",
+        "durability": "sync",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/nitromta",
+        "log": null,
+        "credentials": "/run/bench/credentials.json",
+        "production": true,
+        "env": {
+          "BENCH_ENCRYPTION": "installation"
+        }
+      },
+      "nitromta-ses": {
+        "summary": "NitroMTA's SES v2 API: SendEmail with raw content over HTTPS, each request SigV4-signed, every acceptance committed with a synced write before the 200 answer",
+        "image": "nitromta",
+        "durability": "sync",
+        "ingress": "ses",
+        "port": 8443,
+        "spool": "/var/spool/nitromta",
+        "log": null,
+        "credentials": "/run/bench/credentials.json",
+        "production": true,
+        "env": {}
+      },
+      "postfix": {
+        "summary": "Postfix, signing through the OpenDKIM milter, with its default queue durability: queue files are fsynced before the 250 reply",
+        "image": "postfix",
+        "durability": "sync",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/postfix",
+        "log": "/var/spool/postfix/maillog",
+        "credentials": null,
+        "production": false,
+        "env": {}
+      }
+    }
+  },
+  "runs": [
+    {
+      "system": "nitromta",
+      "repetition": 0,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 103.485,
+          "p50": 109.171,
+          "p95": 124.371,
+          "p99": 132.262,
+          "max": 196.374
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1661.8277341407509
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 280
+      },
+      "sink_most_open": 34,
+      "hooks": {
+        "batches": 24491,
+        "repeated": 0,
+        "refused": 0,
+        "events": {
+          "accepted": 275821,
+          "delivered": 275820
+        }
+      },
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 1.618,
+          "p50": 2.192,
+          "p95": 2.64,
+          "p99": 2.712,
+          "max": 3.14
+        },
+        "delivery_ms": {
+          "min": 0.165,
+          "p50": 0.174,
+          "p95": 0.22,
+          "p99": 0.268,
+          "max": 3.446
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.034539025,
+        "usage": {
+          "cpu_seconds": 0.678383,
+          "cpu_ms_per_message": 1.356766,
+          "memory_mib": 143.265625,
+          "peak_memory_mib": 163.69921875,
+          "written_mib": 60.390625,
+          "written_kib_per_message": 123.68
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.694,
+            "p50": 2.205,
+            "p95": 2.66,
+            "p99": 2.736,
+            "max": 3.036
+          },
+          "delivery_ms": {
+            "min": 0.162,
+            "p50": 0.172,
+            "p95": 0.186,
+            "p99": 0.237,
+            "max": 1.96
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035258917,
+          "usage": {
+            "cpu_seconds": 3.191299,
+            "cpu_ms_per_message": 1.2765196,
+            "memory_mib": 144.69140625,
+            "peak_memory_mib": 163.69921875,
+            "written_mib": 301.58203125,
+            "written_kib_per_message": 123.528
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.004,
+            "p50": 2.55,
+            "p95": 3.017,
+            "p99": 3.092,
+            "max": 3.449
+          },
+          "delivery_ms": {
+            "min": 0.145,
+            "p50": 0.177,
+            "p95": 0.24,
+            "p99": 0.467,
+            "max": 1.927
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.034907524,
+          "usage": {
+            "cpu_seconds": 6.432938,
+            "cpu_ms_per_message": 1.2865876,
+            "memory_mib": 147.62109375,
+            "peak_memory_mib": 163.69921875,
+            "written_mib": 602.71484375,
+            "written_kib_per_message": 123.436
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.849,
+            "p50": 2.389,
+            "p95": 2.959,
+            "p99": 3.113,
+            "max": 5.499
+          },
+          "delivery_ms": {
+            "min": 0.136,
+            "p50": 0.192,
+            "p95": 0.341,
+            "p99": 1.038,
+            "max": 1.859
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036823565,
+          "usage": {
+            "cpu_seconds": 13.35539,
+            "cpu_ms_per_message": 1.335539,
+            "memory_mib": 152.1796875,
+            "peak_memory_mib": 163.69921875,
+            "written_mib": 1239.65625,
+            "written_kib_per_message": 126.9408
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 2000.0,
+          "seconds": 10.0,
+          "attempted": 20000,
+          "accepted": 20000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 20000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.591,
+            "p50": 2.597,
+            "p95": 3.766,
+            "p99": 4.428,
+            "max": 6.082
+          },
+          "delivery_ms": {
+            "min": -0.066,
+            "p50": 0.475,
+            "p95": 1.323,
+            "p99": 1.913,
+            "max": 3.47
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.038131373,
+          "usage": {
+            "cpu_seconds": 25.28385,
+            "cpu_ms_per_message": 1.2641925,
+            "memory_mib": 160.7109375,
+            "peak_memory_mib": 166.859375,
+            "written_mib": 1810.61328125,
+            "written_kib_per_message": 92.7034
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 4000.0,
+          "seconds": 10.0,
+          "attempted": 40000,
+          "accepted": 40000,
+          "accepted_rate": 4000.0,
+          "refused": {},
+          "delivered": 40000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.84,
+            "p50": 1626.43,
+            "p95": 3051.844,
+            "p99": 3188.392,
+            "max": 3245.792
+          },
+          "delivery_ms": {
+            "min": -0.615,
+            "p50": 1.487,
+            "p95": 3.276,
+            "p99": 4.352,
+            "max": 734.546
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.041296532,
+          "usage": {
+            "cpu_seconds": 46.704204,
+            "cpu_ms_per_message": 1.1676050999999998,
+            "memory_mib": 180.10546875,
+            "peak_memory_mib": 186.24609375,
+            "written_mib": 1988.7265625,
+            "written_kib_per_message": 50.9114
+          },
+          "misses": [
+            "p99 submission 3188 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3000.0,
+          "seconds": 10.0,
+          "attempted": 30000,
+          "accepted": 30000,
+          "accepted_rate": 3000.0,
+          "refused": {},
+          "delivered": 30000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.432,
+            "p50": 4.674,
+            "p95": 7.38,
+            "p99": 8.717,
+            "max": 12.809
+          },
+          "delivery_ms": {
+            "min": -0.054,
+            "p50": 1.436,
+            "p95": 3.052,
+            "p99": 4.004,
+            "max": 798.421
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.038524986,
+          "usage": {
+            "cpu_seconds": 35.185628,
+            "cpu_ms_per_message": 1.1728542666666668,
+            "memory_mib": 192.04296875,
+            "peak_memory_mib": 198.7578125,
+            "written_mib": 1509.18359375,
+            "written_kib_per_message": 51.513466666666666
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 3500.0,
+          "seconds": 10.0,
+          "attempted": 35000,
+          "accepted": 35000,
+          "accepted_rate": 3500.0,
+          "refused": {},
+          "delivered": 35000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.149,
+            "p50": 812.144,
+            "p95": 1501.605,
+            "p99": 1568.855,
+            "max": 1621.136
+          },
+          "delivery_ms": {
+            "min": -2.763,
+            "p50": 1.528,
+            "p95": 3.302,
+            "p99": 4.307,
+            "max": 860.287
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.323977994,
+          "usage": {
+            "cpu_seconds": 40.894135,
+            "cpu_ms_per_message": 1.1684038571428572,
+            "memory_mib": 206.53125,
+            "peak_memory_mib": 210.92578125,
+            "written_mib": 1739.78125,
+            "written_kib_per_message": 50.90102857142857
+          },
+          "misses": [
+            "p99 submission 1569 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3250.0,
+          "seconds": 10.0,
+          "attempted": 32500,
+          "accepted": 32500,
+          "accepted_rate": 3250.0,
+          "refused": {},
+          "delivered": 32500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.323,
+            "p50": 372.672,
+            "p95": 708.749,
+            "p99": 747.897,
+            "max": 796.572
+          },
+          "delivery_ms": {
+            "min": -0.86,
+            "p50": 1.509,
+            "p95": 3.284,
+            "p99": 4.438,
+            "max": 12.125
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039046261,
+          "usage": {
+            "cpu_seconds": 38.084617,
+            "cpu_ms_per_message": 1.1718343692307691,
+            "memory_mib": 219.52734375,
+            "peak_memory_mib": 224.36328125,
+            "written_mib": 1615.78125,
+            "written_kib_per_message": 50.90953846153846
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 3375.0,
+          "seconds": 10.0,
+          "attempted": 33750,
+          "accepted": 33750,
+          "accepted_rate": 3375.0,
+          "refused": {},
+          "delivered": 33750,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.057,
+            "p50": 596.992,
+            "p95": 1085.731,
+            "p99": 1138.871,
+            "max": 1179.157
+          },
+          "delivery_ms": {
+            "min": -0.68,
+            "p50": 1.465,
+            "p95": 3.226,
+            "p99": 4.225,
+            "max": 918.583
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.038990963,
+          "usage": {
+            "cpu_seconds": 39.377775,
+            "cpu_ms_per_message": 1.1667488888888888,
+            "memory_mib": 233.3984375,
+            "peak_memory_mib": 237.3046875,
+            "written_mib": 1694.2578125,
+            "written_kib_per_message": 51.40503703703704
+          },
+          "misses": [
+            "p99 submission 1139 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3313.0,
+          "seconds": 10.0,
+          "attempted": 33131,
+          "accepted": 33131,
+          "accepted_rate": 3313.1,
+          "refused": {},
+          "delivered": 33131,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.056,
+            "p50": 459.558,
+            "p95": 906.351,
+            "p99": 950.655,
+            "max": 996.418
+          },
+          "delivery_ms": {
+            "min": -1.59,
+            "p50": 1.483,
+            "p95": 3.261,
+            "p99": 4.376,
+            "max": 540.912
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039339988,
+          "usage": {
+            "cpu_seconds": 38.590385,
+            "cpu_ms_per_message": 1.1647817753765355,
+            "memory_mib": 246.4921875,
+            "peak_memory_mib": 252.65234375,
+            "written_mib": 1657.79296875,
+            "written_kib_per_message": 51.23841719235761
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 3344.0,
+          "seconds": 10.0,
+          "attempted": 33440,
+          "accepted": 33440,
+          "accepted_rate": 3344.0,
+          "refused": {},
+          "delivered": 33440,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.002,
+            "p50": 525.217,
+            "p95": 1005.178,
+            "p99": 1056.138,
+            "max": 1108.557
+          },
+          "delivery_ms": {
+            "min": -1.505,
+            "p50": 1.456,
+            "p95": 3.201,
+            "p99": 4.368,
+            "max": 978.266
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039046823,
+          "usage": {
+            "cpu_seconds": 38.900893,
+            "cpu_ms_per_message": 1.1633042165071772,
+            "memory_mib": 262.60546875,
+            "peak_memory_mib": 268.40625,
+            "written_mib": 1687.51953125,
+            "written_kib_per_message": 51.67523923444976
+          },
+          "misses": [
+            "p99 submission 1056 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 3313.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "postfix",
+      "repetition": 0,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 104.156,
+          "p50": 109.139,
+          "p95": 122.56499999999998,
+          "p99": 127.099,
+          "max": 246.288
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1662.120119882969
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 35
+      },
+      "sink_most_open": 35,
+      "hooks": null,
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 2.853,
+          "p50": 3.478,
+          "p95": 3.926,
+          "p99": 4.16,
+          "max": 11.005
+        },
+        "delivery_ms": {
+          "min": 0.657,
+          "p50": 0.797,
+          "p95": 0.905,
+          "p99": 6.386,
+          "max": 65.871
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.034577132,
+        "usage": {
+          "cpu_seconds": 2.738597,
+          "cpu_ms_per_message": 5.477194,
+          "memory_mib": 213.875,
+          "peak_memory_mib": 223.640625,
+          "written_mib": 10.31640625,
+          "written_kib_per_message": 21.128
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.768,
+            "p50": 4.374,
+            "p95": 4.824,
+            "p99": 6.403,
+            "max": 8.266
+          },
+          "delivery_ms": {
+            "min": 0.709,
+            "p50": 0.774,
+            "p95": 0.857,
+            "p99": 4.735,
+            "max": 7.133
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035108136,
+          "usage": {
+            "cpu_seconds": 10.765746,
+            "cpu_ms_per_message": 4.306298399999999,
+            "memory_mib": 226.171875,
+            "peak_memory_mib": 232.390625,
+            "written_mib": 49.859375,
+            "written_kib_per_message": 20.4224
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.826,
+            "p50": 4.577,
+            "p95": 5.15,
+            "p99": 7.227,
+            "max": 10.194
+          },
+          "delivery_ms": {
+            "min": 0.419,
+            "p50": 0.851,
+            "p95": 1.282,
+            "p99": 6.628,
+            "max": 45.312
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035199805,
+          "usage": {
+            "cpu_seconds": 23.139084,
+            "cpu_ms_per_message": 4.6278168,
+            "memory_mib": 236.84765625,
+            "peak_memory_mib": 249.75390625,
+            "written_mib": 98.578125,
+            "written_kib_per_message": 20.1888
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.756,
+            "p50": 3890.866,
+            "p95": 10679.237,
+            "p99": 11487.234,
+            "max": 12138.065
+          },
+          "delivery_ms": {
+            "min": 0.531,
+            "p50": 178.808,
+            "p95": 390.627,
+            "p99": 458.394,
+            "max": 570.33
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320276551,
+          "usage": {
+            "cpu_seconds": 48.340484,
+            "cpu_ms_per_message": 4.8340483999999995,
+            "memory_mib": 305.9140625,
+            "peak_memory_mib": 403.83203125,
+            "written_mib": 204.5546875,
+            "written_kib_per_message": 20.9464
+          },
+          "misses": [
+            "p99 submission 11487 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 750.0,
+          "seconds": 10.0,
+          "attempted": 7500,
+          "accepted": 7500,
+          "accepted_rate": 750.0,
+          "refused": {},
+          "delivered": 7500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.616,
+            "p50": 5.659,
+            "p95": 11.469,
+            "p99": 16.096,
+            "max": 23.964
+          },
+          "delivery_ms": {
+            "min": -0.967,
+            "p50": 1.942,
+            "p95": 12.589,
+            "p99": 44.713,
+            "max": 70.96
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.319798399,
+          "usage": {
+            "cpu_seconds": 37.582789,
+            "cpu_ms_per_message": 5.011038533333333,
+            "memory_mib": 305.58984375,
+            "peak_memory_mib": 403.83203125,
+            "written_mib": 147.71484375,
+            "written_kib_per_message": 20.168
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 875.0,
+          "seconds": 10.0,
+          "attempted": 8750,
+          "accepted": 8750,
+          "accepted_rate": 875.0,
+          "refused": {},
+          "delivered": 8750,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.092,
+            "p50": 665.522,
+            "p95": 6527.577,
+            "p99": 7308.326,
+            "max": 8436.132
+          },
+          "delivery_ms": {
+            "min": -0.445,
+            "p50": 166.898,
+            "p95": 385.387,
+            "p99": 465.767,
+            "max": 586.399
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320185839,
+          "usage": {
+            "cpu_seconds": 42.477906,
+            "cpu_ms_per_message": 4.854617828571428,
+            "memory_mib": 344.39453125,
+            "peak_memory_mib": 404.453125,
+            "written_mib": 188.41796875,
+            "written_kib_per_message": 22.050285714285714
+          },
+          "misses": [
+            "p99 submission 7308 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 813.0,
+          "seconds": 10.0,
+          "attempted": 8130,
+          "accepted": 8130,
+          "accepted_rate": 813.0,
+          "refused": {},
+          "delivered": 8130,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.678,
+            "p50": 11.247,
+            "p95": 22.688,
+            "p99": 659.191,
+            "max": 1253.063
+          },
+          "delivery_ms": {
+            "min": -0.322,
+            "p50": 144.378,
+            "p95": 378.45,
+            "p99": 456.998,
+            "max": 562.735
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036070403,
+          "usage": {
+            "cpu_seconds": 40.321707,
+            "cpu_ms_per_message": 4.959619557195572,
+            "memory_mib": 350.44140625,
+            "peak_memory_mib": 404.453125,
+            "written_mib": 160.17578125,
+            "written_kib_per_message": 20.174661746617467
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 844.0,
+          "seconds": 10.0,
+          "attempted": 8440,
+          "accepted": 8440,
+          "accepted_rate": 844.0,
+          "refused": {},
+          "delivered": 8440,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.078,
+            "p50": 36.58,
+            "p95": 5758.953,
+            "p99": 6753.649,
+            "max": 7795.581
+          },
+          "delivery_ms": {
+            "min": -0.628,
+            "p50": 170.125,
+            "p95": 386.286,
+            "p99": 455.283,
+            "max": 583.978
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.321125858,
+          "usage": {
+            "cpu_seconds": 41.321533,
+            "cpu_ms_per_message": 4.8959162322274885,
+            "memory_mib": 384.171875,
+            "peak_memory_mib": 425.109375,
+            "written_mib": 181.16796875,
+            "written_kib_per_message": 21.980568720379146
+          },
+          "misses": [
+            "p99 submission 6754 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 829.0,
+          "seconds": 10.0,
+          "attempted": 8290,
+          "accepted": 8290,
+          "accepted_rate": 829.0,
+          "refused": {},
+          "delivered": 8290,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.124,
+            "p50": 14.612,
+            "p95": 3924.87,
+            "p99": 4722.779,
+            "max": 5534.404
+          },
+          "delivery_ms": {
+            "min": -0.48,
+            "p50": 158.215,
+            "p95": 389.055,
+            "p99": 487.349,
+            "max": 614.42
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320878109,
+          "usage": {
+            "cpu_seconds": 40.598463,
+            "cpu_ms_per_message": 4.897281423401689,
+            "memory_mib": 399.8359375,
+            "peak_memory_mib": 437.703125,
+            "written_mib": 163.24609375,
+            "written_kib_per_message": 20.16453558504222
+          },
+          "misses": [
+            "p99 submission 4723 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 821.0,
+          "seconds": 10.0,
+          "attempted": 8210,
+          "accepted": 8210,
+          "accepted_rate": 821.0,
+          "refused": {},
+          "delivered": 8210,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.129,
+            "p50": 13.438,
+            "p95": 2365.566,
+            "p99": 3122.751,
+            "max": 3933.572
+          },
+          "delivery_ms": {
+            "min": -0.069,
+            "p50": 145.115,
+            "p95": 381.428,
+            "p99": 466.593,
+            "max": 591.71
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320198973,
+          "usage": {
+            "cpu_seconds": 40.443916,
+            "cpu_ms_per_message": 4.926177344701584,
+            "memory_mib": 433.26171875,
+            "peak_memory_mib": 446.03515625,
+            "written_mib": 176.12109375,
+            "written_kib_per_message": 21.966869671132766
+          },
+          "misses": [
+            "p99 submission 3123 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 813.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "kumomta",
+      "repetition": 0,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 105.648,
+          "p50": 108.975,
+          "p95": 111.575,
+          "p99": 117.96,
+          "max": 194.14
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1662.1241645105763
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 146
+      },
+      "sink_most_open": 64,
+      "hooks": null,
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 2.732,
+          "p50": 3.33,
+          "p95": 3.748,
+          "p99": 4.144,
+          "max": 8.441
+        },
+        "delivery_ms": {
+          "min": 0.167,
+          "p50": 1.224,
+          "p95": 1.238,
+          "p99": 1.264,
+          "max": 4.489
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.035139959,
+        "usage": {
+          "cpu_seconds": 1.174875,
+          "cpu_ms_per_message": 2.34975,
+          "memory_mib": 171.54296875,
+          "peak_memory_mib": 177.671875,
+          "written_mib": 12.37890625,
+          "written_kib_per_message": 25.352
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.562,
+            "p50": 3.113,
+            "p95": 3.577,
+            "p99": 3.969,
+            "max": 4.984
+          },
+          "delivery_ms": {
+            "min": 0.157,
+            "p50": 1.222,
+            "p95": 1.234,
+            "p99": 1.247,
+            "max": 2.29
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035152908,
+          "usage": {
+            "cpu_seconds": 5.517847,
+            "cpu_ms_per_message": 2.2071388,
+            "memory_mib": 282.7890625,
+            "peak_memory_mib": 288.72265625,
+            "written_mib": 61.921875,
+            "written_kib_per_message": 25.3632
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.326,
+            "p50": 2.635,
+            "p95": 3.425,
+            "p99": 3.707,
+            "max": 10.347
+          },
+          "delivery_ms": {
+            "min": -0.03,
+            "p50": 1.246,
+            "p95": 1.496,
+            "p99": 1.554,
+            "max": 4.999
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035084537,
+          "usage": {
+            "cpu_seconds": 11.521781,
+            "cpu_ms_per_message": 2.3043562,
+            "memory_mib": 392.0859375,
+            "peak_memory_mib": 520.55078125,
+            "written_mib": 124.0078125,
+            "written_kib_per_message": 25.3968
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.892,
+            "p50": 2.314,
+            "p95": 3.495,
+            "p99": 4.734,
+            "max": 8.964
+          },
+          "delivery_ms": {
+            "min": -2.091,
+            "p50": 1.26,
+            "p95": 2.021,
+            "p99": 2.886,
+            "max": 6.395
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036010596,
+          "usage": {
+            "cpu_seconds": 23.606991,
+            "cpu_ms_per_message": 2.3606991,
+            "memory_mib": 410.359375,
+            "peak_memory_mib": 520.55078125,
+            "written_mib": 248.12890625,
+            "written_kib_per_message": 25.4084
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 2000.0,
+          "seconds": 10.0,
+          "attempted": 20000,
+          "accepted": 20000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 20000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.206,
+            "p50": 5185.092,
+            "p95": 8457.766,
+            "p99": 8664.131,
+            "max": 8889.688
+          },
+          "delivery_ms": {
+            "min": -73.92,
+            "p50": 0.747,
+            "p95": 1491.118,
+            "p99": 1706.026,
+            "max": 1772.924
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.322982527,
+          "usage": {
+            "cpu_seconds": 55.049197,
+            "cpu_ms_per_message": 2.75245985,
+            "memory_mib": 574.08203125,
+            "peak_memory_mib": 633.41015625,
+            "written_mib": 503.421875,
+            "written_kib_per_message": 25.7752
+          },
+          "misses": [
+            "p99 submission 8664 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1500.0,
+          "seconds": 10.0,
+          "attempted": 15000,
+          "accepted": 15000,
+          "accepted_rate": 1500.0,
+          "refused": {},
+          "delivered": 15000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.426,
+            "p50": 2542.745,
+            "p95": 3130.029,
+            "p99": 3292.668,
+            "max": 3549.661
+          },
+          "delivery_ms": {
+            "min": -42.383,
+            "p50": 303.996,
+            "p95": 1400.824,
+            "p99": 1519.143,
+            "max": 1590.887
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.606751005,
+          "usage": {
+            "cpu_seconds": 38.722813,
+            "cpu_ms_per_message": 2.5815208666666667,
+            "memory_mib": 672.3359375,
+            "peak_memory_mib": 678.48828125,
+            "written_mib": 391.703125,
+            "written_kib_per_message": 26.740266666666667
+          },
+          "misses": [
+            "p99 submission 3293 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1250.0,
+          "seconds": 10.0,
+          "attempted": 12500,
+          "accepted": 12500,
+          "accepted_rate": 1250.0,
+          "refused": {},
+          "delivered": 12500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.087,
+            "p50": 1190.112,
+            "p95": 3024.283,
+            "p99": 3304.936,
+            "max": 3728.524
+          },
+          "delivery_ms": {
+            "min": -29.652,
+            "p50": -0.101,
+            "p95": 6.696,
+            "p99": 12.654,
+            "max": 38.695
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036463853,
+          "usage": {
+            "cpu_seconds": 38.319391,
+            "cpu_ms_per_message": 3.06555128,
+            "memory_mib": 548.86328125,
+            "peak_memory_mib": 683.73046875,
+            "written_mib": 296.44921875,
+            "written_kib_per_message": 24.28512
+          },
+          "misses": [
+            "p99 submission 3305 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1125.0,
+          "seconds": 10.0,
+          "attempted": 11250,
+          "accepted": 11250,
+          "accepted_rate": 1125.0,
+          "refused": {},
+          "delivered": 11250,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.143,
+            "p50": 394.348,
+            "p95": 913.09,
+            "p99": 1086.16,
+            "max": 1232.044
+          },
+          "delivery_ms": {
+            "min": -66.124,
+            "p50": 0.571,
+            "p95": 896.703,
+            "p99": 979.885,
+            "max": 1014.537
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035935911,
+          "usage": {
+            "cpu_seconds": 32.205684,
+            "cpu_ms_per_message": 2.862727466666666,
+            "memory_mib": 593.890625,
+            "peak_memory_mib": 683.73046875,
+            "written_mib": 256.96484375,
+            "written_kib_per_message": 23.389511111111112
+          },
+          "misses": [
+            "p99 submission 1086 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1063.0,
+          "seconds": 10.0,
+          "attempted": 10630,
+          "accepted": 10630,
+          "accepted_rate": 1063.0,
+          "refused": {},
+          "delivered": 10630,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.207,
+            "p50": 489.114,
+            "p95": 1028.222,
+            "p99": 1270.813,
+            "max": 1534.978
+          },
+          "delivery_ms": {
+            "min": -75.681,
+            "p50": 0.322,
+            "p95": 674.249,
+            "p99": 773.096,
+            "max": 803.829
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320954819,
+          "usage": {
+            "cpu_seconds": 29.075958,
+            "cpu_ms_per_message": 2.735273565380997,
+            "memory_mib": 581.76953125,
+            "peak_memory_mib": 683.73046875,
+            "written_mib": 261.7421875,
+            "written_kib_per_message": 25.213922859830667
+          },
+          "misses": [
+            "p99 submission 1271 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1032.0,
+          "seconds": 10.0,
+          "attempted": 10320,
+          "accepted": 10320,
+          "accepted_rate": 1032.0,
+          "refused": {},
+          "delivered": 10320,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.197,
+            "p50": 328.907,
+            "p95": 807.649,
+            "p99": 971.93,
+            "max": 1299.317
+          },
+          "delivery_ms": {
+            "min": -55.405,
+            "p50": -0.106,
+            "p95": 594.083,
+            "p99": 696.327,
+            "max": 726.308
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036161537,
+          "usage": {
+            "cpu_seconds": 30.437349,
+            "cpu_ms_per_message": 2.949355523255814,
+            "memory_mib": 599.05859375,
+            "peak_memory_mib": 683.73046875,
+            "written_mib": 268.13671875,
+            "written_kib_per_message": 26.605813953488372
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1048.0,
+          "seconds": 10.0,
+          "attempted": 10480,
+          "accepted": 10480,
+          "accepted_rate": 1048.0,
+          "refused": {},
+          "delivered": 10480,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.096,
+            "p50": 104.986,
+            "p95": 569.35,
+            "p99": 734.046,
+            "max": 964.176
+          },
+          "delivery_ms": {
+            "min": -27.753,
+            "p50": 0.966,
+            "p95": 424.871,
+            "p99": 525.536,
+            "max": 565.028
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036213272,
+          "usage": {
+            "cpu_seconds": 31.004757,
+            "cpu_ms_per_message": 2.958469179389313,
+            "memory_mib": 575.63671875,
+            "peak_memory_mib": 683.73046875,
+            "written_mib": 250.56640625,
+            "written_kib_per_message": 24.482824427480917
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 1048.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "kumomta",
+      "repetition": 1,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 102.484,
+          "p50": 108.196,
+          "p95": 121.754,
+          "p99": 125.499,
+          "max": 190.788
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1661.8576728408289
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 112
+      },
+      "sink_most_open": 64,
+      "hooks": null,
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 2.542,
+          "p50": 3.095,
+          "p95": 3.557,
+          "p99": 3.907,
+          "max": 8.118
+        },
+        "delivery_ms": {
+          "min": 0.169,
+          "p50": 1.22,
+          "p95": 1.233,
+          "p99": 1.25,
+          "max": 3.389
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.035109034,
+        "usage": {
+          "cpu_seconds": 1.162482,
+          "cpu_ms_per_message": 2.324964,
+          "memory_mib": 166.0,
+          "peak_memory_mib": 170.15625,
+          "written_mib": 12.37890625,
+          "written_kib_per_message": 25.352
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.769,
+            "p50": 3.282,
+            "p95": 3.749,
+            "p99": 4.148,
+            "max": 5.11
+          },
+          "delivery_ms": {
+            "min": 0.157,
+            "p50": 1.214,
+            "p95": 1.225,
+            "p99": 1.234,
+            "max": 1.358
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.034938274,
+          "usage": {
+            "cpu_seconds": 5.472378,
+            "cpu_ms_per_message": 2.1889512,
+            "memory_mib": 264.65625,
+            "peak_memory_mib": 271.05859375,
+            "written_mib": 61.921875,
+            "written_kib_per_message": 25.3632
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.446,
+            "p50": 2.769,
+            "p95": 3.549,
+            "p99": 3.856,
+            "max": 10.189
+          },
+          "delivery_ms": {
+            "min": 0.03,
+            "p50": 1.241,
+            "p95": 1.467,
+            "p99": 1.535,
+            "max": 5.195
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035122031,
+          "usage": {
+            "cpu_seconds": 11.405677,
+            "cpu_ms_per_message": 2.2811354,
+            "memory_mib": 327.609375,
+            "peak_memory_mib": 424.453125,
+            "written_mib": 123.9765625,
+            "written_kib_per_message": 25.3904
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.602,
+            "p50": 3.103,
+            "p95": 4.424,
+            "p99": 5.524,
+            "max": 10.639
+          },
+          "delivery_ms": {
+            "min": -1.468,
+            "p50": 1.302,
+            "p95": 2.149,
+            "p99": 3.04,
+            "max": 7.769
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035872627,
+          "usage": {
+            "cpu_seconds": 23.476342,
+            "cpu_ms_per_message": 2.3476342,
+            "memory_mib": 386.37109375,
+            "peak_memory_mib": 424.453125,
+            "written_mib": 247.8046875,
+            "written_kib_per_message": 25.3752
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 2000.0,
+          "seconds": 10.0,
+          "attempted": 20000,
+          "accepted": 20000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 20000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.167,
+            "p50": 5674.653,
+            "p95": 10534.296,
+            "p99": 10966.344,
+            "max": 11185.048
+          },
+          "delivery_ms": {
+            "min": -82.241,
+            "p50": -0.201,
+            "p95": 219.435,
+            "p99": 432.884,
+            "max": 484.909
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.323419045,
+          "usage": {
+            "cpu_seconds": 60.072159,
+            "cpu_ms_per_message": 3.00360795,
+            "memory_mib": 540.04296875,
+            "peak_memory_mib": 571.78125,
+            "written_mib": 477.140625,
+            "written_kib_per_message": 24.4296
+          },
+          "misses": [
+            "p99 submission 10966 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1500.0,
+          "seconds": 10.0,
+          "attempted": 15000,
+          "accepted": 15000,
+          "accepted_rate": 1500.0,
+          "refused": {},
+          "delivered": 15000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.298,
+            "p50": 1328.623,
+            "p95": 4012.324,
+            "p99": 4371.255,
+            "max": 4589.852
+          },
+          "delivery_ms": {
+            "min": -69.249,
+            "p50": 0.447,
+            "p95": 574.829,
+            "p99": 759.13,
+            "max": 809.222
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.037303793,
+          "usage": {
+            "cpu_seconds": 42.241577,
+            "cpu_ms_per_message": 2.816105133333333,
+            "memory_mib": 583.9140625,
+            "peak_memory_mib": 614.44921875,
+            "written_mib": 345.99609375,
+            "written_kib_per_message": 23.62
+          },
+          "misses": [
+            "p99 submission 4371 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1250.0,
+          "seconds": 10.0,
+          "attempted": 12500,
+          "accepted": 12500,
+          "accepted_rate": 1250.0,
+          "refused": {},
+          "delivered": 12500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.185,
+            "p50": 399.809,
+            "p95": 1048.031,
+            "p99": 1201.438,
+            "max": 1431.441
+          },
+          "delivery_ms": {
+            "min": -45.658,
+            "p50": 3.007,
+            "p95": 1464.277,
+            "p99": 1535.912,
+            "max": 1554.537
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.03666919,
+          "usage": {
+            "cpu_seconds": 33.163185,
+            "cpu_ms_per_message": 2.6530547999999996,
+            "memory_mib": 538.23046875,
+            "peak_memory_mib": 639.41796875,
+            "written_mib": 307.12890625,
+            "written_kib_per_message": 25.16
+          },
+          "misses": [
+            "p99 submission 1201 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1125.0,
+          "seconds": 10.0,
+          "attempted": 11250,
+          "accepted": 11250,
+          "accepted_rate": 1125.0,
+          "refused": {},
+          "delivered": 11250,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.285,
+            "p50": 1001.128,
+            "p95": 2256.227,
+            "p99": 2470.674,
+            "max": 2791.674
+          },
+          "delivery_ms": {
+            "min": -60.779,
+            "p50": -0.238,
+            "p95": 2.353,
+            "p99": 4.86,
+            "max": 11.963
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036014064,
+          "usage": {
+            "cpu_seconds": 35.13677,
+            "cpu_ms_per_message": 3.1232684444444443,
+            "memory_mib": 579.9765625,
+            "peak_memory_mib": 639.41796875,
+            "written_mib": 268.6796875,
+            "written_kib_per_message": 24.45582222222222
+          },
+          "misses": [
+            "p99 submission 2471 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1063.0,
+          "seconds": 10.0,
+          "attempted": 10630,
+          "accepted": 10630,
+          "accepted_rate": 1063.0,
+          "refused": {},
+          "delivered": 10630,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.951,
+            "p50": 107.842,
+            "p95": 608.492,
+            "p99": 748.153,
+            "max": 911.388
+          },
+          "delivery_ms": {
+            "min": -40.131,
+            "p50": 0.679,
+            "p95": 467.64,
+            "p99": 568.935,
+            "max": 614.285
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.037045393,
+          "usage": {
+            "cpu_seconds": 29.652926,
+            "cpu_ms_per_message": 2.7895508936970836,
+            "memory_mib": 571.53125,
+            "peak_memory_mib": 658.21484375,
+            "written_mib": 251.515625,
+            "written_kib_per_message": 24.228786453433678
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1094.0,
+          "seconds": 10.0,
+          "attempted": 10940,
+          "accepted": 10940,
+          "accepted_rate": 1094.0,
+          "refused": {},
+          "delivered": 10940,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.025,
+            "p50": 210.51,
+            "p95": 660.262,
+            "p99": 836.205,
+            "max": 1026.973
+          },
+          "delivery_ms": {
+            "min": -52.866,
+            "p50": 0.228,
+            "p95": 1.746,
+            "p99": 2.404,
+            "max": 5.516
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.03596509,
+          "usage": {
+            "cpu_seconds": 28.644945,
+            "cpu_ms_per_message": 2.618367915904936,
+            "memory_mib": 559.3359375,
+            "peak_memory_mib": 658.21484375,
+            "written_mib": 263.078125,
+            "written_kib_per_message": 24.624497257769654
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1110.0,
+          "seconds": 10.0,
+          "attempted": 11100,
+          "accepted": 11100,
+          "accepted_rate": 1110.0,
+          "refused": {},
+          "delivered": 11100,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.151,
+            "p50": 180.154,
+            "p95": 501.502,
+            "p99": 697.985,
+            "max": 997.831
+          },
+          "delivery_ms": {
+            "min": -59.006,
+            "p50": 0.218,
+            "p95": 1.73,
+            "p99": 2.586,
+            "max": 5.965
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036015663,
+          "usage": {
+            "cpu_seconds": 27.664913,
+            "cpu_ms_per_message": 2.492334504504504,
+            "memory_mib": 591.50390625,
+            "peak_memory_mib": 658.21484375,
+            "written_mib": 265.30078125,
+            "written_kib_per_message": 24.474594594594596
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 1110.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "postfix",
+      "repetition": 1,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 102.153,
+          "p50": 107.66,
+          "p95": 121.116,
+          "p99": 124.12,
+          "max": 191.724
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1661.8670044706057
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 22
+      },
+      "sink_most_open": 22,
+      "hooks": null,
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 3.264,
+          "p50": 3.808,
+          "p95": 4.293,
+          "p99": 4.504,
+          "max": 11.712
+        },
+        "delivery_ms": {
+          "min": 0.73,
+          "p50": 0.786,
+          "p95": 0.852,
+          "p99": 1.234,
+          "max": 27.47
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.035084964,
+        "usage": {
+          "cpu_seconds": 2.737026,
+          "cpu_ms_per_message": 5.474052,
+          "memory_mib": 215.15234375,
+          "peak_memory_mib": 225.0078125,
+          "written_mib": 10.3046875,
+          "written_kib_per_message": 21.104
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.255,
+            "p50": 3.844,
+            "p95": 4.284,
+            "p99": 5.82,
+            "max": 8.089
+          },
+          "delivery_ms": {
+            "min": 0.717,
+            "p50": 0.791,
+            "p95": 0.905,
+            "p99": 5.012,
+            "max": 47.74
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035383046,
+          "usage": {
+            "cpu_seconds": 10.760786,
+            "cpu_ms_per_message": 4.3043144,
+            "memory_mib": 228.71875,
+            "peak_memory_mib": 234.86328125,
+            "written_mib": 49.8515625,
+            "written_kib_per_message": 20.4192
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.616,
+            "p50": 4.318,
+            "p95": 4.843,
+            "p99": 6.361,
+            "max": 13.736
+          },
+          "delivery_ms": {
+            "min": -0.67,
+            "p50": 0.85,
+            "p95": 1.237,
+            "p99": 7.112,
+            "max": 43.94
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035728721,
+          "usage": {
+            "cpu_seconds": 23.107383,
+            "cpu_ms_per_message": 4.621476599999999,
+            "memory_mib": 246.32421875,
+            "peak_memory_mib": 250.73046875,
+            "written_mib": 98.69921875,
+            "written_kib_per_message": 20.2136
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.083,
+            "p50": 3494.643,
+            "p95": 9561.879,
+            "p99": 10321.13,
+            "max": 11179.951
+          },
+          "delivery_ms": {
+            "min": 0.341,
+            "p50": 183.637,
+            "p95": 399.894,
+            "p99": 474.58,
+            "max": 608.553
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.32174836,
+          "usage": {
+            "cpu_seconds": 48.652857,
+            "cpu_ms_per_message": 4.865285699999999,
+            "memory_mib": 318.12109375,
+            "peak_memory_mib": 380.6640625,
+            "written_mib": 204.40234375,
+            "written_kib_per_message": 20.9308
+          },
+          "misses": [
+            "p99 submission 10321 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 750.0,
+          "seconds": 10.0,
+          "attempted": 7500,
+          "accepted": 7500,
+          "accepted_rate": 750.0,
+          "refused": {},
+          "delivered": 7500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.483,
+            "p50": 5.333,
+            "p95": 12.636,
+            "p99": 17.726,
+            "max": 24.643
+          },
+          "delivery_ms": {
+            "min": -1.563,
+            "p50": 1.914,
+            "p95": 14.902,
+            "p99": 46.354,
+            "max": 67.028
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320371351,
+          "usage": {
+            "cpu_seconds": 37.563003,
+            "cpu_ms_per_message": 5.0084004,
+            "memory_mib": 302.61328125,
+            "peak_memory_mib": 380.6640625,
+            "written_mib": 147.65234375,
+            "written_kib_per_message": 20.159466666666667
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 875.0,
+          "seconds": 10.0,
+          "attempted": 8750,
+          "accepted": 8750,
+          "accepted_rate": 875.0,
+          "refused": {},
+          "delivered": 8750,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.945,
+            "p50": 1074.731,
+            "p95": 6751.543,
+            "p99": 7487.395,
+            "max": 8183.717
+          },
+          "delivery_ms": {
+            "min": 0.484,
+            "p50": 187.783,
+            "p95": 397.77,
+            "p99": 463.586,
+            "max": 590.142
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.322305724,
+          "usage": {
+            "cpu_seconds": 42.624358,
+            "cpu_ms_per_message": 4.8713552,
+            "memory_mib": 331.31640625,
+            "peak_memory_mib": 408.53515625,
+            "written_mib": 187.5390625,
+            "written_kib_per_message": 21.94742857142857
+          },
+          "misses": [
+            "p99 submission 7487 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 813.0,
+          "seconds": 10.0,
+          "attempted": 8130,
+          "accepted": 8130,
+          "accepted_rate": 813.0,
+          "refused": {},
+          "delivered": 8130,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.111,
+            "p50": 11.972,
+            "p95": 581.294,
+            "p99": 1118.95,
+            "max": 1702.492
+          },
+          "delivery_ms": {
+            "min": 0.078,
+            "p50": 141.657,
+            "p95": 391.467,
+            "p99": 479.614,
+            "max": 597.631
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320165991,
+          "usage": {
+            "cpu_seconds": 40.465875,
+            "cpu_ms_per_message": 4.977352398523985,
+            "memory_mib": 371.08984375,
+            "peak_memory_mib": 408.53515625,
+            "written_mib": 159.98046875,
+            "written_kib_per_message": 20.150061500615006
+          },
+          "misses": [
+            "p99 submission 1119 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 782.0,
+          "seconds": 10.0,
+          "attempted": 7820,
+          "accepted": 7820,
+          "accepted_rate": 782.0,
+          "refused": {},
+          "delivered": 7820,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.674,
+            "p50": 7.124,
+            "p95": 14.708,
+            "p99": 19.52,
+            "max": 27.324
+          },
+          "delivery_ms": {
+            "min": -1.173,
+            "p50": 3.4,
+            "p95": 33.167,
+            "p99": 51.188,
+            "max": 104.229
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320188541,
+          "usage": {
+            "cpu_seconds": 39.129845,
+            "cpu_ms_per_message": 5.003816496163683,
+            "memory_mib": 336.8515625,
+            "peak_memory_mib": 408.53515625,
+            "written_mib": 170.1875,
+            "written_kib_per_message": 22.28542199488491
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 798.0,
+          "seconds": 10.0,
+          "attempted": 7980,
+          "accepted": 7980,
+          "accepted_rate": 798.0,
+          "refused": {},
+          "delivered": 7980,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.729,
+            "p50": 10.168,
+            "p95": 19.116,
+            "p99": 26.947,
+            "max": 49.047
+          },
+          "delivery_ms": {
+            "min": -1.147,
+            "p50": 20.195,
+            "p95": 89.113,
+            "p99": 118.806,
+            "max": 180.565
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.31995926,
+          "usage": {
+            "cpu_seconds": 39.820487,
+            "cpu_ms_per_message": 4.9900359649122805,
+            "memory_mib": 357.93359375,
+            "peak_memory_mib": 408.53515625,
+            "written_mib": 156.9609375,
+            "written_kib_per_message": 20.141353383458647
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 806.0,
+          "seconds": 10.0,
+          "attempted": 8060,
+          "accepted": 8060,
+          "accepted_rate": 806.0,
+          "refused": {},
+          "delivered": 8060,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.8,
+            "p50": 11.214,
+            "p95": 19.199,
+            "p99": 23.621,
+            "max": 33.563
+          },
+          "delivery_ms": {
+            "min": 0.631,
+            "p50": 54.382,
+            "p95": 117.587,
+            "p99": 146.992,
+            "max": 206.146
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320182927,
+          "usage": {
+            "cpu_seconds": 40.048172,
+            "cpu_ms_per_message": 4.968755831265509,
+            "memory_mib": 378.2578125,
+            "peak_memory_mib": 408.53515625,
+            "written_mib": 158.73046875,
+            "written_kib_per_message": 20.166253101736974
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 806.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "nitromta",
+      "repetition": 1,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 102.574,
+          "p50": 108.337,
+          "p95": 122.105,
+          "p99": 126.018,
+          "max": 194.272
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1662.0383773411322
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 281
+      },
+      "sink_most_open": 32,
+      "hooks": {
+        "batches": 24175,
+        "repeated": 0,
+        "refused": 0,
+        "events": {
+          "accepted": 275821,
+          "delivered": 275820
+        }
+      },
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 2.174,
+          "p50": 2.696,
+          "p95": 3.151,
+          "p99": 3.248,
+          "max": 3.372
+        },
+        "delivery_ms": {
+          "min": 0.168,
+          "p50": 0.181,
+          "p95": 0.246,
+          "p99": 0.301,
+          "max": 3.331
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.03506885,
+        "usage": {
+          "cpu_seconds": 0.68925,
+          "cpu_ms_per_message": 1.3785,
+          "memory_mib": 150.0859375,
+          "peak_memory_mib": 156.05078125,
+          "written_mib": 60.41015625,
+          "written_kib_per_message": 123.72
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.731,
+            "p50": 2.261,
+            "p95": 2.698,
+            "p99": 2.767,
+            "max": 3.041
+          },
+          "delivery_ms": {
+            "min": 0.167,
+            "p50": 0.177,
+            "p95": 0.19,
+            "p99": 0.237,
+            "max": 1.968
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035618948,
+          "usage": {
+            "cpu_seconds": 3.235921,
+            "cpu_ms_per_message": 1.2943684,
+            "memory_mib": 151.58203125,
+            "peak_memory_mib": 157.421875,
+            "written_mib": 301.55078125,
+            "written_kib_per_message": 123.5152
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.02,
+            "p50": 2.57,
+            "p95": 3.095,
+            "p99": 3.176,
+            "max": 3.657
+          },
+          "delivery_ms": {
+            "min": 0.147,
+            "p50": 0.182,
+            "p95": 0.248,
+            "p99": 0.284,
+            "max": 1.877
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.034850746,
+          "usage": {
+            "cpu_seconds": 6.500528,
+            "cpu_ms_per_message": 1.3001056,
+            "memory_mib": 143.171875,
+            "peak_memory_mib": 157.421875,
+            "written_mib": 602.6484375,
+            "written_kib_per_message": 123.4224
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.318,
+            "p50": 1.873,
+            "p95": 2.427,
+            "p99": 2.584,
+            "max": 3.622
+          },
+          "delivery_ms": {
+            "min": 0.143,
+            "p50": 0.195,
+            "p95": 0.338,
+            "p99": 0.626,
+            "max": 1.918
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036001566,
+          "usage": {
+            "cpu_seconds": 13.429404,
+            "cpu_ms_per_message": 1.3429404,
+            "memory_mib": 147.8125,
+            "peak_memory_mib": 157.421875,
+            "written_mib": 1239.20703125,
+            "written_kib_per_message": 126.8948
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 2000.0,
+          "seconds": 10.0,
+          "attempted": 20000,
+          "accepted": 20000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 20000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.258,
+            "p50": 2.281,
+            "p95": 3.426,
+            "p99": 4.115,
+            "max": 5.867
+          },
+          "delivery_ms": {
+            "min": 0.141,
+            "p50": 0.486,
+            "p95": 1.315,
+            "p99": 1.801,
+            "max": 380.607
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.037427023,
+          "usage": {
+            "cpu_seconds": 25.450424,
+            "cpu_ms_per_message": 1.2725212000000001,
+            "memory_mib": 156.58984375,
+            "peak_memory_mib": 162.73828125,
+            "written_mib": 1808.0859375,
+            "written_kib_per_message": 92.574
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 4000.0,
+          "seconds": 10.0,
+          "attempted": 40000,
+          "accepted": 40000,
+          "accepted_rate": 4000.0,
+          "refused": {},
+          "delivered": 40000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.142,
+            "p50": 1644.162,
+            "p95": 3072.655,
+            "p99": 3201.166,
+            "max": 3257.172
+          },
+          "delivery_ms": {
+            "min": -0.276,
+            "p50": 1.514,
+            "p95": 3.326,
+            "p99": 4.332,
+            "max": 761.571
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.324541903,
+          "usage": {
+            "cpu_seconds": 46.782467,
+            "cpu_ms_per_message": 1.169561675,
+            "memory_mib": 175.25,
+            "peak_memory_mib": 182.22265625,
+            "written_mib": 1985.65625,
+            "written_kib_per_message": 50.8328
+          },
+          "misses": [
+            "p99 submission 3201 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3000.0,
+          "seconds": 10.0,
+          "attempted": 30000,
+          "accepted": 30000,
+          "accepted_rate": 3000.0,
+          "refused": {},
+          "delivered": 30000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.438,
+            "p50": 4.923,
+            "p95": 8.411,
+            "p99": 10.103,
+            "max": 13.437
+          },
+          "delivery_ms": {
+            "min": -0.941,
+            "p50": 1.414,
+            "p95": 3.103,
+            "p99": 4.137,
+            "max": 859.587
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.038989226,
+          "usage": {
+            "cpu_seconds": 35.318412,
+            "cpu_ms_per_message": 1.1772804000000001,
+            "memory_mib": 187.84765625,
+            "peak_memory_mib": 191.75390625,
+            "written_mib": 1520.3203125,
+            "written_kib_per_message": 51.8936
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 3500.0,
+          "seconds": 10.0,
+          "attempted": 35000,
+          "accepted": 35000,
+          "accepted_rate": 3500.0,
+          "refused": {},
+          "delivered": 35000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.947,
+            "p50": 785.526,
+            "p95": 1495.615,
+            "p99": 1560.797,
+            "max": 1608.535
+          },
+          "delivery_ms": {
+            "min": -0.656,
+            "p50": 1.534,
+            "p95": 3.355,
+            "p99": 4.534,
+            "max": 977.635
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039066773,
+          "usage": {
+            "cpu_seconds": 41.036514,
+            "cpu_ms_per_message": 1.1724718285714284,
+            "memory_mib": 200.96484375,
+            "peak_memory_mib": 207.36328125,
+            "written_mib": 1735.32421875,
+            "written_kib_per_message": 50.770628571428574
+          },
+          "misses": [
+            "p99 submission 1561 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3250.0,
+          "seconds": 10.0,
+          "attempted": 32500,
+          "accepted": 32500,
+          "accepted_rate": 3250.0,
+          "refused": {},
+          "delivered": 32500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.583,
+            "p50": 392.843,
+            "p95": 707.24,
+            "p99": 745.027,
+            "max": 780.547
+          },
+          "delivery_ms": {
+            "min": -1.741,
+            "p50": 1.541,
+            "p95": 3.335,
+            "p99": 4.454,
+            "max": 930.825
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.038742034,
+          "usage": {
+            "cpu_seconds": 38.11007,
+            "cpu_ms_per_message": 1.1726175384615385,
+            "memory_mib": 213.8671875,
+            "peak_memory_mib": 220.25390625,
+            "written_mib": 1611.625,
+            "written_kib_per_message": 50.77858461538462
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 3375.0,
+          "seconds": 10.0,
+          "attempted": 33750,
+          "accepted": 33750,
+          "accepted_rate": 3375.0,
+          "refused": {},
+          "delivered": 33750,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.061,
+            "p50": 600.199,
+            "p95": 1120.018,
+            "p99": 1173.394,
+            "max": 1211.414
+          },
+          "delivery_ms": {
+            "min": -0.544,
+            "p50": 1.529,
+            "p95": 3.216,
+            "p99": 4.204,
+            "max": 485.113
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039070428,
+          "usage": {
+            "cpu_seconds": 39.689606,
+            "cpu_ms_per_message": 1.1759883259259258,
+            "memory_mib": 226.828125,
+            "peak_memory_mib": 232.796875,
+            "written_mib": 1676.171875,
+            "written_kib_per_message": 50.85629629629629
+          },
+          "misses": [
+            "p99 submission 1173 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3313.0,
+          "seconds": 10.0,
+          "attempted": 33131,
+          "accepted": 33131,
+          "accepted_rate": 3313.1,
+          "refused": {},
+          "delivered": 33131,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.817,
+            "p50": 506.152,
+            "p95": 932.628,
+            "p99": 974.683,
+            "max": 1021.863
+          },
+          "delivery_ms": {
+            "min": -0.651,
+            "p50": 1.484,
+            "p95": 3.294,
+            "p99": 4.473,
+            "max": 491.029
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.038244915,
+          "usage": {
+            "cpu_seconds": 38.832605,
+            "cpu_ms_per_message": 1.1720927530107754,
+            "memory_mib": 239.4453125,
+            "peak_memory_mib": 245.36328125,
+            "written_mib": 1659.26953125,
+            "written_kib_per_message": 51.284054209048925
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 3344.0,
+          "seconds": 10.0,
+          "attempted": 33440,
+          "accepted": 33440,
+          "accepted_rate": 3344.0,
+          "refused": {},
+          "delivered": 33440,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.361,
+            "p50": 556.984,
+            "p95": 1073.597,
+            "p99": 1121.642,
+            "max": 1173.242
+          },
+          "delivery_ms": {
+            "min": -0.344,
+            "p50": 1.498,
+            "p95": 3.246,
+            "p99": 4.272,
+            "max": 621.716
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039465401,
+          "usage": {
+            "cpu_seconds": 39.31737,
+            "cpu_ms_per_message": 1.1757586722488036,
+            "memory_mib": 251.82421875,
+            "peak_memory_mib": 257.734375,
+            "written_mib": 1679.15234375,
+            "written_kib_per_message": 51.41901913875598
+          },
+          "misses": [
+            "p99 submission 1122 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 3313.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "nitromta",
+      "repetition": 2,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 104.312,
+          "p50": 108.629,
+          "p95": 113.899,
+          "p99": 117.353,
+          "max": 196.76
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1661.8417465526848
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 283
+      },
+      "sink_most_open": 39,
+      "hooks": {
+        "batches": 24978,
+        "repeated": 0,
+        "refused": 0,
+        "events": {
+          "accepted": 275201,
+          "delivered": 275201
+        }
+      },
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 2.23,
+          "p50": 2.762,
+          "p95": 3.214,
+          "p99": 3.29,
+          "max": 3.522
+        },
+        "delivery_ms": {
+          "min": 0.167,
+          "p50": 0.179,
+          "p95": 0.242,
+          "p99": 0.291,
+          "max": 3.331
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.035007534,
+        "usage": {
+          "cpu_seconds": 0.688147,
+          "cpu_ms_per_message": 1.376294,
+          "memory_mib": 152.1796875,
+          "peak_memory_mib": 161.4375,
+          "written_mib": 60.390625,
+          "written_kib_per_message": 123.68
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.531,
+            "p50": 2.071,
+            "p95": 2.525,
+            "p99": 2.576,
+            "max": 2.878
+          },
+          "delivery_ms": {
+            "min": 0.163,
+            "p50": 0.173,
+            "p95": 0.185,
+            "p99": 0.227,
+            "max": 1.945
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.034932497,
+          "usage": {
+            "cpu_seconds": 3.206724,
+            "cpu_ms_per_message": 1.2826895999999999,
+            "memory_mib": 153.203125,
+            "peak_memory_mib": 161.4375,
+            "written_mib": 301.65234375,
+            "written_kib_per_message": 123.5568
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.1,
+            "p50": 2.681,
+            "p95": 3.156,
+            "p99": 3.235,
+            "max": 3.489
+          },
+          "delivery_ms": {
+            "min": 0.144,
+            "p50": 0.179,
+            "p95": 0.242,
+            "p99": 0.316,
+            "max": 1.926
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035545592,
+          "usage": {
+            "cpu_seconds": 6.468118,
+            "cpu_ms_per_message": 1.2936235999999999,
+            "memory_mib": 156.0,
+            "peak_memory_mib": 161.65625,
+            "written_mib": 601.3203125,
+            "written_kib_per_message": 123.1504
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.9,
+            "p50": 2.462,
+            "p95": 3.021,
+            "p99": 3.179,
+            "max": 4.345
+          },
+          "delivery_ms": {
+            "min": 0.132,
+            "p50": 0.192,
+            "p95": 0.339,
+            "p99": 0.561,
+            "max": 1.822
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036418399,
+          "usage": {
+            "cpu_seconds": 13.397714,
+            "cpu_ms_per_message": 1.3397714,
+            "memory_mib": 160.1640625,
+            "peak_memory_mib": 166.3359375,
+            "written_mib": 1237.671875,
+            "written_kib_per_message": 126.7376
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 2000.0,
+          "seconds": 10.0,
+          "attempted": 20000,
+          "accepted": 20000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 20000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.326,
+            "p50": 2.339,
+            "p95": 3.469,
+            "p99": 4.099,
+            "max": 7.157
+          },
+          "delivery_ms": {
+            "min": 0.17,
+            "p50": 0.48,
+            "p95": 1.332,
+            "p99": 1.841,
+            "max": 4.04
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.03762664,
+          "usage": {
+            "cpu_seconds": 25.40087,
+            "cpu_ms_per_message": 1.2700435,
+            "memory_mib": 168.375,
+            "peak_memory_mib": 174.7421875,
+            "written_mib": 1803.8671875,
+            "written_kib_per_message": 92.358
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 4000.0,
+          "seconds": 10.0,
+          "attempted": 40000,
+          "accepted": 40000,
+          "accepted_rate": 4000.0,
+          "refused": {},
+          "delivered": 40000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.544,
+            "p50": 1648.651,
+            "p95": 3097.25,
+            "p99": 3226.016,
+            "max": 3280.035
+          },
+          "delivery_ms": {
+            "min": -1.055,
+            "p50": 1.507,
+            "p95": 3.292,
+            "p99": 4.358,
+            "max": 996.565
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.041263209,
+          "usage": {
+            "cpu_seconds": 46.86008,
+            "cpu_ms_per_message": 1.171502,
+            "memory_mib": 187.3515625,
+            "peak_memory_mib": 191.29296875,
+            "written_mib": 2003.3359375,
+            "written_kib_per_message": 51.2854
+          },
+          "misses": [
+            "p99 submission 3226 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3000.0,
+          "seconds": 10.0,
+          "attempted": 30000,
+          "accepted": 30000,
+          "accepted_rate": 3000.0,
+          "refused": {},
+          "delivered": 30000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.736,
+            "p50": 5.516,
+            "p95": 9.56,
+            "p99": 11.294,
+            "max": 15.154
+          },
+          "delivery_ms": {
+            "min": -0.01,
+            "p50": 1.405,
+            "p95": 3.088,
+            "p99": 4.091,
+            "max": 6.213
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.038879744,
+          "usage": {
+            "cpu_seconds": 35.214508,
+            "cpu_ms_per_message": 1.1738169333333335,
+            "memory_mib": 199.5,
+            "peak_memory_mib": 204.1171875,
+            "written_mib": 1529.4765625,
+            "written_kib_per_message": 52.206133333333334
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 3500.0,
+          "seconds": 10.0,
+          "attempted": 35000,
+          "accepted": 35000,
+          "accepted_rate": 3500.0,
+          "refused": {},
+          "delivered": 35000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.591,
+            "p50": 832.652,
+            "p95": 1562.412,
+            "p99": 1625.974,
+            "max": 1661.139
+          },
+          "delivery_ms": {
+            "min": -0.613,
+            "p50": 1.517,
+            "p95": 3.332,
+            "p99": 4.368,
+            "max": 788.583
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039745245,
+          "usage": {
+            "cpu_seconds": 41.020196,
+            "cpu_ms_per_message": 1.1720055999999999,
+            "memory_mib": 212.71875,
+            "peak_memory_mib": 217.75390625,
+            "written_mib": 1744.7421875,
+            "written_kib_per_message": 51.04617142857143
+          },
+          "misses": [
+            "p99 submission 1626 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3250.0,
+          "seconds": 10.0,
+          "attempted": 32500,
+          "accepted": 32500,
+          "accepted_rate": 3250.0,
+          "refused": {},
+          "delivered": 32500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.937,
+            "p50": 398.206,
+            "p95": 746.436,
+            "p99": 784.064,
+            "max": 817.281
+          },
+          "delivery_ms": {
+            "min": -0.93,
+            "p50": 1.527,
+            "p95": 3.281,
+            "p99": 4.248,
+            "max": 372.785
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039371336,
+          "usage": {
+            "cpu_seconds": 38.115922,
+            "cpu_ms_per_message": 1.1727976,
+            "memory_mib": 224.67578125,
+            "peak_memory_mib": 231.0859375,
+            "written_mib": 1618.453125,
+            "written_kib_per_message": 50.993723076923075
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 3375.0,
+          "seconds": 10.0,
+          "attempted": 33750,
+          "accepted": 33750,
+          "accepted_rate": 3375.0,
+          "refused": {},
+          "delivered": 33750,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.601,
+            "p50": 596.775,
+            "p95": 1137.855,
+            "p99": 1191.084,
+            "max": 1241.102
+          },
+          "delivery_ms": {
+            "min": -1.198,
+            "p50": 1.482,
+            "p95": 3.201,
+            "p99": 4.224,
+            "max": 641.562
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039506216,
+          "usage": {
+            "cpu_seconds": 39.429139,
+            "cpu_ms_per_message": 1.1682707851851852,
+            "memory_mib": 237.7734375,
+            "peak_memory_mib": 241.84765625,
+            "written_mib": 1695.44140625,
+            "written_kib_per_message": 51.440948148148145
+          },
+          "misses": [
+            "p99 submission 1191 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3313.0,
+          "seconds": 10.0,
+          "attempted": 33131,
+          "accepted": 33131,
+          "accepted_rate": 3313.1,
+          "refused": {},
+          "delivered": 33131,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.362,
+            "p50": 508.144,
+            "p95": 967.098,
+            "p99": 1009.063,
+            "max": 1062.789
+          },
+          "delivery_ms": {
+            "min": -1.233,
+            "p50": 1.477,
+            "p95": 3.211,
+            "p99": 4.289,
+            "max": 540.246
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039812207,
+          "usage": {
+            "cpu_seconds": 38.702146,
+            "cpu_ms_per_message": 1.1681550813437567,
+            "memory_mib": 256.5,
+            "peak_memory_mib": 260.33203125,
+            "written_mib": 1661.18359375,
+            "written_kib_per_message": 51.34321330475989
+          },
+          "misses": [
+            "p99 submission 1009 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 3282.0,
+          "seconds": 10.0,
+          "attempted": 32820,
+          "accepted": 32820,
+          "accepted_rate": 3282.0,
+          "refused": {},
+          "delivered": 32820,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.251,
+            "p50": 452.338,
+            "p95": 867.453,
+            "p99": 912.234,
+            "max": 955.164
+          },
+          "delivery_ms": {
+            "min": -0.25,
+            "p50": 1.472,
+            "p95": 3.232,
+            "p99": 4.437,
+            "max": 698.282
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.039283067,
+          "usage": {
+            "cpu_seconds": 38.362688,
+            "cpu_ms_per_message": 1.1688814137720902,
+            "memory_mib": 274.30078125,
+            "peak_memory_mib": 280.48046875,
+            "written_mib": 1650.5,
+            "written_kib_per_message": 51.49640463132236
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 3282.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "postfix",
+      "repetition": 2,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 103.283,
+          "p50": 109.183,
+          "p95": 123.104,
+          "p99": 125.721,
+          "max": 241.44
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1661.716250263532
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 27
+      },
+      "sink_most_open": 27,
+      "hooks": null,
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 3.26,
+          "p50": 3.867,
+          "p95": 4.314,
+          "p99": 4.518,
+          "max": 11.791
+        },
+        "delivery_ms": {
+          "min": 0.715,
+          "p50": 0.787,
+          "p95": 0.852,
+          "p99": 0.972,
+          "max": 26.962
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.034324043,
+        "usage": {
+          "cpu_seconds": 2.743223,
+          "cpu_ms_per_message": 5.486446,
+          "memory_mib": 214.94921875,
+          "peak_memory_mib": 224.828125,
+          "written_mib": 10.2734375,
+          "written_kib_per_message": 21.04
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.084,
+            "p50": 3.659,
+            "p95": 4.13,
+            "p99": 5.671,
+            "max": 8.7
+          },
+          "delivery_ms": {
+            "min": 0.718,
+            "p50": 0.789,
+            "p95": 0.861,
+            "p99": 4.829,
+            "max": 44.695
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.03518815,
+          "usage": {
+            "cpu_seconds": 10.783994,
+            "cpu_ms_per_message": 4.3135976000000005,
+            "memory_mib": 228.92578125,
+            "peak_memory_mib": 235.2890625,
+            "written_mib": 49.828125,
+            "written_kib_per_message": 20.4096
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.989,
+            "p50": 4.723,
+            "p95": 5.245,
+            "p99": 7.073,
+            "max": 13.359
+          },
+          "delivery_ms": {
+            "min": -1.144,
+            "p50": 0.836,
+            "p95": 1.295,
+            "p99": 7.411,
+            "max": 50.163
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.319519829,
+          "usage": {
+            "cpu_seconds": 23.132785,
+            "cpu_ms_per_message": 4.626557,
+            "memory_mib": 242.70703125,
+            "peak_memory_mib": 250.375,
+            "written_mib": 98.7421875,
+            "written_kib_per_message": 20.2224
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.923,
+            "p50": 3174.568,
+            "p95": 9789.398,
+            "p99": 10628.88,
+            "max": 11497.577
+          },
+          "delivery_ms": {
+            "min": 0.19,
+            "p50": 177.951,
+            "p95": 396.818,
+            "p99": 477.404,
+            "max": 570.968
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.321054,
+          "usage": {
+            "cpu_seconds": 48.771542,
+            "cpu_ms_per_message": 4.8771542,
+            "memory_mib": 316.7578125,
+            "peak_memory_mib": 376.79296875,
+            "written_mib": 204.51171875,
+            "written_kib_per_message": 20.942
+          },
+          "misses": [
+            "p99 submission 10629 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 750.0,
+          "seconds": 10.0,
+          "attempted": 7500,
+          "accepted": 7500,
+          "accepted_rate": 750.0,
+          "refused": {},
+          "delivered": 7500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.485,
+            "p50": 5.401,
+            "p95": 12.334,
+            "p99": 16.804,
+            "max": 29.748
+          },
+          "delivery_ms": {
+            "min": -0.486,
+            "p50": 1.958,
+            "p95": 16.337,
+            "p99": 45.461,
+            "max": 78.167
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.319254921,
+          "usage": {
+            "cpu_seconds": 37.506233,
+            "cpu_ms_per_message": 5.000831066666667,
+            "memory_mib": 295.86328125,
+            "peak_memory_mib": 376.79296875,
+            "written_mib": 147.640625,
+            "written_kib_per_message": 20.157866666666667
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 875.0,
+          "seconds": 10.0,
+          "attempted": 8750,
+          "accepted": 8750,
+          "accepted_rate": 875.0,
+          "refused": {},
+          "delivered": 8750,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.047,
+            "p50": 50.341,
+            "p95": 6352.297,
+            "p99": 7388.24,
+            "max": 8216.199
+          },
+          "delivery_ms": {
+            "min": 0.008,
+            "p50": 178.579,
+            "p95": 401.384,
+            "p99": 489.265,
+            "max": 635.335
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.321254614,
+          "usage": {
+            "cpu_seconds": 42.912085,
+            "cpu_ms_per_message": 4.904238285714285,
+            "memory_mib": 353.88671875,
+            "peak_memory_mib": 400.90234375,
+            "written_mib": 186.8359375,
+            "written_kib_per_message": 21.865142857142857
+          },
+          "misses": [
+            "p99 submission 7388 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 813.0,
+          "seconds": 10.0,
+          "attempted": 8130,
+          "accepted": 8130,
+          "accepted_rate": 813.0,
+          "refused": {},
+          "delivered": 8130,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.958,
+            "p50": 12.487,
+            "p95": 1264.853,
+            "p99": 1929.399,
+            "max": 2779.309
+          },
+          "delivery_ms": {
+            "min": 0.274,
+            "p50": 159.422,
+            "p95": 401.165,
+            "p99": 493.372,
+            "max": 618.866
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035512359,
+          "usage": {
+            "cpu_seconds": 40.441704,
+            "cpu_ms_per_message": 4.9743793357933574,
+            "memory_mib": 381.7578125,
+            "peak_memory_mib": 400.90234375,
+            "written_mib": 160.09765625,
+            "written_kib_per_message": 20.16482164821648
+          },
+          "misses": [
+            "p99 submission 1929 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 782.0,
+          "seconds": 10.0,
+          "attempted": 7820,
+          "accepted": 7820,
+          "accepted_rate": 782.0,
+          "refused": {},
+          "delivered": 7820,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.47,
+            "p50": 7.393,
+            "p95": 17.226,
+            "p99": 24.232,
+            "max": 43.521
+          },
+          "delivery_ms": {
+            "min": -1.152,
+            "p50": 3.62,
+            "p95": 45.064,
+            "p99": 65.583,
+            "max": 122.993
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.320999699,
+          "usage": {
+            "cpu_seconds": 39.233139,
+            "cpu_ms_per_message": 5.017025447570333,
+            "memory_mib": 347.34375,
+            "peak_memory_mib": 400.90234375,
+            "written_mib": 169.21484375,
+            "written_kib_per_message": 22.158056265984655
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 798.0,
+          "seconds": 10.0,
+          "attempted": 7980,
+          "accepted": 7980,
+          "accepted_rate": 798.0,
+          "refused": {},
+          "delivered": 7980,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.745,
+            "p50": 10.222,
+            "p95": 18.359,
+            "p99": 23.674,
+            "max": 36.737
+          },
+          "delivery_ms": {
+            "min": -1.236,
+            "p50": 17.141,
+            "p95": 75.599,
+            "p99": 102.721,
+            "max": 177.183
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035663984,
+          "usage": {
+            "cpu_seconds": 39.854881,
+            "cpu_ms_per_message": 4.994345989974938,
+            "memory_mib": 344.19140625,
+            "peak_memory_mib": 400.90234375,
+            "written_mib": 157.1484375,
+            "written_kib_per_message": 20.165413533834588
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 806.0,
+          "seconds": 10.0,
+          "attempted": 8060,
+          "accepted": 8060,
+          "accepted_rate": 806.0,
+          "refused": {},
+          "delivered": 8060,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.985,
+            "p50": 11.475,
+            "p95": 19.888,
+            "p99": 25.53,
+            "max": 41.106
+          },
+          "delivery_ms": {
+            "min": -2.657,
+            "p50": 117.716,
+            "p95": 317.595,
+            "p99": 401.691,
+            "max": 529.863
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.321359627,
+          "usage": {
+            "cpu_seconds": 40.262298,
+            "cpu_ms_per_message": 4.995322332506204,
+            "memory_mib": 387.72265625,
+            "peak_memory_mib": 400.90234375,
+            "written_mib": 158.640625,
+            "written_kib_per_message": 20.15483870967742
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 806.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "kumomta",
+      "repetition": 2,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 104.838,
+          "p50": 107.616,
+          "p95": 109.6,
+          "p99": 114.26,
+          "max": 191.534
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1661.2768386171142
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 107
+      },
+      "sink_most_open": 64,
+      "hooks": null,
+      "throttled_sink": null,
+      "release": null,
+      "backlog": null,
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 2.812,
+          "p50": 3.382,
+          "p95": 3.836,
+          "p99": 4.218,
+          "max": 8.291
+        },
+        "delivery_ms": {
+          "min": 0.165,
+          "p50": 1.221,
+          "p95": 1.236,
+          "p99": 1.261,
+          "max": 3.398
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.034839771,
+        "usage": {
+          "cpu_seconds": 1.168243,
+          "cpu_ms_per_message": 2.336486,
+          "memory_mib": 170.27734375,
+          "peak_memory_mib": 176.45703125,
+          "written_mib": 12.37890625,
+          "written_kib_per_message": 25.352
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 250.0,
+          "seconds": 10.0,
+          "attempted": 2500,
+          "accepted": 2500,
+          "accepted_rate": 250.0,
+          "refused": {},
+          "delivered": 2500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.926,
+            "p50": 2.458,
+            "p95": 2.925,
+            "p99": 3.312,
+            "max": 4.305
+          },
+          "delivery_ms": {
+            "min": -0.797,
+            "p50": 1.218,
+            "p95": 1.232,
+            "p99": 1.243,
+            "max": 2.295
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.034941256,
+          "usage": {
+            "cpu_seconds": 5.515753,
+            "cpu_ms_per_message": 2.2063012,
+            "memory_mib": 274.86328125,
+            "peak_memory_mib": 281.29296875,
+            "written_mib": 61.921875,
+            "written_kib_per_message": 25.3632
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 500.0,
+          "seconds": 10.0,
+          "attempted": 5000,
+          "accepted": 5000,
+          "accepted_rate": 500.0,
+          "refused": {},
+          "delivered": 5000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.048,
+            "p50": 2.371,
+            "p95": 3.156,
+            "p99": 3.481,
+            "max": 10.619
+          },
+          "delivery_ms": {
+            "min": 0.163,
+            "p50": 1.243,
+            "p95": 1.509,
+            "p99": 1.697,
+            "max": 5.037
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035518772,
+          "usage": {
+            "cpu_seconds": 11.448122,
+            "cpu_ms_per_message": 2.2896243999999997,
+            "memory_mib": 445.50390625,
+            "peak_memory_mib": 539.48046875,
+            "written_mib": 124.0,
+            "written_kib_per_message": 25.3952
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1000.0,
+          "seconds": 10.0,
+          "attempted": 10000,
+          "accepted": 10000,
+          "accepted_rate": 1000.0,
+          "refused": {},
+          "delivered": 10000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.351,
+            "p50": 2.843,
+            "p95": 4.55,
+            "p99": 25.242,
+            "max": 35.657
+          },
+          "delivery_ms": {
+            "min": -2.022,
+            "p50": 1.257,
+            "p95": 2.112,
+            "p99": 2.856,
+            "max": 8.391
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036176464,
+          "usage": {
+            "cpu_seconds": 23.670704,
+            "cpu_ms_per_message": 2.3670704000000002,
+            "memory_mib": 492.17578125,
+            "peak_memory_mib": 623.78515625,
+            "written_mib": 247.6796875,
+            "written_kib_per_message": 25.3624
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 2000.0,
+          "seconds": 10.0,
+          "attempted": 20000,
+          "accepted": 20000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 20000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 3.023,
+            "p50": 3515.407,
+            "p95": 7830.967,
+            "p99": 8048.748,
+            "max": 8245.924
+          },
+          "delivery_ms": {
+            "min": -81.572,
+            "p50": 0.76,
+            "p95": 1124.881,
+            "p99": 1343.762,
+            "max": 1404.916
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.323018435,
+          "usage": {
+            "cpu_seconds": 52.989708,
+            "cpu_ms_per_message": 2.6494854,
+            "memory_mib": 548.7421875,
+            "peak_memory_mib": 623.78515625,
+            "written_mib": 469.1171875,
+            "written_kib_per_message": 24.0188
+          },
+          "misses": [
+            "p99 submission 8049 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1500.0,
+          "seconds": 10.0,
+          "attempted": 15000,
+          "accepted": 15000,
+          "accepted_rate": 1500.0,
+          "refused": {},
+          "delivered": 15000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.131,
+            "p50": 3218.147,
+            "p95": 6346.57,
+            "p99": 6709.557,
+            "max": 7025.726
+          },
+          "delivery_ms": {
+            "min": -75.017,
+            "p50": -0.316,
+            "p95": 1.901,
+            "p99": 23.321,
+            "max": 46.409
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.03699152,
+          "usage": {
+            "cpu_seconds": 47.576814,
+            "cpu_ms_per_message": 3.1717876,
+            "memory_mib": 551.65625,
+            "peak_memory_mib": 623.78515625,
+            "written_mib": 359.80078125,
+            "written_kib_per_message": 24.5624
+          },
+          "misses": [
+            "p99 submission 6710 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1250.0,
+          "seconds": 10.0,
+          "attempted": 12500,
+          "accepted": 12500,
+          "accepted_rate": 1250.0,
+          "refused": {},
+          "delivered": 12500,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.244,
+            "p50": 664.322,
+            "p95": 1588.354,
+            "p99": 1830.994,
+            "max": 2122.728
+          },
+          "delivery_ms": {
+            "min": -65.562,
+            "p50": 1.158,
+            "p95": 790.09,
+            "p99": 915.955,
+            "max": 970.898
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036104009,
+          "usage": {
+            "cpu_seconds": 35.075256,
+            "cpu_ms_per_message": 2.80602048,
+            "memory_mib": 531.875,
+            "peak_memory_mib": 623.78515625,
+            "written_mib": 291.03515625,
+            "written_kib_per_message": 23.8416
+          },
+          "misses": [
+            "p99 submission 1831 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1125.0,
+          "seconds": 10.0,
+          "attempted": 11250,
+          "accepted": 11250,
+          "accepted_rate": 1125.0,
+          "refused": {},
+          "delivered": 11250,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.147,
+            "p50": 985.812,
+            "p95": 1712.911,
+            "p99": 1947.365,
+            "max": 2248.794
+          },
+          "delivery_ms": {
+            "min": -66.875,
+            "p50": 0.038,
+            "p95": 1017.142,
+            "p99": 1139.176,
+            "max": 1178.184
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.035921197,
+          "usage": {
+            "cpu_seconds": 32.748735,
+            "cpu_ms_per_message": 2.910998666666667,
+            "memory_mib": 623.88671875,
+            "peak_memory_mib": 630.296875,
+            "written_mib": 293.16796875,
+            "written_kib_per_message": 26.6848
+          },
+          "misses": [
+            "p99 submission 1947 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1063.0,
+          "seconds": 10.0,
+          "attempted": 10630,
+          "accepted": 10630,
+          "accepted_rate": 1063.0,
+          "refused": {},
+          "delivered": 10630,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 2.217,
+            "p50": 522.112,
+            "p95": 1415.462,
+            "p99": 1555.16,
+            "max": 1928.257
+          },
+          "delivery_ms": {
+            "min": -23.561,
+            "p50": -0.003,
+            "p95": 2.629,
+            "p99": 4.044,
+            "max": 8.009
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036002541,
+          "usage": {
+            "cpu_seconds": 32.587107,
+            "cpu_ms_per_message": 3.0655792097836314,
+            "memory_mib": 567.04296875,
+            "peak_memory_mib": 649.2578125,
+            "written_mib": 255.96875,
+            "written_kib_per_message": 24.657761053621826
+          },
+          "misses": [
+            "p99 submission 1555 ms is over the 1000 ms budget"
+          ],
+          "errors": []
+        },
+        {
+          "offered_rate": 1032.0,
+          "seconds": 10.0,
+          "attempted": 10320,
+          "accepted": 10320,
+          "accepted_rate": 1032.0,
+          "refused": {},
+          "delivered": 10320,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.947,
+            "p50": 2.924,
+            "p95": 5.403,
+            "p99": 22.019,
+            "max": 37.974
+          },
+          "delivery_ms": {
+            "min": -6.649,
+            "p50": 1.303,
+            "p95": 2.161,
+            "p99": 3.096,
+            "max": 8.005
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036065249,
+          "usage": {
+            "cpu_seconds": 24.59826,
+            "cpu_ms_per_message": 2.383552325581395,
+            "memory_mib": 502.01171875,
+            "peak_memory_mib": 651.4921875,
+            "written_mib": 254.0625,
+            "written_kib_per_message": 25.209302325581394
+          },
+          "misses": [],
+          "errors": []
+        },
+        {
+          "offered_rate": 1048.0,
+          "seconds": 10.0,
+          "attempted": 10480,
+          "accepted": 10480,
+          "accepted_rate": 1048.0,
+          "refused": {},
+          "delivered": 10480,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.903,
+            "p50": 2.9,
+            "p95": 4.417,
+            "p99": 5.605,
+            "max": 10.806
+          },
+          "delivery_ms": {
+            "min": -0.9,
+            "p50": 1.302,
+            "p95": 2.171,
+            "p99": 3.231,
+            "max": 5.516
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.036328154,
+          "usage": {
+            "cpu_seconds": 24.801385,
+            "cpu_ms_per_message": 2.3665443702290077,
+            "memory_mib": 483.40625,
+            "peak_memory_mib": 651.4921875,
+            "written_mib": 257.9140625,
+            "written_kib_per_message": 25.200763358778627
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 1048.0,
+      "limited_by": null,
+      "error": null
+    }
+  ],
+  "summary": [
+    {
+      "system": "nitromta",
+      "durability": "sync",
+      "rates": [
+        3313.0,
+        3313.0,
+        3282.0
+      ],
+      "median_rate": 3313.0,
+      "ratios": {
+        "kumomta": 3.161259541984733,
+        "postfix": 4.110421836228288
+      },
+      "cpu_ms_per_message": [
+        1.1647817753765355,
+        1.1720927530107754,
+        1.1688814137720902
+      ],
+      "submit_p99_ms": [
+        950.655,
+        974.683,
+        912.234
+      ],
+      "delivery_p99_ms": [
+        4.376,
+        4.473,
+        4.437
+      ]
+    },
+    {
+      "system": "postfix",
+      "durability": "sync",
+      "rates": [
+        813.0,
+        806.0,
+        806.0
+      ],
+      "median_rate": 806.0,
+      "ratios": {
+        "kumomta": 0.7690839694656488,
+        "nitromta": 0.243284032598853
+      },
+      "cpu_ms_per_message": [
+        4.959619557195572,
+        4.968755831265509,
+        4.995322332506204
+      ],
+      "submit_p99_ms": [
+        659.191,
+        23.621,
+        25.53
+      ],
+      "delivery_p99_ms": [
+        456.998,
+        146.992,
+        401.691
+      ]
+    },
+    {
+      "system": "kumomta",
+      "durability": "sync",
+      "rates": [
+        1048.0,
+        1110.0,
+        1048.0
+      ],
+      "median_rate": 1048.0,
+      "ratios": {
+        "nitromta": 0.31632961062481135,
+        "postfix": 1.3002481389578164
+      },
+      "cpu_ms_per_message": [
+        2.958469179389313,
+        2.492334504504504,
+        2.3665443702290077
+      ],
+      "submit_p99_ms": [
+        734.046,
+        697.985,
+        5.605
+      ],
+      "delivery_p99_ms": [
+        525.536,
+        2.586,
+        3.231
+      ]
+    }
+  ],
+  "limitations": [
+    "Each system's durability is set in its configuration and inspected in its source, but not yet proven by a crash test.",
+    "The quick profile measures each system for minutes on one machine in one session: its ratios hold for that machine, labelled with it; sustained runs, the million-recipient backlog and the aged store belong to the full profile, which is not built yet."
+  ]
+}
