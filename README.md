@@ -1,6 +1,6 @@
 <div align="center">
 
-<img alt="NitroMTA" src="docs/assets/brand/logo-vermilion.svg" width="380">
+<img alt="NitroMTA" src="docs/assets/brand/logo-light.svg" width="380">
 
 <h3>The open-source Amazon SES replacement.</h3>
 
