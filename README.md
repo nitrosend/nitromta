@@ -1,10 +1,6 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.svg">
-  <img alt="NitroMTA" src="docs/assets/brand/logo-light.svg" width="380">
-</picture>
+<img alt="NitroMTA" src="docs/assets/brand/logo-vermilion.svg" width="380">
 
 <h3>The open-source Amazon SES replacement.</h3>
 
