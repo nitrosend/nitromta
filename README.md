@@ -1,21 +1,25 @@
-# NitroMTA
+<div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/hero-dark.jpg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/hero-light.jpg">
-  <img alt="NitroMTA. Your mail. Your metal. The open-source Amazon SES replacement. Built in Rust, self-hosted, Apache-2.0." src="docs/assets/brand/hero-light.jpg" width="1100">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/logo-light.svg">
+  <img alt="NitroMTA" src="docs/assets/brand/logo-light.svg" width="380">
 </picture>
 
-**The open-source Amazon SES replacement. Built in Rust.**
+<h3>The open-source Amazon SES replacement.</h3>
 
-[Nitrosend](https://nitrosend.com)'s mail delivery engine, open sourced.
+[Nitrosend](https://nitrosend.com)'s mail delivery engine, open sourced and built in Rust.<br>
+Keep your SES code, change the endpoint, and deliver from IP addresses you control.
 
-[Try locally](#try-it) · [Run it on your servers](#run-it-on-your-own-servers) · [Benchmarks](#benchmarks) · [Compatibility](docs/compatibility.md)
+[![CI](https://img.shields.io/github/actions/workflow/status/nitrosend/nitromta/check.yml?branch=main&style=flat-square&label=ci&labelColor=111&color=111)](https://github.com/nitrosend/nitromta/actions/workflows/check.yml)
+[![Release](https://img.shields.io/github/v/release/nitrosend/nitromta?style=flat-square&label=release&labelColor=111&color=111)](https://github.com/nitrosend/nitromta/releases/latest)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-111?style=flat-square)](LICENSE)
 
-A self-hosted mail delivery engine that speaks the Amazon SES v2 API. Point
-an application built for SES, or any SMTP client, at it by changing the
-endpoint and credentials, and it delivers your mail directly from IP
-addresses you control.
+[Try it](#try-it) · [Run it on your servers](#run-it-on-your-own-servers) · [Benchmarks](#benchmarks) · [Compatibility](docs/compatibility.md) · [nitromta.com](https://nitromta.com)
+
+</div>
+
+<br>
 
 - **SES v2 compatible:** `SendEmail`, `SendBulkEmail`, email templates,
   identities, configuration sets, tenants, the suppression list, dedicated

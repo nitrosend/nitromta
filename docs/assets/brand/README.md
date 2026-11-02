@@ -9,7 +9,6 @@ graphite (`#181614`) and chalk (`#F5F2EC`).
   dark surfaces. Use at 160 px wide or larger.
 - `mark.svg`: standalone symbol. Use at 24 px wide or larger.
 - `avatar.svg` and `avatar.png`: square identity for repository avatars.
-- `hero-light.jpg` and `hero-dark.jpg`: README banners, 2172 × 724.
 - `delivery-path-light.svg` and `delivery-path-dark.svg`: the product's
   submission and direct-delivery path.
 - `social-card.png` and `social-card.svg`: repository social preview and
@@ -26,5 +25,5 @@ SIL Open Font License. No font software is bundled in this directory.
 
 The main README uses the
 [GitHub picture pattern](https://github.blog/changelog/2022-08-15-specify-theme-context-for-images-in-markdown-ga/)
-to select a banner by color scheme. Its prose and image alternatives carry
+to select a wordmark by color scheme. Its prose and image alternatives carry
 the product description independently of the artwork.
