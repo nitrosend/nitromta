@@ -1,0 +1,10 @@
+{
+  "name": "nitromta-sdk-javascript",
+  "private": true,
+  "description": "The official SES v2 SDK for JavaScript, and Nodemailer's SES transport, against the engine.",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "3.1152.0",
+    "nodemailer": "10.1.1"
+  }
+}

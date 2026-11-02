@@ -108,6 +108,13 @@ its IP's warmup; with `[feedback] trusted = "authenticated"`, only one
 whose DKIM signature verifies for a reporter enrolled in
 `[feedback] reporters` does, and any other is recorded as an event alone.
 
+## The SDKs, tested
+
+`cargo xtask sdk` runs the official SES v2 SDKs, pinned, against the
+engine: `@aws-sdk/client-sesv2` and Nodemailer's SES transport in
+JavaScript, `boto3` and django-ses in Python, and `aws-sdk-sesv2` in Ruby.
+[`sdk/README.md`](../sdk/README.md) lists the scenario each runs.
+
 ## Where the engine differs from SES
 
 - **Identities.** `CreateEmailIdentity` creates domain identities alone,

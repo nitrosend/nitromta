@@ -19,8 +19,8 @@ addresses you control.
 
 - **SES v2 compatible:** `SendEmail`, `SendBulkEmail`, email templates,
   identities, configuration sets, tenants, the suppression list, dedicated
-  IPs and SES-shaped events through an SNS subset. See
-  [compatibility](docs/compatibility.md).
+  IPs and SES-shaped events through an SNS subset, tested with the official
+  SDKs. See [compatibility](docs/compatibility.md).
 - **Durable:** a submission is answered only once it is committed to disk,
   and survives a crash, a power cut, and the loss of its host when its disk
   survives. See [durability](docs/durability.md).
@@ -82,7 +82,8 @@ and a container image is `ghcr.io/nitrosend/nitromta`.
 [Installation](docs/install.md) takes a host from the archive to its first
 delivered message in six steps, ending with `nitromta doctor`, which checks
 reverse DNS, SPF, DKIM, DMARC and the bounce MX, and tells you what to
-publish.
+publish. Moving an application from SES is
+[a change of endpoint and keys](docs/migrate-from-ses.md).
 
 Followed step by step on a fresh server, those steps delivered every
 message they sent, to Gmail, Outlook, Yahoo, AOL, iCloud and Office 365
@@ -97,6 +98,8 @@ Guides:
 - [Installation](docs/install.md): a server to its first delivered message
 - [Choosing a host](docs/hosting.md): port 25, reverse DNS and the
   providers that allow them
+- [Migrating from SES](docs/migrate-from-ses.md): endpoint, keys,
+  identities and events
 
 Reference:
 

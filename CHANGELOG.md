@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.1 - 2026-11-02
+
+### Added
+
+- **The SDK matrix:** `cargo xtask sdk` runs the official SES v2 SDKs
+  against the engine, each pinned by its lockfile: `@aws-sdk/client-sesv2`
+  and Nodemailer's SES transport in JavaScript, `boto3` and django-ses in
+  Python, and `aws-sdk-sesv2` in Ruby.
+- **Migrating from SES:** a guide to moving an application, its domains,
+  events, suppression list and templates from Amazon SES.
+
 ## 0.1.0 - 2026-11-02
 
 The first release.

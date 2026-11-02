@@ -83,3 +83,7 @@ deliveries).
 `nitromta queue --config config.toml` and
 `nitromta explain --config config.toml --message <id>` show what the engine
 holds and why, as they do in production (see [operations](operations.md)).
+
+The test `the_capture_quickstart_as_setup_prints_it` in
+`crates/engine/tests/sdk.rs` follows these steps with the Python example
+above, read from this page, and checks that the README shows the same.

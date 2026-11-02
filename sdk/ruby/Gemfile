@@ -1,0 +1,14 @@
+# The official SES v2 SDK for Ruby at the version Nitrosend sends with, and
+# each gem it needs at the version Nitrosend resolves.
+source "https://rubygems.org"
+
+gem "aws-sdk-sesv2", "1.97.0"
+gem "aws-sdk-core", "3.257.0"
+gem "aws-sigv4", "1.12.1"
+gem "aws-partitions", "1.1216.0"
+gem "aws-eventstream", "1.4.0"
+gem "jmespath", "1.6.2"
+gem "base64", "0.3.0"
+gem "bigdecimal", "4.1.2"
+gem "logger", "1.7.0"
+gem "rexml", "3.4.4"

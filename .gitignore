@@ -1,1 +1,5 @@
 /target
+/sdk/javascript/node_modules/
+/sdk/python/.venv/
+/sdk/ruby/vendor/
+/sdk/ruby/.bundle/

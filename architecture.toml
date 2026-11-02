@@ -29,6 +29,7 @@
 "models" = "pinned AWS Smithy models, and the recipe that generates code from them"
 "packaging" = "how the engine is installed and run: its service unit, its system user and its container image"
 "rules" = "the receiver rule bundle, as versioned data"
+"sdk" = "the official SES v2 SDKs, and applications built on them, each pinned, run against the engine by `cargo xtask sdk`"
 "rust-toolchain.toml" = "the Rust toolchain every machine uses, so every machine runs the same lints; updating it is its own commit"
 "xtask" = "the repository's checks"
 

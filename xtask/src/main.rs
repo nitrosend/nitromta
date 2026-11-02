@@ -10,6 +10,10 @@
 //! `cargo xtask fixtures` writes the golden fixtures of a persisted format's
 //! case or schema step that has none, under `fixtures/formats`; one written
 //! is never rewritten, and the gate reads every one.
+//!
+//! `cargo xtask sdk` installs the SDKs `sdk/` pins, from their lockfiles,
+//! and runs them against the engine: the release's matrix
+//! runs it, and it needs Node, Python and Ruby, which the gate does not.
 
 mod architecture;
 mod structure;
@@ -31,13 +35,14 @@ fn main() -> ExitCode {
         ["check", "generated"] => check_generated(&root),
         ["generate"] => generate(&root),
         ["fixtures"] => fixtures(&root),
+        ["sdk"] => sdk(&root),
         ["fuzz"] => fuzz(&root, FUZZ_SECONDS),
         ["fuzz", seconds] => seconds
             .parse()
             .map_err(|_| format!("fuzz: {seconds} is not a number of seconds"))
             .and_then(|seconds| fuzz(&root, seconds)),
         _ => Err(
-            "usage: cargo xtask check [structure|generated] | cargo xtask generate | cargo xtask fixtures | cargo xtask fuzz [seconds]"
+            "usage: cargo xtask check [structure|generated] | cargo xtask generate | cargo xtask fixtures | cargo xtask sdk | cargo xtask fuzz [seconds]"
                 .to_owned(),
         ),
     };
@@ -118,6 +123,62 @@ fn work_counts(root: &Path) {
             directory.join("work-counts.txt").display()
         );
     }
+}
+
+/// Installs each SDK as its lockfile pins it, then runs the scenario
+/// through each against the engine.
+fn sdk(root: &Path) -> Result<(), String> {
+    let sdk = root.join("sdk");
+    let javascript = sdk.join("javascript");
+    step(
+        "sdk: javascript",
+        Command::new("npm")
+            .args(["ci", "--ignore-scripts", "--no-audit", "--no-fund"])
+            .current_dir(&javascript),
+    )?;
+    let python = sdk.join("python");
+    if !python.join(".venv").exists() {
+        step(
+            "sdk: python's environment",
+            Command::new("python3")
+                .args(["-m", "venv", ".venv"])
+                .current_dir(&python),
+        )?;
+    }
+    step(
+        "sdk: python",
+        Command::new(python.join(".venv/bin/pip"))
+            .args([
+                "install",
+                "--quiet",
+                "--require-hashes",
+                "--no-deps",
+                "-r",
+                "requirements.txt",
+            ])
+            .current_dir(&python),
+    )?;
+    step(
+        "sdk: ruby",
+        Command::new("bundle")
+            .arg("install")
+            .current_dir(sdk.join("ruby"))
+            .env("BUNDLE_PATH", "vendor/bundle")
+            .env("BUNDLE_FROZEN", "true"),
+    )?;
+    step(
+        "sdk: the scenario",
+        cargo(root).args([
+            "test",
+            "-p",
+            "engine",
+            "--test",
+            "sdk",
+            "--locked",
+            "--",
+            "--ignored",
+        ]),
+    )
 }
 
 /// How long `cargo xtask fuzz` runs each target, unless told otherwise.
