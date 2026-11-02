@@ -1,0 +1,46 @@
+summary = "Process loss: as the crash tests, but on the system's own volume, without LazyFS, so the kill loses the process and what it held in memory, not what it wrote and had not synced, as when the process alone dies and the host stays up. Under a steady 500 messages a second, the container is killed ten seconds in and started again. The sink takes only 100 a second until the system accepts again, so most of what it acknowledged is still queued at the kill. Every recipient it acknowledged must arrive; deliveries in flight at the kill may arrive twice, and are counted. Proves recovery, not speed"
+systems = ["nitromta", "postfix", "kumomta"]
+# Three crash points for each system, interleaved.
+repetitions = 3
+
+[placement]
+sut_cpus = 4
+# As the crash tests give it, so the two compare.
+sut_memory_mib = 3072
+tool_cpus = 4
+tool_memory_mib = 2048
+
+[workload]
+message_bytes = 16384
+connections = 64
+domains = 1000
+
+[crash]
+# The process alone is lost; the power stays on.
+power = false
+rate = 500
+seconds = 20
+after_seconds = 10
+# The sink takes a fifth of the load until the system accepts again, so
+# about 4,000 acknowledged recipients are still queued at the kill: some
+# waiting to retry, some in flight.
+sink_rate = 100
+sink_connections = 8
+drain_seconds = 300
+
+# The search's settings are not used by a crash test.
+[search]
+warmup_rate = 100
+warmup_seconds = 5
+start_rate = 250
+step_seconds = 10
+bisections = 3
+drain_seconds = 30
+headroom_seconds = 5
+headroom = 2.0
+
+[budgets]
+# Provisional: the first baseline freezes them.
+submit_p99_ms = 1000
+delivery_p99_ms = 2000
+accepted_share = 0.99

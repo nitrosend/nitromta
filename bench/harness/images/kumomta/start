@@ -1,0 +1,36 @@
+#!/bin/sh
+# Hands the keys the harness copied into /etc/bench to KumoMTA's user, starts
+# the traffic-shaping automation daemon when the profile needs it, then runs
+# KumoMTA in the foreground.
+set -eu
+mkdir -p /var/spool/kumomta
+chown -R kumod:kumod /var/spool/kumomta /etc/bench
+chmod 600 /etc/bench/tls/sut.key /etc/bench/dkim/private.pem
+if [ "$BENCH_TSA" = true ]; then
+    # The harness's shaping rules: the connections every system may open,
+    # and a suspension of the throttled receiver's site whenever it answers
+    # 421, for the same time NitroMTA's cooldown takes (the first retry).
+    # Both of the receiver's 421 replies end "try again later".
+    mkdir -p /run/kumomta
+    cat > /run/kumomta/shaping.toml <<SHAPING
+["default"]
+connection_limit = $BENCH_CONNECTIONS
+enable_tls = "$([ "$BENCH_DELIVERY_TLS" = true ] && echo RequiredInsecure || echo Disabled)"
+max_ready = 100000
+
+["throttled.test"]
+
+[["throttled.test".automation]]
+regex = "try again later"
+action = "Suspend"
+duration = "${BENCH_RETRY_FIRST_SECONDS}s"
+SHAPING
+    tsa-daemon --policy /etc/kumomta/tsa_init.lua &
+    # KumoMTA subscribes to suspensions at its start, and retries only every
+    # 30 seconds, so the daemon listens first: port 8008 is 1F48.
+    for _ in $(seq 100); do
+        grep -q ':1F48 ' /proc/net/tcp && break
+        sleep 0.1
+    done
+fi
+exec kumod --policy /etc/kumomta/init.lua --user kumod

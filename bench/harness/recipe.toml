@@ -1,0 +1,136 @@
+# What the harness builds and runs: every system under test and
+# every tool, built from source at the versions named here. The commits these
+# tags resolved to, the image digests and the base images' digests are
+# recorded in each result, never here.
+
+[base]
+# Every build stage starts from `build`; each project's own toolchain file
+# picks its Rust version. Every runtime stage starts from `runtime`.
+build = "rust:trixie"
+runtime = "debian:trixie-slim"
+
+[sources.kumomta]
+url = "https://github.com/KumoCorp/kumomta"
+tag = "2026.09.29-b90d8bc1"
+
+[sources.postfix]
+# Viktor Dukhovni's mirror of the Postfix releases.
+url = "https://github.com/vdukhovni/postfix"
+tag = "v3.11.7"
+
+[sources.opendkim]
+url = "https://github.com/trusteddomainproject/OpenDKIM"
+tag = "rel-opendkim-2-11-0-Beta2"
+
+[sources.lazyfs]
+# The crash tests' file system, from the INESC TEC research
+# group that maintains it.
+url = "https://github.com/dsrhaslab/lazyfs"
+tag = "0.3.1"
+
+[sources.unbound]
+url = "https://github.com/NLnetLabs/unbound"
+tag = "release-1.26.2"
+
+# Each image is built from `images/<name>/Dockerfile`.
+
+[images.harness]
+# The sink, load generator and probe, from this repository.
+repository = true
+
+[images.nitromta]
+# The engine, from this repository.
+repository = true
+
+[images.ceilings]
+# The component ceilings, from this repository: the engine's own
+# signing and verification, timed on one of the systems' CPUs.
+repository = true
+
+[images.unbound]
+sources = ["unbound"]
+
+# Each system under test on LazyFS, for the crash tests: built from the
+# system's own image, so what it runs is unchanged.
+[images.lazyfs]
+sources = ["lazyfs"]
+
+[images.postfix]
+sources = ["postfix", "opendkim"]
+
+[images.kumomta]
+sources = ["kumomta"]
+
+# The systems under test. Each accepts authenticated submission over STARTTLS,
+# or, for the separately labelled API-ingress comparison, authenticated
+# requests over HTTPS. Each signs with the same RSA-2048 key (rsa-sha256,
+# relaxed/relaxed, the same headers), and delivers over required STARTTLS to
+# the sink by its MX.
+
+[systems.nitromta]
+summary = "NitroMTA's SMTP path: every acceptance committed with a synced write before the 250 reply"
+image = "nitromta"
+durability = "sync"
+port = 587
+spool = "/var/spool/nitromta"
+# The engine issues its own secrets; its start script writes them
+# here for the load generator.
+credentials = "/run/bench/credentials.json"
+production = true
+
+# The same, with personal data sealed under the installation's key,
+# measured as its own configuration beside it. Per-tenant keys cost the
+# same cipher work, with a lookup of the tenant's key: the harness's mail,
+# over SMTP, names no tenant, so it would measure this again.
+[systems.nitromta-sealed]
+summary = "NitroMTA's SMTP path, as nitromta, with personal data sealed under the installation's key"
+image = "nitromta"
+durability = "sync"
+port = 587
+spool = "/var/spool/nitromta"
+credentials = "/run/bench/credentials.json"
+production = true
+env = { BENCH_ENCRYPTION = "installation" }
+
+[systems.postfix]
+summary = "Postfix, signing through the OpenDKIM milter, with its default queue durability: queue files are fsynced before the 250 reply"
+image = "postfix"
+durability = "sync"
+port = 587
+spool = "/var/spool/postfix"
+log = "/var/spool/postfix/maillog"
+
+[systems.kumomta]
+summary = "KumoMTA with its RocksDB spool, every message saved with a synced write before the 250 reply"
+image = "kumomta"
+durability = "sync"
+port = 587
+spool = "/var/spool/kumomta"
+env = { FORCE_SYNC = "1" }
+
+[systems.nitromta-ses]
+summary = "NitroMTA's SES v2 API: SendEmail with raw content over HTTPS, each request SigV4-signed, every acceptance committed with a synced write before the 200 answer"
+image = "nitromta"
+durability = "sync"
+ingress = "ses"
+port = 8443
+spool = "/var/spool/nitromta"
+credentials = "/run/bench/credentials.json"
+production = true
+
+[systems.kumomta-http]
+summary = "KumoMTA's HTTP injection API (/api/inject/v1) over HTTPS, each request with Basic authentication, every message saved with a synced write before its answer"
+image = "kumomta"
+durability = "sync"
+ingress = "kumomta"
+port = 8443
+spool = "/var/spool/kumomta"
+env = { FORCE_SYNC = "1" }
+
+[systems.kumomta-async]
+summary = "KumoMTA as it ships: the 250 reply follows a spool write that is not synced"
+image = "kumomta"
+durability = "async"
+port = 587
+spool = "/var/spool/kumomta"
+env = { FORCE_SYNC = "0" }

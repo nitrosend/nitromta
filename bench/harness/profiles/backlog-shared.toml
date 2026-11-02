@@ -1,0 +1,44 @@
+summary = "The shared-body backlog, a labelled variant of the backlog profile: 1,000,000 recipients as 20,000 messages of 50 recipients each, which share each message's body, spread over 1,000 domains and accepted while the sink refuses every session. It favours a design that stores a body once. Then each system's memory with the backlog, a graceful stop and a start until it accepts again, and the drain, in which every recipient must arrive once. The quick profile's machine: minutes on one machine"
+systems = ["nitromta", "postfix", "kumomta"]
+# A reported comparison has at least three, interleaved; a
+# shorter check passes --repetitions.
+repetitions = 3
+
+[placement]
+sut_cpus = 4
+sut_memory_mib = 2048
+tool_cpus = 4
+tool_memory_mib = 2048
+
+[workload]
+# 16 KiB messages, each to 50 recipients (SES's limit) that share its body.
+message_bytes = 16384
+connections = 64
+domains = 1000
+recipients = 50
+
+[backlog]
+messages = 20000
+settle_seconds = 10
+drain_seconds = 1800
+
+# Only the cool-down between systems applies to a backlog run.
+[search]
+warmup_rate = 100
+warmup_seconds = 5
+start_rate = 250
+step_seconds = 10
+bisections = 3
+drain_seconds = 30
+headroom_seconds = 5
+headroom = 2.0
+# This Mac slowed by a third through a 45-minute session, every system alike
+# (27 October 2026).
+cooldown_seconds = 90
+
+# A backlog run is judged by its loss and its measurements, not by budgets.
+[budgets]
+# Provisional: the first baseline freezes them.
+submit_p99_ms = 1000
+delivery_p99_ms = 2000
+accepted_share = 0.99

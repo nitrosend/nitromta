@@ -1,0 +1,57 @@
+# NitroMTA as the harness runs it. Every acceptance commits with a synced
+# write before the 250 reply; that is how the engine always runs.
+
+[store]
+path = "/var/spool/nitromta/store.db"
+keys = "/run/nitromta/keys"
+# Off unless the system the harness runs seals personal data.
+encryption = "BENCH_ENCRYPTION"
+
+[submission]
+listen = "0.0.0.0:587"
+hostname = "sut.bench.test"
+certificate = "/etc/bench/tls/sut.crt"
+key = "/etc/bench/tls/sut.key"
+
+# The SES v2 API, for the API-ingress comparison. Its clients sign for the
+# harness's region.
+[ses]
+listen = "0.0.0.0:8443"
+certificate = "/etc/bench/tls/sut.crt"
+key = "/etc/bench/tls/sut.key"
+region = "us-east-1"
+
+# The admin socket the start script creates the harness's sender through:
+# identities and credentials are policy, not configuration.
+[admin]
+socket = "/run/nitromta/admin.sock"
+
+# Every system retries on the same schedule and keeps to the same connections
+# per receiver site. The harness passes both from the profile, and
+# the start script writes them in.
+[scheduler]
+retry_first_seconds = BENCH_RETRY_FIRST_SECONDS
+retry_max_seconds = BENCH_RETRY_MAX_SECONDS
+
+[delivery]
+helo = "sut.bench.test"
+# Each message's envelope sender is its correlation token at this domain.
+return_path_domain = "bounces.bench.test"
+return_path_key = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0"
+# Without TLS, an ablation; required otherwise.
+require_tls = BENCH_DELIVERY_TLS
+# The harness's unbound serves its sink zones unsigned, so DNSSEC cannot be
+# validated; KumoMTA and Postfix leave DANE off by default too. MTA-STS stays
+# on, as it is by default in KumoMTA: each domain's route costs a TXT lookup.
+dane = false
+
+# The connections to each sink site, which no provider in the receiver rules
+# claims, and the transactions each carries before it closes:
+# KumoMTA's built-in 1,024, which the harness leaves in place for it.
+[receivers.defaults]
+connections = BENCH_CONNECTIONS
+transactions_per_connection = 1024
+
+[outbound]
+# The sink and the event receiver are on the benchmark's private network.
+allow_private_destinations = true

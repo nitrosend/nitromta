@@ -9,7 +9,7 @@
 
 # Every entry allowed at the repository root, with its purpose.
 [root]
-".cargo" = "the `cargo xtask` alias"
+".cargo" = "the `cargo xtask` and `cargo harness` aliases"
 ".github" = "CI, which runs the gate, and the release workflow, which builds, signs and publishes a tag's archives"
 ".gitignore" = "build output kept out of the repository"
 "Cargo.lock" = "resolved dependency versions; every check runs with --locked"
@@ -21,6 +21,7 @@
 "README.md" = "what the project is, how to try and install it, and how to check a change"
 "SECURITY.md" = "how to report a vulnerability"
 "architecture.toml" = "this file"
+"bench" = "the benchmark harness and the measurements"
 "crates" = "the engine's crates, and the determinism rules that govern them"
 "docs" = "the user's documentation: its guides, its reference and the brand's artwork"
 "deny.toml" = "the licenses, sources and advisories allowed for third-party code"
@@ -102,6 +103,15 @@ summary = "The binary: connects the components and performs their I/O. Carries m
 under = "crates"
 may_depend_on = ["deterministic", "store", "adapter", "generated"]
 forbidden = ["provider-sdks"]
+
+[kinds.harness]
+summary = "Load generators, sinks and the external observer. Independent of the engine, so a bug in the engine cannot be mirrored by the code that observes it."
+under = "bench"
+
+[kinds.measurement]
+summary = "Component ceilings and store measurements on real disks, which measure engine crates directly, adapters among them, since the ceilings include an adapter's own costs. Nothing depends on them."
+under = "bench"
+may_depend_on = ["deterministic", "store", "adapter"]
 
 [kinds.tool]
 summary = "Repository tooling, independent of the engine."
@@ -249,3 +259,24 @@ owns = "The repository's checks: `cargo xtask check` and its parts"
 must_not_own = "Engine code, or a check that passes by skipping"
 internal = []
 external = ["serde", "serde_json", "toml"]
+
+[crates.harness]
+kind = "harness"
+owns = "The benchmark harness: the load generator, the sink and its independent DKIM verifier, the durability probe, the observer, the competitor recipes and profiles, and the runner behind `cargo harness`"
+must_not_own = "Engine code, or anything that trusts the system it measures"
+internal = []
+external = ["aws-lc-rs", "base64", "rcgen", "rustix", "rustls", "serde", "serde_json", "tokio", "tokio-rustls", "toml"]
+
+[crates.ceilings]
+kind = "measurement"
+owns = "The reference machine's component ceilings, on one core with the engine's own code: DKIM signatures, SigV4 verifications and body hashing"
+must_not_own = "Engine code, or results kept by hand"
+internal = ["engine-api", "engine-core", "engine-message"]
+external = ["aws-lc-rs", "base64", "serde_json"]
+
+[crates.measure-store]
+kind = "measurement"
+owns = "Measuring the store on a real disk: completed deliveries per second through all three commit points as groups grow, commit latency, the cost of reading bodies through the commit owner, and the disk's own sync latency"
+must_not_own = "Engine code, or results kept by hand"
+internal = ["engine-core", "engine-store"]
+external = ["bytes", "rusqlite", "serde_json"]

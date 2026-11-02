@@ -1,0 +1,18 @@
+#!/bin/sh
+# Mounts the system's spool through LazyFS, over the volume the harness
+# mounted at /lazyfs-root, then starts the system as its image does. LazyFS
+# runs in FUSE's foreground mode, beside the system: as a FUSE daemon it
+# would send its reports, which the harness reads from the container's log,
+# to /dev/null.
+set -eu
+mkdir -p "$BENCH_SPOOL"
+rm -f /run/lazyfs.fifo
+mkfifo /run/lazyfs.fifo
+lazyfs "$BENCH_SPOOL" --config-path /etc/lazyfs.toml \
+    -o allow_other -o modules=subdir -o subdir=/lazyfs-root -f &
+for _ in $(seq 100); do
+    grep -qs " $BENCH_SPOOL fuse" /proc/mounts && exec start
+    sleep 0.1
+done
+echo "LazyFS did not mount $BENCH_SPOOL" >&2
+exit 1

@@ -1,0 +1,50 @@
+summary = "The engine alone, for regressions, in a few minutes: a small backlog for its memory per queued recipient, then half a minute at a fixed rate well below saturation, three times. Each run is compared with the last on the same machine; not a comparison between systems"
+systems = ["nitromta"]
+repetitions = 3
+# Nothing here is compared with the ceilings, so their build and their
+# measurement are left out.
+ceilings = false
+
+[placement]
+sut_cpus = 4
+sut_memory_mib = 2048
+tool_cpus = 4
+tool_memory_mib = 2048
+
+[workload]
+# 16 KiB single-recipient messages, spread over many domains.
+message_bytes = 16384
+connections = 64
+domains = 1000
+
+[backlog]
+messages = 20000
+settle_seconds = 5
+drain_seconds = 300
+# Compared only with itself, so its drain need not wait for the longest retry.
+open_at_longest_retry = false
+
+[fixed]
+# Under half of the 4,500 to 5,000 a second the engine sustained on the
+# quick profile here (27 October 2026), so the costs are measured unsaturated.
+# Half a minute is 60,000 messages, enough for their CPU per message.
+rate = 2000
+seconds = 30
+
+# The search's warm-up runs before the fixed load; the rest of the search
+# does not apply.
+[search]
+warmup_rate = 100
+warmup_seconds = 5
+start_rate = 250
+step_seconds = 10
+bisections = 3
+drain_seconds = 30
+headroom_seconds = 5
+headroom = 2.0
+
+[budgets]
+# Frozen from the first baselines, 30 October 2026.
+submit_p99_ms = 10
+delivery_p99_ms = 10
+accepted_share = 0.99

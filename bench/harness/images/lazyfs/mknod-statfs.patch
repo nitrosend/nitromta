@@ -1,0 +1,52 @@
+diff --git a/lazyfs/include/lazyfs/lazyfs.hpp b/lazyfs/include/lazyfs/lazyfs.hpp
+index 5fcff7c..3c638ae 100644
+--- a/lazyfs/include/lazyfs/lazyfs.hpp
++++ b/lazyfs/include/lazyfs/lazyfs.hpp
+@@ -342,6 +342,16 @@ class LazyFS : public Fusepp::Fuse<LazyFS> {
+ 
+     static int lfs_mkdir (const char* path, mode_t mode);
+ 
++    /**
++     * @brief Creates a FIFO or a socket's node on the underlying disk.
++     */
++    static int lfs_mknod (const char* path, mode_t mode, dev_t rdev);
++
++    /**
++     * @brief Reports the underlying disk's space and inodes.
++     */
++    static int lfs_statfs (const char* path, struct statvfs* stbuf);
++
+     static int lfs_access (const char* path, int mask);
+ 
+     static int lfs_getattr (const char*, struct stat*, struct fuse_file_info*);
+diff --git a/lazyfs/src/lazyfs.cpp b/lazyfs/src/lazyfs.cpp
+index 4709ff3..59bb363 100644
+--- a/lazyfs/src/lazyfs.cpp
++++ b/lazyfs/src/lazyfs.cpp
+@@ -1918,6 +1918,26 @@ int LazyFS::lfs_mkdir (const char* path, mode_t mode) {
+     return 0;
+ }
+ 
++int LazyFS::lfs_mknod (const char* path, mode_t mode, dev_t rdev) {
++
++    std::shared_lock<std::shared_mutex> lock (cache_command_lock);
++
++    int res = S_ISFIFO (mode) ? mkfifo (path, mode) : mknod (path, mode, rdev);
++    if (res == -1)
++        return -errno;
++
++    return 0;
++}
++
++int LazyFS::lfs_statfs (const char* path, struct statvfs* stbuf) {
++
++    int res = statvfs (path, stbuf);
++    if (res == -1)
++        return -errno;
++
++    return 0;
++}
++
+ int LazyFS::lfs_link (const char* from, const char* to) {
+ 
+     this_ ()->trigger_crash_fault ("link", "before", from, to, CLEAR);

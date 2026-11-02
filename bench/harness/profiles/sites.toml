@@ -1,0 +1,41 @@
+summary = "Receivers at a distance: recipients spread over 1,000 domains on 10 receiver sites, each with an exchange of its own, and every exchange answered after a 30 ms round trip, so connection reuse, pipelining and concurrency are measured as well as CPU. Each system may open as many connections to each site. The quick profile's machine, load and budgets: minutes on one machine"
+systems = ["nitromta", "postfix", "kumomta"]
+# A reported comparison has at least three, interleaved; a
+# shorter check passes --repetitions.
+repetitions = 3
+
+[placement]
+sut_cpus = 4
+sut_memory_mib = 2048
+tool_cpus = 4
+tool_memory_mib = 2048
+
+[workload]
+# 16 KiB single-recipient messages.
+message_bytes = 16384
+connections = 64
+domains = 1000
+sites = 10
+# A round trip across a continent is 30 to 80 ms, and within one provider's
+# region a few: 30 ms stands for a receiver some way off.
+round_trip_ms = 30
+
+[search]
+warmup_rate = 100
+warmup_seconds = 5
+start_rate = 250
+step_seconds = 10
+# Six halvings narrow the rate to within about 1.5%, as the quick profile.
+bisections = 6
+drain_seconds = 30
+headroom_seconds = 5
+headroom = 2.0
+# This Mac slowed by a third through a 45-minute session, every system alike
+# (27 October 2026).
+cooldown_seconds = 90
+
+[budgets]
+# Provisional: the first baseline freezes them.
+submit_p99_ms = 1000
+delivery_p99_ms = 2000
+accepted_share = 0.99

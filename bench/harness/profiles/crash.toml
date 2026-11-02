@@ -1,0 +1,45 @@
+summary = "Crash tests: each system runs on LazyFS, which keeps the file data written but not yet synced in its own memory; creating, renaming and removing files reach the volume at once. Under a steady 500 messages a second, the container is killed ten seconds in, losing that data as a power failure would, and the system starts again on what it synced. The sink takes only 100 a second until the system accepts again, so most of what it acknowledged is still queued at the kill. A run counts only if some acknowledged mail was still queued at the crash and LazyFS's cache was under 90% full. Every recipient it acknowledged must arrive; deliveries in flight at the crash may arrive twice, and are counted. Proves durability, not speed"
+systems = ["nitromta", "postfix", "kumomta"]
+# Three crash points for each system, interleaved.
+repetitions = 3
+
+[placement]
+sut_cpus = 4
+# Each system's 2 GiB, as elsewhere, and the 1 GiB LazyFS holds for its
+# cache in the same container (images/lazyfs/lazyfs.toml).
+sut_memory_mib = 3072
+tool_cpus = 4
+tool_memory_mib = 2048
+
+[workload]
+message_bytes = 16384
+connections = 64
+domains = 1000
+
+[crash]
+rate = 500
+seconds = 20
+after_seconds = 10
+# The sink takes a fifth of the load until the system accepts again, so
+# about 4,000 acknowledged recipients are still queued at the kill: some
+# waiting to retry, some in flight.
+sink_rate = 100
+sink_connections = 8
+drain_seconds = 300
+
+# The search's settings are not used by a crash test.
+[search]
+warmup_rate = 100
+warmup_seconds = 5
+start_rate = 250
+step_seconds = 10
+bisections = 3
+drain_seconds = 30
+headroom_seconds = 5
+headroom = 2.0
+
+[budgets]
+# Provisional: the first baseline freezes them.
+submit_p99_ms = 1000
+delivery_p99_ms = 2000
+accepted_share = 0.99

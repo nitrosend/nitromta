@@ -1,0 +1,116 @@
+#!/bin/sh
+# Writes the harness's delivery settings into the configuration and runs the
+# engine in the foreground. Meanwhile the harness's sender is created through
+# the admin socket: the identity bench.test, signing with the harness's key
+# unless signing is ablated, an SMTP login and an SES key. The
+# engine issues both secrets, and they are written where the harness reads
+# them; the harness is ready only once a login succeeds with them. A restart
+# of the same container finds them written and its store already holding
+# them. If any request is refused, the engine is stopped, so the harness sees
+# the container exit.
+#
+# Production-shaped, the sender's mail goes out
+# as production's does: from a pool of two egresses whose daily caps never
+# bind, under a configuration with a tenant and a subscription to every
+# event, posted to the harness's event receiver, against a suppression list
+# of a million addresses, none of them the load's.
+set -eu
+production=${BENCH_PRODUCTION:-false}
+sed "s/BENCH_RETRY_FIRST_SECONDS/$BENCH_RETRY_FIRST_SECONDS/;
+     s/BENCH_RETRY_MAX_SECONDS/$BENCH_RETRY_MAX_SECONDS/;
+     s/BENCH_CONNECTIONS/$BENCH_CONNECTIONS/;
+     s/BENCH_DELIVERY_TLS/$BENCH_DELIVERY_TLS/;
+     s/BENCH_ENCRYPTION/${BENCH_ENCRYPTION:-off}/" /etc/nitromta/config.toml > /run/nitromta.toml
+mkdir -p /var/spool/nitromta /run/nitromta /run/bench
+# The engine's own user holds its store, its socket and its certificate;
+# what root writes stays in root's own directory, where the engine's user
+# cannot point it elsewhere.
+chown nitromta:nitromta /var/spool/nitromta /run/nitromta
+# The installation's keys, which a restart of the same container keeps,
+# written by the engine's user itself: root changes nothing in a directory
+# that user could point elsewhere.
+[ -e /run/nitromta/keys ] || setpriv --reuid=nitromta --regid=nitromta --init-groups \
+    nitromta key --to /run/nitromta/keys > /dev/null
+chown -R nitromta:nitromta /etc/bench/tls
+# Copied in as the harness's umask made it, which may shut others out.
+chmod a+x /etc/bench
+chmod 0700 /run/bench
+socket=/run/nitromta/admin.sock
+credentials=/run/bench/credentials.json
+signing=
+if [ "$BENCH_SIGN" != false ]; then
+    key=$(awk '{ printf "%s\\n", $0 }' /etc/bench/dkim/private.pem)
+    signing=",\"selector\":\"bench\",\"private_key\":\"$key\""
+fi
+if [ "$production" = true ]; then
+    # The second egress's address, beside the one the harness gave. Each
+    # start gives the container a new MAC address, and nothing announces an
+    # address added here, so the sink would go on sending this one's replies
+    # to the last start's MAC until its entry expired: a backlog drain after
+    # a restart waited on it. The announcement updates the sink at once.
+    ip address add "$BENCH_SECOND_ADDRESS/24" dev eth0 2>/dev/null || true
+    arping -q -U -c 1 -I eth0 -s "$BENCH_SECOND_ADDRESS" "$BENCH_SECOND_ADDRESS"
+fi
+# A field of the admin socket's answers, which hold hex and capitals only.
+# Requests are written with printf, never echo: dash's echo would turn the
+# key's \n escapes into newlines.
+field() {
+    printf '%s\n' "$answers" | sed -n "s/.*\"$1\":\"\([0-9A-Za-z]*\)\".*/\1/p"
+}
+# The requests that create the sender.
+requests() {
+    if [ "$production" = true ]; then
+        cap=10000000
+        cat <<REQUESTS
+{"op":"put_pool","account":1,"name":"outbound"}
+{"op":"put_egress","account":1,"address":"$BENCH_FIRST_ADDRESS","helo":"sut.bench.test","pool":"outbound","daily_cap":$cap}
+{"op":"put_egress","account":1,"address":"$BENCH_SECOND_ADDRESS","helo":"sut2.bench.test","pool":"outbound","daily_cap":$cap}
+{"op":"put_configuration","account":1,"name":"receipts","pool":"outbound"}
+{"op":"put_identity","account":1,"name":"bench.test"$signing,"configuration":"receipts"}
+{"op":"put_tenant","account":1,"name":"acme","identities":["bench.test"],"configurations":["receipts"]}
+{"op":"create_subscription","account":1,"name":"hooks","configuration":"receipts","url":"$BENCH_HOOKS_URL","events":["accepted","delivered","deferred","bounced","uncertain","expired","suppressed","cancelled"]}
+REQUESTS
+        # A million suppressions, ten thousand to a request.
+        awk 'BEGIN {
+            for (request = 0; request < 100; request++) {
+                printf "{\"op\":\"suppress\",\"account\":1,\"reason\":\"bounce\",\"addresses\":["
+                for (i = 0; i < 10000; i++) {
+                    printf "%s\"s%d@suppressed.test\"", (i ? "," : ""), request * 10000 + i
+                }
+                print "]}"
+            }
+        }'
+    else
+        printf '%s\n' "{\"op\":\"put_identity\",\"account\":1,\"name\":\"bench.test\"$signing}"
+    fi
+    printf '%s\n' '{"op":"create_login","account":1,"user":"bench"}'
+    printf '%s\n' '{"op":"create_access_key","account":1}'
+}
+provision() {
+    if [ -e "$credentials" ]; then
+        return
+    fi
+    for _ in $(seq 200); do
+        [ -S "$socket" ] && break
+        sleep 0.05
+    done
+    answers=$(requests | nitromta admin --config /run/nitromta.toml) \
+        || answers="the admin socket did not answer"
+    case "$answers" in
+        *error*|*"did not answer"*)
+            echo "start: the sender was not created: $(printf '%s\n' "$answers" | grep -v '"changed":' | head -5)" >&2
+            kill -TERM "$$"
+            return
+            ;;
+    esac
+    hooks=$(printf '%s\n' "$answers" | sed -n 's/.*"signing_secret":"\([^"]*\)".*/\1/p')
+    printf '{"smtp":{"user":"bench","password":"%s"},"ses":{"user":"%s","password":"%s"},"hooks":"%s"}\n' \
+        "$(field password)" "$(field access_key_id)" "$(field secret_access_key)" "$hooks" > "$credentials.new"
+    mv "$credentials.new" "$credentials"
+}
+provision &
+# Root, for the egress address above; the engine itself runs without it and
+# without any capability: the container lets any user listen on
+# the ports it uses.
+exec setpriv --reuid=nitromta --regid=nitromta --init-groups --inh-caps=-all \
+    --bounding-set=-all nitromta run --config /run/nitromta.toml

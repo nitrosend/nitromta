@@ -1,0 +1,37 @@
+summary = "Minutes on one machine: the systems measured under the same rules, interleaved and repeated, for development, regression checks and comparisons labelled with that machine"
+systems = ["nitromta", "postfix", "kumomta"]
+# A reported comparison has at least three, interleaved; a
+# shorter check passes --repetitions.
+repetitions = 3
+
+[placement]
+sut_cpus = 4
+sut_memory_mib = 2048
+tool_cpus = 4
+tool_memory_mib = 2048
+
+[workload]
+# 16 KiB single-recipient messages.
+message_bytes = 16384
+connections = 64
+
+[search]
+warmup_rate = 100
+warmup_seconds = 5
+start_rate = 250
+step_seconds = 10
+# Six halvings of the octave the doubling found narrow the rate to within
+# about 1.5%, so a reported rate is the one measured, not the nearest step.
+bisections = 6
+drain_seconds = 30
+headroom_seconds = 5
+headroom = 2.0
+# This Mac slowed by a third through a 45-minute session, every system alike
+# (27 October 2026).
+cooldown_seconds = 90
+
+[budgets]
+# Provisional: the first baseline freezes them.
+submit_p99_ms = 1000
+delivery_p99_ms = 2000
+accepted_share = 0.99

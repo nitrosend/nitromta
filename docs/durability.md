@@ -57,7 +57,8 @@ at least once, and counts each uncertain attempt
 - **Corruption.** A store left open by a crash is checked as the engine
   starts, and a damaged one refused.
 
-The power-loss and simulation tests run in `cargo xtask check`.
+The power-loss and simulation tests run in `cargo xtask check`; the process
+loss runs in the benchmark harness (`cargo harness kill`).
 
 ## Backup and restore
 

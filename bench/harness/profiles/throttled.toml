@@ -1,0 +1,43 @@
+summary = "Many domains with one throttled destination: recipients spread over 1,000 domains on the sink, and a tenth of them sent to a receiver of its own that takes at most 2 sessions and 50 messages a second, answering 421 beyond that. Budgets judge the sink's messages only; the throttled receiver's may wait, and must all arrive once its throttle lifts. The quick profile's machine and load: minutes on one machine"
+systems = ["nitromta", "postfix", "kumomta"]
+# A reported comparison has at least three, interleaved; a
+# shorter check passes --repetitions.
+repetitions = 3
+
+[placement]
+sut_cpus = 4
+sut_memory_mib = 2048
+tool_cpus = 4
+tool_memory_mib = 2048
+
+[workload]
+# 16 KiB single-recipient messages.
+message_bytes = 16384
+connections = 64
+domains = 1000
+
+[throttle]
+share = 0.1
+rate = 50
+connections = 2
+release_seconds = 180
+
+[search]
+warmup_rate = 100
+warmup_seconds = 5
+start_rate = 250
+step_seconds = 10
+# Six halvings narrow the rate to within about 1.5%, as the quick profile.
+bisections = 6
+drain_seconds = 30
+headroom_seconds = 5
+headroom = 2.0
+# This Mac slowed by a third through a 45-minute session, every system alike
+# (27 October 2026).
+cooldown_seconds = 90
+
+[budgets]
+# Provisional: the first baseline freezes them.
+submit_p99_ms = 1000
+delivery_p99_ms = 2000
+accepted_share = 0.99

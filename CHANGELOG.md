@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.2 - 2026-11-02
+
+### Added
+
+- **The benchmark harness:** `cargo harness` builds NitroMTA, KumoMTA, and
+  Postfix with OpenDKIM from source and measures each on the same machine
+  under the same rules. Its profiles cover throttled and distant receivers,
+  the backlog, the SES API, and crash recovery, including killing the
+  process under load.
+
 ## 0.1.1 - 2026-11-02
 
 ### Added

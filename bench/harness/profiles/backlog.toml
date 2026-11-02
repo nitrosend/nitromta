@@ -1,0 +1,46 @@
+summary = "The backlog, personalised as most senders' mail is, at the quick profile's scale: 100,000 messages of one recipient each, spread over 1,000 domains and accepted while the sink refuses every session. Then each system's memory with the backlog, a graceful stop and a start until it accepts again, and the drain, in which every recipient must arrive once. The full profile queues 1,000,000. The quick profile's machine: minutes on one machine"
+systems = ["nitromta", "postfix", "kumomta"]
+# A reported comparison has at least three, interleaved; a
+# shorter check passes --repetitions.
+repetitions = 3
+
+[placement]
+sut_cpus = 4
+sut_memory_mib = 2048
+tool_cpus = 4
+tool_memory_mib = 2048
+
+[workload]
+# 16 KiB messages, each to one recipient, every one a body of its own.
+message_bytes = 16384
+connections = 64
+domains = 1000
+
+[backlog]
+messages = 100000
+settle_seconds = 10
+drain_seconds = 1800
+
+# Only the cool-down between systems applies to a backlog run.
+[search]
+warmup_rate = 100
+warmup_seconds = 5
+start_rate = 250
+step_seconds = 10
+bisections = 3
+drain_seconds = 30
+headroom_seconds = 5
+headroom = 2.0
+# This Mac slowed by a third through a 45-minute session, every system alike
+# (27 October 2026).
+cooldown_seconds = 90
+
+# A backlog run is judged by its loss and its measurements, not by budgets.
+[budgets]
+# Frozen from the first baselines, 30 October 2026:
+# the million recipients queued in at most 64 MiB, and again after a
+# restart. Its rates are the drain's, measured, not budgeted.
+submit_p99_ms = 1000
+delivery_p99_ms = 2000
+accepted_share = 0.99
+backlog_anon_mib = 64

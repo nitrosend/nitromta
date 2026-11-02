@@ -1,0 +1,18 @@
+# LazyFS as the crash tests run it. File data written but not
+# yet synced lives only in LazyFS's memory, so killing the container loses
+# it, as a power failure would. Creating, renaming and removing files reach
+# the volume at once. The harness asks for the cache's usage on the FIFO
+# just before the kill.
+[faults]
+fifo_path="/run/lazyfs.fifo"
+[cache]
+# Unsynced data stays in the cache until it is synced, never written back
+# early. Once every page is used, LazyFS writes to the volume directly, so
+# the harness refuses a crash whose cache was nearly full.
+apply_eviction=false
+[cache.simple]
+custom_size="1gb"
+blocks_per_page=1
+[filesystem]
+log_all_operations=false
+logfile=""

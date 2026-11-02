@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/*", "fuzz", "xtask"]
+members = ["bench/*", "crates/*", "fuzz", "xtask"]
 # Generated crates are built as dependencies but are not members, so the
 # gate's lints never run on them: regeneration checks them (architecture.toml).
 exclude = ["crates/engine-ses-v2"]
@@ -8,7 +8,7 @@ exclude = ["crates/engine-ses-v2"]
 [workspace.package]
 # The release's version, every crate's, which `nitromta --version` prints and
 # a release's tag names.
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "Apache-2.0"
 publish = false

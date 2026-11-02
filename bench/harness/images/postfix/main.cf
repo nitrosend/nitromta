@@ -1,0 +1,62 @@
+# Postfix as the harness runs it. Only settings that differ from Postfix's
+# defaults are here, each with its reason.
+compatibility_level = 3.11
+myhostname = sut.bench.test
+mydomain = bench.test
+myorigin = $mydomain
+inet_protocols = ipv4
+# Where the image installs the manual pages, which set-permissions checks.
+manpage_directory = /usr/share/man
+
+# Nothing is delivered locally.
+mydestination =
+local_recipient_maps =
+local_transport = error:local delivery is disabled
+alias_maps =
+alias_database =
+
+# Logs go to the measured volume, as KumoMTA's do.
+maillog_file = /var/spool/postfix/maillog
+
+# Submission: STARTTLS, then SASL authentication with the harness's account,
+# then relaying for authenticated clients only.
+smtpd_tls_chain_files = /etc/bench/tls/sut.key, /etc/bench/tls/sut.crt
+smtpd_sasl_type = cyrus
+smtpd_sasl_path = smtpd
+cyrus_sasl_config_path = /etc/postfix/sasl
+smtpd_sasl_local_domain = bench.test
+smtpd_relay_restrictions = permit_sasl_authenticated, reject
+# One generator host opens every connection, which the per-client limit
+# would refuse.
+smtpd_client_connection_count_limit = 0
+
+# Signing: the OpenDKIM milter, for every message, over a UNIX socket as
+# Debian's packages connect them. Over loopback TCP every submission took
+# about 86 ms at any rate, the pattern of delayed acknowledgements, against
+# 4 ms over the socket (measured 27 October 2026).
+smtpd_milters = unix:/run/opendkim/opendkim.sock
+non_smtpd_milters = $smtpd_milters
+milter_default_action = tempfail
+
+# Delivery: STARTTLS required and the certificate not verified, as for every
+# system, with the TLS session caches Debian's default configuration keeps.
+smtp_tls_security_level = encrypt
+smtp_tls_session_cache_database = lmdb:${data_directory}/smtp_scache
+smtpd_tls_session_cache_database = lmdb:${data_directory}/smtpd_scache
+
+# Processes enough for every submission connection and every delivery.
+default_process_limit = 256
+# Every system retries on the same schedule and keeps to the same connections
+# per receiver site. The harness passes both from the profile, and
+# the start script sets minimal_backoff_time, maximal_backoff_time and
+# queue_run_delay to the schedule. Postfix limits connections per destination
+# domain and has no limit per receiving site, so the start script sets the
+# per-domain limit to the connections allowed a site, and smtp's process limit
+# to that times the sites: as many deliveries at once as the other systems may
+# open, however the domains share the sites.
+# Connections to every destination stay open between deliveries, as
+# KumoMTA's do. By default Postfix keeps no TLS connection for reuse, so it
+# opened a connection, and completed a TLS handshake, for every message
+# (measured 27 October 2026). Reuse runs TLS through tlsproxy.
+smtp_tls_connection_reuse = yes
+smtp_connection_cache_destinations = static:all

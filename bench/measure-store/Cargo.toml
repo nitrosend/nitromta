@@ -1,0 +1,16 @@
+[package]
+name = "measure-store"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+engine-core.workspace = true
+engine-store.workspace = true
+rusqlite.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,32 @@
+#!/bin/sh
+# Sets up the credentials and keys the harness copied into /etc/bench, starts
+# OpenDKIM, then runs Postfix in the foreground.
+set -eu
+# docker cp keeps the host's owner, which OpenDKIM refuses on a key's path.
+chown -R root:root /etc/bench
+chmod -R go-w /etc/bench
+echo "$BENCH_PASSWORD" | saslpasswd2 -p -c -u bench.test -f /etc/sasldb2 bench
+chown postfix /etc/sasldb2
+chmod 600 /etc/bench/dkim/private.pem /etc/bench/tls/sut.key
+# An ablation may leave out signing, or TLS on delivery. Without
+# signing, OpenDKIM does not run and no milter is asked.
+if [ "$BENCH_SIGN" = true ]; then
+    chown opendkim /etc/bench/dkim/private.pem
+    install -d -o opendkim -g opendkim -m 750 /run/opendkim
+    opendkim -x /etc/opendkim.conf
+else
+    postconf -e "smtpd_milters=" "non_smtpd_milters="
+fi
+if [ "$BENCH_DELIVERY_TLS" = false ]; then
+    postconf -e "smtp_tls_security_level=none"
+fi
+# The harness's delivery settings: its retry schedule, and its connections
+# per receiver site (main.cf).
+postconf -e "minimal_backoff_time=${BENCH_RETRY_FIRST_SECONDS}s" \
+    "maximal_backoff_time=${BENCH_RETRY_MAX_SECONDS}s" \
+    "queue_run_delay=${BENCH_RETRY_FIRST_SECONDS}s" \
+    "smtp_destination_concurrency_limit=$BENCH_CONNECTIONS"
+postconf -F "smtp/unix/process_limit=$((BENCH_CONNECTIONS * BENCH_SITES))"
+# The queue volume starts empty: create its directories, with their owners.
+postfix post-install create-missing set-permissions
+exec postfix start-fg
