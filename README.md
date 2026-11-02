@@ -96,6 +96,8 @@ mailboxes among others, signed and passing DKIM, SPF and DMARC.
 
 ## Documentation
 
+The same pages are at [nitromta.com/docs](https://nitromta.com/docs/).
+
 Guides:
 
 - [Capture quickstart](docs/capture.md): the whole engine on your machine,
@@ -116,6 +118,9 @@ Reference:
   and where the engine differs from SES
 - [Durability](docs/durability.md): what an acceptance promises, and the
   limits
+- [Command line](docs/reference/cli.md): every command and its options
+- [Configuration](docs/reference/configuration.md): what `nitromta setup`
+  writes, every setting explained
 - [Changelog](CHANGELOG.md)
 
 ## Benchmarks

@@ -15,7 +15,8 @@ use serde_json::{Value, json};
 use crate::{admin, backup, clock, config, doctor, keys, setup, store};
 
 /// Every command, for the usage line.
-const USAGE: &str = "usage: nitromta <command> [--option value ...] | nitromta --version
+const USAGE: &str =
+    "usage: nitromta <command> [--option value ...] | nitromta --version | nitromta --help
 
   run --config <file>             serve
   check --config <file>           check a stopped engine's store
@@ -63,7 +64,8 @@ pub struct Options {
 }
 
 /// The options that are switches, with no value.
-const SWITCHES: [&str; 7] = [
+const SWITCHES: [&str; 8] = [
+    "help",
     "version",
     "json",
     "accepting",
@@ -149,6 +151,10 @@ impl Options {
 pub fn command(options: &Options) -> Result<(), String> {
     let words = options.words();
     match words.as_slice() {
+        [] if options.switch("help") => {
+            println!("{USAGE}");
+            Ok(())
+        }
         [] if options.switch("version") => {
             println!("nitromta {}", env!("CARGO_PKG_VERSION"));
             Ok(())
