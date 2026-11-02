@@ -1,0 +1,23 @@
+[package]
+name = "engine-sim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+engine-core.workspace = true
+engine-scheduler.workspace = true
+engine-store.workspace = true
+rusqlite.workspace = true
+
+[dev-dependencies]
+bytes.workspace = true
+engine-events.workspace = true
+engine-rules.workspace = true
+# SQLite's preupdate and commit hooks, through which the work counts see
+# every write: the update hook misses tables without row IDs.
+rusqlite = { workspace = true, features = ["preupdate_hook"] }
+
+[lints]
+workspace = true

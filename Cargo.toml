@@ -1,0 +1,91 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "fuzz", "xtask"]
+# Generated crates are built as dependencies but are not members, so the
+# gate's lints never run on them: regeneration checks them (architecture.toml).
+exclude = ["crates/engine-ses-v2"]
+
+[workspace.package]
+# The release's version, every crate's, which `nitromta --version` prints and
+# a release's tag names.
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+# Every dependency version in the repository is set here, once. Crates name
+# their dependencies with `workspace = true`.
+[workspace.dependencies]
+aws-lc-rs = "1.18.2"
+aws-smithy-http-server = { version = "0.68.0", default-features = false }
+base64 = "0.23.1"
+bytes = "1.12.1"
+engine-api = { path = "crates/engine-api" }
+engine-core = { path = "crates/engine-core" }
+engine-events = { path = "crates/engine-events" }
+engine-feedback = { path = "crates/engine-feedback" }
+engine-message = { path = "crates/engine-message" }
+engine-rules = { path = "crates/engine-rules" }
+engine-scheduler = { path = "crates/engine-scheduler" }
+engine-ses-v2 = { path = "crates/engine-ses-v2" }
+engine-smtp = { path = "crates/engine-smtp" }
+engine-store = { path = "crates/engine-store" }
+engine-warmup = { path = "crates/engine-warmup" }
+hickory-resolver = { version = "0.26.3", default-features = false, features = ["dnssec-aws-lc-rs", "tokio"] }
+http = "1.5.0"
+http-body-util = "0.1.5"
+hyper = { version = "1.12.0", features = ["client", "http1", "server"] }
+hyper-util = { version = "0.1.21", features = ["tokio"] }
+libfuzzer-sys = "0.4.13"
+mail-auth = { version = "0.14.1", default-features = false, features = ["aws-lc-rs"] }
+mail-parser = "1.0.0"
+regex = "1.13.1"
+rcgen = { version = "0.14.10", default-features = false, features = ["aws_lc_rs", "pem"] }
+rusqlite = { version = "0.41.0", default-features = false, features = ["backup", "bundled", "cache"] }
+rustix = { version = "1.1.6", features = ["fs", "param", "process", "thread"] }
+rustls = "0.23.46"
+rustls-webpki = "0.103.16"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+smtp-proto = "0.2.5"
+tokio = { version = "1.54.1", features = ["io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tokio-rustls = "0.26.6"
+tokio-util = "0.7.20"
+toml = "1.1.8"
+tower = { version = "0.4.13", default-features = false, features = ["util"] }
+tracing = { version = "0.1.44", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "json", "std"] }
+
+# hickory 0.26.3 calls a name bogus when its zone is delegated from an
+# unsigned parent and the child answers the DS query with its own SOA, as
+# Google's l.google.com does, so no mail reached Gmail while DANE was
+# honoured (hickory-dns#3974). The fix is on hickory's release/0.26 branch
+# (#4007) but in no release yet; back to the registry once 0.26.4 is out.
+[patch.crates-io]
+hickory-net = { git = "https://github.com/hickory-dns/hickory-dns", rev = "8a448ff49139c0c2809610e476501fb278e10a01" }
+hickory-proto = { git = "https://github.com/hickory-dns/hickory-dns", rev = "8a448ff49139c0c2809610e476501fb278e10a01" }
+hickory-resolver = { git = "https://github.com/hickory-dns/hickory-dns", rev = "8a448ff49139c0c2809610e476501fb278e10a01" }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+
+# Simulation runs every check, so SQLite and the crates the simulator spends
+# its time in are optimised even in development builds; debug assertions and
+# overflow checks stay on. When they were added, they made the SQLite
+# power-loss gate run eight times faster.
+[profile.dev.package.libsqlite3-sys]
+opt-level = 3
+
+[profile.dev.package.engine-sim]
+opt-level = 2
+
+[profile.dev.package.engine-store]
+opt-level = 2
+
+[profile.dev.package.engine-core]
+opt-level = 2

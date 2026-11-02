@@ -1,0 +1,13 @@
+[package]
+name = "engine-warmup"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+engine-core.workspace = true
+engine-rules.workspace = true
+
+[lints]
+workspace = true

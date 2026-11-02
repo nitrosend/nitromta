@@ -1,0 +1,10 @@
+This repository includes data derived from KumoMTA
+(https://github.com/KumoCorp/kumomta), Copyright 2023-present Kumo Corp,
+licensed under the Apache License, Version 2.0.
+
+rules/receivers.toml is seeded from KumoMTA's
+assets/policy-extras/shaping.toml and assets/bounce_classifier/iana.toml at
+release 2026.09.29-b90d8bc1, and some of its tests use replies from KumoMTA's
+examples/smart-sink-docker/policy/responses.toml and
+assets/community/shaping.toml. The comments at the head of
+rules/receivers.toml describe how the data was changed.

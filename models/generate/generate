@@ -1,0 +1,7 @@
+#!/bin/sh
+# Runs the generator and writes the formatted crate to /out.
+set -eu
+./gradlew :engine-ses-v2:smithyBuild --no-daemon --quiet
+generated=engine-ses-v2/build/smithyprojections/engine-ses-v2/sesv2/rust-server-codegen
+rm -rf /out/* && cp -R "$generated"/. /out/
+cd /toolchain && find /out/src -name '*.rs' -exec rustfmt --edition 2021 {} +

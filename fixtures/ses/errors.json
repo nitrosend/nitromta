@@ -1,0 +1,42 @@
+[
+  {
+    "operation": "SendEmail",
+    "status": 400,
+    "headers": {
+      "content-type": "application/json",
+      "x-amzn-requestid": "<request-id>",
+      "x-amzn-errortype": "MessageRejected"
+    },
+    "body": "{\"message\":\"Email address is not verified. The following identities failed the check in region US-EAST-1: fixture@nitromta-fixture.invalid\"}"
+  },
+  {
+    "operation": "SendEmail",
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "x-amzn-requestid": "<request-id>",
+      "x-amzn-errortype": "NotFoundException"
+    },
+    "body": "{\"message\":\"Configuration set <nitromta-fixture-nowhere> does not exist.\"}"
+  },
+  {
+    "operation": "GetSuppressedDestination",
+    "status": 404,
+    "headers": {
+      "content-type": "application/x-amz-json-1.1",
+      "x-amzn-requestid": "<request-id>",
+      "x-amzn-errortype": "NotFoundException"
+    },
+    "body": "{\"message\":\"Email address nitromta-fixture-absent@simulator.amazonses.com does not exist on your suppression list.\"}"
+  },
+  {
+    "operation": "SendEmail",
+    "status": 403,
+    "headers": {
+      "content-type": "application/json",
+      "x-amzn-errortype": "AccessDeniedException",
+      "x-amzn-requestid": "<request-id>"
+    },
+    "body": "{\"Message\":\"Tenant not associated with resources [arn:aws:ses:us-east-1:123456789012:identity/example.com].\"}"
+  }
+]

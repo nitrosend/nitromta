@@ -1,0 +1,48 @@
+# What third-party code this repository may use. `cargo xtask check` runs
+# `cargo deny check` against it. A new license or source is an edit here.
+
+[graph]
+all-features = true
+
+[advisories]
+yanked = "deny"
+
+[licenses]
+# Each license is here because a dependency in Cargo.lock needs it.
+allow = [
+  "Apache-2.0",
+  "BlueOak-1.0.0", # minicbor, under the generated SES v2 server's runtime
+  "BSD-3-Clause", # subtle, and parts of aws-lc-sys, under the harness's TLS
+  "ISC",          # aws-lc-rs, rustls-webpki and untrusted, under the harness's TLS
+  "MIT",
+  "Unicode-3.0", # unicode-ident's Unicode data tables
+  "Zlib",        # foldhash, the hasher in rusqlite's statement cache
+]
+confidence-threshold = 0.93
+
+# Mozilla's root certificates as data, under the platform verifier mail-auth's
+# aws-lc-rs backend turns on in hickory, for DNS over TLS, which the engine
+# does not use.
+[[licenses.exceptions]]
+crate = "webpki-root-certs"
+allow = ["CDLA-Permissive-2.0"]
+
+# LLVM's libFuzzer, built into the fuzz targets alone, which never reach a
+# build of the engine.
+[[licenses.exceptions]]
+crate = "libfuzzer-sys"
+allow = ["NCSA"]
+
+[bans]
+# Duplicate versions are reported, not pinned: a skip list of exact versions
+# would be maintained by hand and go stale.
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+# hickory's own repository, for the release/0.26 fix the workspace patches
+# in until it is released (Cargo.toml, [patch.crates-io]).
+allow-git = ["https://github.com/hickory-dns/hickory-dns"]

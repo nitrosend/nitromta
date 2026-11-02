@@ -1,0 +1,61 @@
+[package]
+name = "engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# The product's one name: configuration, environment, metric and
+# header prefixes derive from it.
+[[bin]]
+name = "nitromta"
+path = "src/main.rs"
+
+# Its own main: run with `run --config`, it is the engine with hooks of the
+# test's own, which the tests start.
+[[test]]
+name = "hooks"
+harness = false
+
+[dependencies]
+aws-lc-rs.workspace = true
+aws-smithy-http-server.workspace = true
+base64.workspace = true
+bytes.workspace = true
+engine-api.workspace = true
+engine-core.workspace = true
+engine-events.workspace = true
+engine-feedback.workspace = true
+engine-message.workspace = true
+engine-rules.workspace = true
+engine-scheduler.workspace = true
+engine-ses-v2.workspace = true
+engine-smtp.workspace = true
+engine-store.workspace = true
+engine-warmup.workspace = true
+hickory-resolver.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+hyper.workspace = true
+hyper-util.workspace = true
+mail-auth.workspace = true
+mail-parser.workspace = true
+rcgen.workspace = true
+rusqlite.workspace = true
+rustix.workspace = true
+rustls.workspace = true
+rustls-webpki.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tokio-rustls.workspace = true
+tokio-util.workspace = true
+toml.workspace = true
+tower.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

@@ -1,0 +1,28 @@
+# The one gate, as contributors run it: `cargo xtask check`.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install libclang, for the simulator's SQLite build
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libclang-dev
+      - name: Install the toolchain rust-toolchain.toml names
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Install cargo-deny
+        run: cargo install --locked cargo-deny
+      - run: cargo xtask check

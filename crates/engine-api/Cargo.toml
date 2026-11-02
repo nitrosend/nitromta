@@ -1,0 +1,21 @@
+[package]
+name = "engine-api"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+aws-lc-rs.workspace = true
+base64.workspace = true
+bytes.workspace = true
+engine-core.workspace = true
+engine-message.workspace = true
+engine-scheduler.workspace = true
+engine-ses-v2.workspace = true
+engine-smtp.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

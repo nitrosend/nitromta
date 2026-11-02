@@ -1,0 +1,1065 @@
+{
+  "bounce-bounce": {
+    "eventType": "Bounce",
+    "bounce": {
+      "feedbackId": "<feedback-id>",
+      "bounceType": "Permanent",
+      "bounceSubType": "General",
+      "bouncedRecipients": [
+        {
+          "emailAddress": "bounce@simulator.amazonses.com",
+          "action": "failed",
+          "status": "5.1.1",
+          "diagnosticCode": "smtp; 550 5.1.1 As requested: user unknown <bounce@simulator.amazonses.com>"
+        }
+      ],
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "remoteMtaIp": "192.0.2.1",
+      "reportingMTA": "dns; a0-0.smtp-out.amazonses.com"
+    },
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "bounce@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "bounce@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture bounce"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "bounce@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture bounce"
+      },
+      "tags": {
+        "fixture": [
+          "bounce"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    }
+  },
+  "bounce-ooto": {
+    "eventType": "Bounce",
+    "bounce": {
+      "feedbackId": "<feedback-id>",
+      "bounceType": "Transient",
+      "bounceSubType": "General",
+      "bouncedRecipients": [
+        {
+          "emailAddress": "ooto@simulator.amazonses.com"
+        }
+      ],
+      "timestamp": "2026-01-01T00:00:00.000Z"
+    },
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "ooto@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "ooto@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture ooto"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "ooto@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture ooto"
+      },
+      "tags": {
+        "fixture": [
+          "ooto"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    }
+  },
+  "bounce-suppressionlist": {
+    "eventType": "Bounce",
+    "bounce": {
+      "feedbackId": "<feedback-id>",
+      "bounceType": "Permanent",
+      "bounceSubType": "General",
+      "bouncedRecipients": [
+        {
+          "emailAddress": "suppressionlist@simulator.amazonses.com",
+          "action": "failed",
+          "status": "5.1.1",
+          "diagnosticCode": "smtp; 550 5.1.1 As requested: user unknown (suppressed address: suppressionlist@simulator.amazonses.com)"
+        }
+      ],
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "remoteMtaIp": "192.0.2.1",
+      "reportingMTA": "dns; a0-0.smtp-out.amazonses.com"
+    },
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "suppressionlist@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "suppressionlist@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture suppressionlist"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "suppressionlist@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture suppressionlist"
+      },
+      "tags": {
+        "fixture": [
+          "suppressionlist"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    }
+  },
+  "complaint-complaint": {
+    "eventType": "Complaint",
+    "complaint": {
+      "feedbackId": "<feedback-id>",
+      "complaintSubType": null,
+      "complainedRecipients": [
+        {
+          "emailAddress": "complaint@simulator.amazonses.com"
+        }
+      ],
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "userAgent": "Amazon SES Mailbox Simulator",
+      "complaintFeedbackType": "abuse",
+      "arrivalDate": "2026-01-01T00:00:00.000Z"
+    },
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "complaint@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "complaint@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture complaint"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "complaint@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture complaint"
+      },
+      "tags": {
+        "fixture": [
+          "complaint"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    }
+  },
+  "delivery-complaint": {
+    "eventType": "Delivery",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "complaint@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "complaint@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture complaint"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "complaint@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture complaint"
+      },
+      "tags": {
+        "fixture": [
+          "complaint"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:outgoing-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ],
+        "ses:outgoing-ip": [
+          "192.0.2.20"
+        ]
+      }
+    },
+    "delivery": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "processingTimeMillis": 0,
+      "recipients": [
+        "complaint@simulator.amazonses.com"
+      ],
+      "smtpResponse": "250 Ok",
+      "remoteMtaIp": "192.0.2.1",
+      "reportingMTA": "a0-0.smtp-out.amazonses.com"
+    }
+  },
+  "delivery-ooto": {
+    "eventType": "Delivery",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "ooto@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "ooto@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture ooto"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "ooto@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture ooto"
+      },
+      "tags": {
+        "fixture": [
+          "ooto"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:outgoing-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ],
+        "ses:outgoing-ip": [
+          "192.0.2.20"
+        ]
+      }
+    },
+    "delivery": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "processingTimeMillis": 0,
+      "recipients": [
+        "ooto@simulator.amazonses.com"
+      ],
+      "smtpResponse": "250 Ok",
+      "remoteMtaIp": "192.0.2.1",
+      "reportingMTA": "a0-0.smtp-out.amazonses.com"
+    }
+  },
+  "delivery-success": {
+    "eventType": "Delivery",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "success@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "success@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture success"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "success@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture success"
+      },
+      "tags": {
+        "fixture": [
+          "success"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:outgoing-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ],
+        "ses:outgoing-ip": [
+          "192.0.2.20"
+        ]
+      }
+    },
+    "delivery": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "processingTimeMillis": 0,
+      "recipients": [
+        "success@simulator.amazonses.com"
+      ],
+      "smtpResponse": "250 Ok",
+      "remoteMtaIp": "192.0.2.1",
+      "reportingMTA": "a0-0.smtp-out.amazonses.com"
+    }
+  },
+  "send-bounce": {
+    "eventType": "Send",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "bounce@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "bounce@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture bounce"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "bounce@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture bounce"
+      },
+      "tags": {
+        "fixture": [
+          "bounce"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    },
+    "send": {}
+  },
+  "send-complaint": {
+    "eventType": "Send",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "complaint@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "complaint@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture complaint"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "complaint@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture complaint"
+      },
+      "tags": {
+        "fixture": [
+          "complaint"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    },
+    "send": {}
+  },
+  "send-ooto": {
+    "eventType": "Send",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "ooto@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "ooto@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture ooto"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "ooto@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture ooto"
+      },
+      "tags": {
+        "fixture": [
+          "ooto"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    },
+    "send": {}
+  },
+  "send-success": {
+    "eventType": "Send",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "success@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "success@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture success"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "success@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture success"
+      },
+      "tags": {
+        "fixture": [
+          "success"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    },
+    "send": {}
+  },
+  "send-suppressionlist": {
+    "eventType": "Send",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "messageId": "<message-id>",
+      "destination": [
+        "suppressionlist@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "suppressionlist@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture suppressionlist"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "suppressionlist@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture suppressionlist"
+      },
+      "tags": {
+        "fixture": [
+          "suppressionlist"
+        ],
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    },
+    "send": {}
+  },
+  "send-tenant": {
+    "eventType": "Send",
+    "mail": {
+      "timestamp": "2026-01-01T00:00:00.000Z",
+      "source": "fixture@nitromta-fixture.example.com",
+      "sourceArn": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+      "sendingAccountId": "123456789012",
+      "tenant": {
+        "tenantName": "nitromta-fixture-tenant",
+        "tenantId": "<tenant-id>"
+      },
+      "messageId": "<message-id>",
+      "destination": [
+        "success@simulator.amazonses.com"
+      ],
+      "headersTruncated": false,
+      "headers": [
+        {
+          "name": "From",
+          "value": "fixture@nitromta-fixture.example.com"
+        },
+        {
+          "name": "To",
+          "value": "success@simulator.amazonses.com"
+        },
+        {
+          "name": "Subject",
+          "value": "fixture tenant"
+        },
+        {
+          "name": "MIME-Version",
+          "value": "1.0"
+        },
+        {
+          "name": "Content-Type",
+          "value": "text/plain; charset=UTF-8"
+        },
+        {
+          "name": "Content-Transfer-Encoding",
+          "value": "7bit"
+        }
+      ],
+      "commonHeaders": {
+        "from": [
+          "fixture@nitromta-fixture.example.com"
+        ],
+        "to": [
+          "success@simulator.amazonses.com"
+        ],
+        "messageId": "<message-id>",
+        "subject": "fixture tenant"
+      },
+      "tags": {
+        "ses:source-tls-version": [
+          "TLSv1.3"
+        ],
+        "ses:tenant": [
+          "nitromta-fixture-tenant"
+        ],
+        "ses:operation": [
+          "SendEmail"
+        ],
+        "ses:configuration-set": [
+          "nitromta-fixture-set"
+        ],
+        "ses:source-ip": [
+          "192.0.2.10"
+        ],
+        "ses:from-domain": [
+          "nitromta-fixture.example.com"
+        ],
+        "ses:caller-identity": [
+          "<caller>"
+        ]
+      }
+    },
+    "send": {}
+  }
+}

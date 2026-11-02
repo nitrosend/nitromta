@@ -1,0 +1,8 @@
+ÿEHLO c
+MAIL FROM:<a@b>
+RCPT TO:<c@d>
+DATA
+.
+VRFY x
+HELP
+QUIT

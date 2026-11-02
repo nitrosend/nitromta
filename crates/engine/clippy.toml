@@ -1,0 +1,4 @@
+# The shell keeps the engine's clocks, runs its threads and performs its I/O,
+# so the determinism rules in crates/clippy.toml do not govern it. Clippy
+# reads the nearest configuration, so this file stands in their place, with
+# no rules of its own.

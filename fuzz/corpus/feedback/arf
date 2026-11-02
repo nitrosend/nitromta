@@ -1,0 +1,23 @@
+From: abuse@example.net
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=feedback-report; boundary="p"
+
+--p
+Content-Type: text/plain
+
+spam
+--p
+Content-Type: message/feedback-report
+
+Feedback-Type: abuse
+User-Agent: fuzz/1.0
+Version: 1
+Original-Mail-From: <bounce+token@bounces.example.test>
+Original-Rcpt-To: <one@example.net>
+
+--p
+Content-Type: text/rfc822-headers
+
+Message-ID: <1@sender.test>
+
+--p--

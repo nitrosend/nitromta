@@ -1,0 +1,87 @@
+[package]
+name = "fuzz"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# Its targets are run by `cargo xtask fuzz`, through cargo-fuzz.
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+bytes.workspace = true
+engine-api.workspace = true
+engine-core.workspace = true
+engine-feedback.workspace = true
+engine-message.workspace = true
+engine-rules.workspace = true
+engine-smtp.workspace = true
+engine-store = { workspace = true, features = ["fuzz"] }
+libfuzzer-sys.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "provider"
+path = "fuzz_targets/provider.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "mime"
+path = "fuzz_targets/mime.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "template"
+path = "fuzz_targets/template.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "smtp_server"
+path = "fuzz_targets/smtp_server.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "smtp_client"
+path = "fuzz_targets/smtp_client.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "feedback"
+path = "fuzz_targets/feedback.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "sts"
+path = "fuzz_targets/sts.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "replies"
+path = "fuzz_targets/replies.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "records"
+path = "fuzz_targets/records.rs"
+test = false
+doc = false
+bench = false

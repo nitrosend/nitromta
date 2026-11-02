@@ -1,0 +1,19 @@
+[package]
+name = "engine-store"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+# The record decoders, for the fuzz targets alone.
+fuzz = []
+
+[dependencies]
+aws-lc-rs.workspace = true
+bytes.workspace = true
+engine-core.workspace = true
+rusqlite.workspace = true
+
+[lints]
+workspace = true

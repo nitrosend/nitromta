@@ -1,0 +1,17 @@
+From: app@sender.test
+To: one@plain.test
+Subject: parts
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+hello=20there
+--b1
+Content-Type: application/octet-stream; name="a.bin"
+Content-Transfer-Encoding: base64
+
+AAECAw==
+--b1--

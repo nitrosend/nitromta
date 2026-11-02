@@ -1,0 +1,7 @@
+From:
+ app@sender.test
+Subject: a
+	long subject
+List-Unsubscribe: <https://sender.test/u>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+

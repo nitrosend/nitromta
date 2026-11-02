@@ -1,0 +1,12 @@
+{
+  "Type": "Notification",
+  "MessageId": "<sns-message-id>",
+  "TopicArn": "arn:aws:sns:us-east-1:123456789012:nitromta-fixture-events",
+  "Subject": "Amazon SES Email Event Notification",
+  "Message": "<the event>",
+  "Timestamp": "2026-01-01T00:00:00.000Z",
+  "SignatureVersion": "1",
+  "Signature": "<signature>",
+  "SigningCertURL": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-1e59c4574facfe41babdb2d652f8ebef.pem",
+  "UnsubscribeURL": "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=<subscription>"
+}

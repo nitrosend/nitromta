@@ -1,0 +1,97 @@
+# The determinism rules. They govern every deterministic, store and simulator
+# crate (architecture.toml), and the structure check fails if one of those
+# crates is governed by any other Clippy configuration. Deterministic code
+# receives time, randomness and I/O results from its driver, so the simulator
+# can replay any run exactly from its seed.
+
+disallowed-types = [
+  { path = "std::time::Instant", reason = "time is an input to deterministic code" },
+  { path = "std::time::SystemTime", reason = "time is an input to deterministic code" },
+
+  { path = "std::collections::HashMap", reason = "iteration order follows a random seed; use a map seeded by the driver" },
+  { path = "std::collections::HashSet", reason = "iteration order follows a random seed; use a set seeded by the driver" },
+  { path = "std::hash::RandomState", reason = "seeds come from the driver" },
+
+  { path = "aws_lc_rs::rand::SystemRandom", reason = "randomness is an input to deterministic code", allow-invalid = true },
+
+  { path = "std::fs::File", reason = "I/O belongs to the shell" },
+  { path = "std::fs::OpenOptions", reason = "I/O belongs to the shell" },
+  { path = "std::net::TcpListener", reason = "I/O belongs to the shell" },
+  { path = "std::net::TcpStream", reason = "I/O belongs to the shell" },
+  { path = "std::net::UdpSocket", reason = "I/O belongs to the shell" },
+  { path = "std::os::unix::net::UnixDatagram", reason = "I/O belongs to the shell" },
+  { path = "std::os::unix::net::UnixListener", reason = "I/O belongs to the shell" },
+  { path = "std::os::unix::net::UnixStream", reason = "I/O belongs to the shell" },
+  { path = "std::process::Command", reason = "I/O belongs to the shell" },
+
+  { path = "std::thread::Builder", reason = "deterministic code runs on its driver's thread" },
+  { path = "std::sync::Barrier", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::Condvar", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::LazyLock", reason = "global state leaks between simulation runs" },
+  { path = "std::sync::Mutex", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::OnceLock", reason = "global state leaks between simulation runs" },
+  { path = "std::sync::RwLock", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicBool", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicI8", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicI16", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicI32", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicI64", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicIsize", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicPtr", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicU8", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicU16", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicU32", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicU64", reason = "state lives in the component, not shared between threads" },
+  { path = "std::sync::atomic::AtomicUsize", reason = "state lives in the component, not shared between threads" },
+]
+
+disallowed-methods = [
+  { path = "std::thread::available_parallelism", reason = "deterministic code runs on its driver's thread" },
+  { path = "std::thread::park", reason = "deterministic code runs on its driver's thread" },
+  { path = "std::thread::scope", reason = "deterministic code runs on its driver's thread" },
+  { path = "std::thread::sleep", reason = "time is an input to deterministic code" },
+  { path = "std::thread::spawn", reason = "deterministic code runs on its driver's thread" },
+  { path = "std::thread::yield_now", reason = "deterministic code runs on its driver's thread" },
+
+  { path = "std::env::args", reason = "configuration is an input from the driver" },
+  { path = "std::env::args_os", reason = "configuration is an input from the driver" },
+  { path = "std::env::current_dir", reason = "configuration is an input from the driver" },
+  { path = "std::env::current_exe", reason = "configuration is an input from the driver" },
+  { path = "std::env::set_current_dir", reason = "configuration is an input from the driver" },
+  { path = "std::env::temp_dir", reason = "configuration is an input from the driver" },
+  { path = "std::env::var", reason = "configuration is an input from the driver" },
+  { path = "std::env::var_os", reason = "configuration is an input from the driver" },
+  { path = "std::env::vars", reason = "configuration is an input from the driver" },
+  { path = "std::env::vars_os", reason = "configuration is an input from the driver" },
+  { path = "std::process::id", reason = "configuration is an input from the driver" },
+
+  { path = "std::fs::canonicalize", reason = "I/O belongs to the shell" },
+  { path = "std::fs::copy", reason = "I/O belongs to the shell" },
+  { path = "std::fs::create_dir", reason = "I/O belongs to the shell" },
+  { path = "std::fs::create_dir_all", reason = "I/O belongs to the shell" },
+  { path = "std::fs::exists", reason = "I/O belongs to the shell" },
+  { path = "std::fs::hard_link", reason = "I/O belongs to the shell" },
+  { path = "std::fs::metadata", reason = "I/O belongs to the shell" },
+  { path = "std::fs::read", reason = "I/O belongs to the shell" },
+  { path = "std::fs::read_dir", reason = "I/O belongs to the shell" },
+  { path = "std::fs::read_link", reason = "I/O belongs to the shell" },
+  { path = "std::fs::read_to_string", reason = "I/O belongs to the shell" },
+  { path = "std::fs::remove_dir", reason = "I/O belongs to the shell" },
+  { path = "std::fs::remove_dir_all", reason = "I/O belongs to the shell" },
+  { path = "std::fs::remove_file", reason = "I/O belongs to the shell" },
+  { path = "std::fs::rename", reason = "I/O belongs to the shell" },
+  { path = "std::fs::set_permissions", reason = "I/O belongs to the shell" },
+  { path = "std::fs::symlink_metadata", reason = "I/O belongs to the shell" },
+  { path = "std::fs::write", reason = "I/O belongs to the shell" },
+  { path = "std::io::stderr", reason = "I/O belongs to the shell" },
+  { path = "std::io::stdin", reason = "I/O belongs to the shell" },
+  { path = "std::io::stdout", reason = "I/O belongs to the shell" },
+]
+
+disallowed-macros = [
+  { path = "std::eprint", reason = "output belongs to the shell" },
+  { path = "std::eprintln", reason = "output belongs to the shell" },
+  { path = "std::print", reason = "output belongs to the shell" },
+  { path = "std::println", reason = "output belongs to the shell" },
+  { path = "std::thread_local", reason = "global state leaks between simulation runs" },
+]

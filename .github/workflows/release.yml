@@ -1,0 +1,111 @@
+# A release, from a tag `v<version>` naming the workspace's version: the
+# binary for each architecture, built on Debian bookworm and checked to need
+# no glibc newer than 2.34, as docs/install.md promises, packed with its
+# systemd files, with build provenance signed by GitHub, and published with
+# its changelog section; and the container image built from those binaries.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    container: rust:1-bookworm
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check the tag names the workspace's version, which the changelog has a section for
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "the tag $GITHUB_REF_NAME is not v$version"; exit 1; }
+          grep -q "^## $version - " CHANGELOG.md || { echo "CHANGELOG.md has no section for $version"; exit 1; }
+      - name: Build
+        run: rustup toolchain install && cargo build --locked --release --package engine
+      - name: Check it needs no glibc newer than 2.34
+        run: |
+          newest=$(objdump -T target/release/nitromta | grep -o 'GLIBC_[0-9.]*' | sed 's/GLIBC_//' | sort -uV | tail -n 1)
+          test "$(printf '%s\n2.34\n' "$newest" | sort -V | tail -n 1)" = 2.34 || { echo "it needs glibc $newest"; exit 1; }
+      - name: Pack
+        run: |
+          name="nitromta-${GITHUB_REF_NAME#v}-${{ matrix.arch }}-linux"
+          mkdir "$name"
+          cp target/release/nitromta packaging/nitromta.service packaging/nitromta.sysusers LICENSE NOTICE README.md "$name"/
+          tar -czf "$name.tar.gz" "$name"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: nitromta-*.tar.gz
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.arch }}
+          path: nitromta-*.tar.gz
+
+  image:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          merge-multiple: true
+      - name: Build and push the image, for both architectures, from the release's binaries
+        id: push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for pair in x86_64:amd64 aarch64:arm64; do
+            arch="${pair%%:*}"
+            tar -xzf "nitromta-$version-$arch-linux.tar.gz"
+            cp "nitromta-$version-$arch-linux/nitromta" "packaging/nitromta-${pair##*:}"
+          done
+          image="ghcr.io/$GITHUB_REPOSITORY"
+          echo "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker buildx create --use
+          docker buildx build --platform linux/amd64,linux/arm64 \
+            --tag "$image:$version" --push --metadata-file metadata.json packaging
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "digest=$(jq -r '."containerimage.digest"' metadata.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ steps.push.outputs.image }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          merge-multiple: true
+      - name: Publish, with the version's changelog section
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v heading="## $version " 'index($0, heading) == 1 { kept = 1; next } /^## / { kept = 0 } kept' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "CHANGELOG.md has no section for $version"; exit 1; }
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md nitromta-*.tar.gz

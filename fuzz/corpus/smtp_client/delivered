@@ -1,0 +1,14 @@
+220 mx.fuzz.test ESMTP
+250-mx.fuzz.test
+250-PIPELINING
+250-8BITMIME
+250 STARTTLS
+220 2.0.0 go ahead
+250-mx.fuzz.test
+250 PIPELINING
+250 2.1.0 Ok
+250 2.1.5 Ok
+550 5.1.1 no such user
+354 go ahead
+250 2.0.0 queued
+221 2.0.0 bye

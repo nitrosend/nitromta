@@ -1,0 +1,250 @@
+# What this repository contains, what each crate owns, and what each crate may
+# depend on. This file is the single home for those facts: `cargo xtask check`
+# fails whenever the repository disagrees with it.
+#
+# A change to structure, ownership or dependencies edits this file in the same
+# commit as the code. Crates that do not exist yet are declared in advance, so
+# their scope is fixed before their code is written; once a crate exists, its
+# `internal` and `external` lists must match its manifest exactly.
+
+# Every entry allowed at the repository root, with its purpose.
+[root]
+".cargo" = "the `cargo xtask` alias"
+".github" = "CI, which runs the gate, and the release workflow, which builds, signs and publishes a tag's archives"
+".gitignore" = "build output kept out of the repository"
+"Cargo.lock" = "resolved dependency versions; every check runs with --locked"
+"CHANGELOG.md" = "what each release changed, from the first"
+"CONTRIBUTING.md" = "how to contribute: the gate, layout versions, conventional commits and the DCO sign-off"
+"Cargo.toml" = "the workspace: members, shared package fields, the release's version, dependency versions and lints"
+"LICENSE" = "Apache-2.0"
+"NOTICE" = "attribution for third-party work the repository includes, as the Apache License asks"
+"README.md" = "what the project is, how to try and install it, and how to check a change"
+"SECURITY.md" = "how to report a vulnerability"
+"architecture.toml" = "this file"
+"crates" = "the engine's crates, and the determinism rules that govern them"
+"docs" = "the user's documentation: its guides, its reference and the brand's artwork"
+"deny.toml" = "the licenses, sources and advisories allowed for third-party code"
+"fixtures" = "recorded provider fixtures and generated golden formats"
+"fuzz" = "a fuzz target for every parser"
+"models" = "pinned AWS Smithy models, and the recipe that generates code from them"
+"packaging" = "how the engine is installed and run: its service unit, its system user and its container image"
+"rules" = "the receiver rule bundle, as versioned data"
+"rust-toolchain.toml" = "the Rust toolchain every machine uses, so every machine runs the same lints; updating it is its own commit"
+"xtask" = "the repository's checks"
+
+# Groups of third-party crates that kinds forbid. A trailing `*` matches a
+# prefix.
+
+[groups.io]
+summary = "I/O runtimes, socket and HTTP libraries, and DNS resolvers"
+crates = [
+  "tokio", "mio", "socket2", "polling", "async-io", "async-std", "smol",
+  "hyper", "h2", "reqwest", "ureq", "hickory-resolver",
+]
+
+[groups.os-randomness]
+summary = "randomness read from the operating system"
+crates = ["getrandom"]
+
+[groups.sqlite]
+summary = "the SQLite store engine"
+crates = ["rusqlite", "libsqlite3-sys"]
+
+[groups.other-stores]
+summary = "store engines the engine does not use"
+crates = ["rocksdb", "librocksdb-sys", "postgres", "tokio-postgres", "sqlx"]
+
+[groups.provider-sdks]
+summary = "sending-provider SDKs: the engine never calls another provider"
+crates = ["aws-sdk-*"]
+
+# Kinds. Every crate has one. `under` is the directory its crates live in;
+# `may_depend_on` lists the kinds its crates may use; `forbidden` lists groups
+# that may never appear in a crate's normal dependency closure, however
+# indirectly; `clippy` names the Clippy configuration that must govern the
+# kind's crates.
+
+[kinds.deterministic]
+summary = "Sans-IO state machines and pure functions. Time, randomness and I/O results arrive as inputs from a driver, so the simulator can replay any run exactly from its seed."
+under = "crates"
+may_depend_on = ["deterministic"]
+clippy = "crates/clippy.toml"
+forbidden = ["io", "os-randomness", "sqlite", "other-stores"]
+
+[kinds.store]
+summary = "Deterministic, with SQLite as its only I/O, through SQLite's VFS."
+under = "crates"
+may_depend_on = ["deterministic"]
+clippy = "crates/clippy.toml"
+forbidden = ["io", "os-randomness", "other-stores"]
+
+[kinds.simulator]
+summary = "Deterministic. Drives the deterministic and store crates on one thread from a seeded event queue. Nothing depends on it, so it never reaches a production build."
+under = "crates"
+may_depend_on = ["deterministic", "store"]
+clippy = "crates/clippy.toml"
+forbidden = ["io", "os-randomness", "other-stores"]
+
+[kinds.adapter]
+summary = "Provider wire formats to native commands and back. Never touches storage or calls a provider."
+under = "crates"
+may_depend_on = ["deterministic", "generated"]
+forbidden = ["sqlite", "other-stores", "provider-sdks"]
+
+[kinds.generated]
+summary = "Code generated from a pinned model, committed and never edited by hand. Checked by regeneration, not by the manifest, dependency and source rules."
+under = "crates"
+generated = true
+
+[kinds.shell]
+summary = "The binary: connects the components and performs their I/O. Carries messages and supplies time and randomness; makes no decisions of its own."
+under = "crates"
+may_depend_on = ["deterministic", "store", "adapter", "generated"]
+forbidden = ["provider-sdks"]
+
+[kinds.tool]
+summary = "Repository tooling, independent of the engine."
+under = "."
+
+[kinds.fuzzing]
+summary = "A fuzz target for every parser, which feeds engine crates any bytes, adapters among them. Nothing depends on it, so it never reaches a production build."
+under = "."
+may_depend_on = ["deterministic", "store", "adapter"]
+
+# Crates. `internal` and `external` list the crate's dependencies (normal, dev
+# and build). `exceptions` names the files allowed to switch off `unsafe_code`
+# or the determinism lints, each with its reason.
+
+[crates.engine-core]
+kind = "deterministic"
+owns = "Native IDs, records and commands; transition rules; policy semantics; the component contract both drivers run; hook interfaces"
+must_not_own = "Provider wire types, sockets, storage engine types"
+internal = []
+external = ["bytes"]
+
+[crates.engine-store]
+kind = "store"
+owns = "The store contract and its single implementation: layout, the commit owner and group commit, atomic execution, indexes, recovery, backup, migrations; the sealing of policy's secrets under the installation's keys"
+must_not_own = "Policy rules, SMTP, webhook HTTP, reading the keys' file"
+internal = ["engine-core"]
+external = ["aws-lc-rs", "bytes", "rusqlite"]
+
+[crates.engine-store.exceptions."src/golden.rs"]
+allow = ["clippy::disallowed_methods"]
+reason = "the persisted formats' golden fixtures are read from fixtures/formats, and written there once by `cargo xtask fixtures`, for the store's tests alone"
+
+# Its own crate so that the bundle's parser and its regular expressions stay
+# out of the protocol crates, and the scheduler, the feedback intake and the
+# shell read one copy of the rules.
+[crates.engine-rules]
+kind = "deterministic"
+owns = "The receiver rule bundle's format and checks, its operator overrides, site grouping, per-site limits, and the verdict on a reply: its status class, whether it rules the address out, and whether it throttles"
+must_not_own = "The bundle's data, which is rules/receivers.toml, or what a verdict causes: cooldowns, suppression and retry belong to the scheduler and the store"
+internal = ["engine-core"]
+external = ["regex", "serde", "toml"]
+
+[crates.engine-scheduler]
+kind = "deterministic"
+owns = "Bounded active queues, fairness, eligibility, dispatch requests"
+must_not_own = "A second authoritative copy of recipient state"
+internal = ["engine-core", "engine-rules", "engine-smtp"]
+external = ["bytes"]
+
+[crates.engine-smtp]
+kind = "deterministic"
+owns = "SMTP client and server protocol state machines, route resolution decisions, MTA-STS and DANE decisions, attempt evidence"
+must_not_own = "Sockets, suppression or acceptance decisions"
+internal = ["engine-core"]
+# rcgen is its tests' alone: certificates for DANE's matching.
+external = ["aws-lc-rs", "base64", "bytes", "rcgen", "smtp-proto"]
+
+[crates.engine-message]
+kind = "deterministic"
+owns = "MIME validation and construction, payload preparation, DKIM signing"
+must_not_own = "Queue lifecycle"
+internal = ["engine-core"]
+external = ["aws-lc-rs", "base64", "bytes"]
+
+[crates.engine-message.exceptions."src/dkim.rs"]
+allow = ["clippy::disallowed_types"]
+reason = "aws-lc-rs's RSA signing takes a random generator it ignores: PKCS#1 v1.5 signatures are deterministic"
+
+[crates.engine-feedback]
+kind = "deterministic"
+owns = "DSN and ARF parsing, reporter evidence, correlation proposals, the return path's correlation token"
+must_not_own = "Unilateral penalties or queue edits"
+internal = ["engine-core", "engine-rules"]
+external = ["aws-lc-rs", "base64", "bytes"]
+
+[crates.engine-events]
+kind = "deterministic"
+owns = "Event delivery: rendering, signing, retry, replay, acknowledgement"
+must_not_own = "Sending decisions, HTTP connections"
+internal = ["engine-core"]
+external = ["aws-lc-rs", "base64", "bytes", "serde", "serde_json"]
+
+[crates.engine-events.exceptions."src/sns.rs"]
+allow = ["clippy::disallowed_types"]
+reason = "aws-lc-rs's RSA signing takes a random generator it ignores: PKCS#1 v1.5 signatures, SNS's SignatureVersion 2, are deterministic"
+
+[crates.engine-warmup]
+kind = "deterministic"
+owns = "Warmup's schedule and promotion: the judgment of each capped egress on a day's evidence, and the caps it sets, as one policy change"
+must_not_own = "Enforcing caps, which is the scheduler's; counting the evidence, which is the store's; the ladder and thresholds, which are rules/receivers.toml"
+internal = ["engine-core", "engine-rules"]
+external = []
+
+[crates.engine-api]
+kind = "adapter"
+owns = "SES v2 and the SNS subset, the native API and SMTP submission mapping; wire authentication and error mapping"
+must_not_own = "Provider SDKs, business rules, storage, delivery workers"
+internal = ["engine-core", "engine-message", "engine-scheduler", "engine-ses-v2", "engine-smtp"]
+external = ["aws-lc-rs", "base64", "bytes", "serde", "serde_json"]
+
+[crates.engine-ses-v2]
+kind = "generated"
+owns = "The SES v2 server generated by smithy-rs from the pinned model"
+must_not_own = "Anything written by hand"
+internal = []
+recipe = "models/generate/Dockerfile"
+
+[crates.engine-sim]
+kind = "simulator"
+owns = "The deterministic simulator: seeded event queue, simulated clock, network peers, the simulated disk under SQLite, crashes and restarts, invariant checks, seed replay; every test that needs simulation"
+must_not_own = "Anything in a production build"
+internal = ["engine-core", "engine-events", "engine-rules", "engine-scheduler", "engine-store"]
+external = ["bytes", "rusqlite"]
+
+[crates.engine-sim.exceptions."src/vfs.rs"]
+allow = ["unsafe_code"]
+reason = "SQLite's VFS is a C interface: this file puts the real SQLite on the simulated disk"
+
+[crates.engine-sim.exceptions."tests/work.rs"]
+allow = ["clippy::disallowed_methods"]
+reason = "after the simulation, the work counts are written under target/ beside the last run's, for `cargo xtask check` to show what changed"
+
+[crates.engine]
+kind = "shell"
+owns = "The Tokio shell: sockets, timers, files, TLS records, DNS lookups, execution pools; configuration, lifecycle, CLI and admin serving; `doctor`'s checks of the installation; the engine's logs; running the hooks a build carries, within their time, concurrency and failure policy; the binary, whose name is the product name, and the library a build with hooks of its own runs"
+must_not_own = "Business logic or routing decisions, which live in the deterministic crates"
+internal = ["engine-api", "engine-core", "engine-events", "engine-feedback", "engine-message", "engine-rules", "engine-scheduler", "engine-ses-v2", "engine-smtp", "engine-store", "engine-warmup"]
+# rcgen makes the certificate `setup --capture` gives an installation to
+# try the engine with, and its tests' certificates. serde_json reads the
+# admin socket's answers for the CLI; base64 decodes the DKIM keys `doctor`
+# compares, and mail-auth evaluates SPF and finds DMARC records for it;
+# mail-parser reads captured messages for capture mode's inspector.
+external = ["aws-lc-rs", "aws-smithy-http-server", "base64", "bytes", "hickory-resolver", "http", "http-body-util", "hyper", "hyper-util", "mail-auth", "mail-parser", "rcgen", "rusqlite", "rustix", "rustls", "rustls-webpki", "serde", "serde_json", "tokio", "tokio-rustls", "tokio-util", "toml", "tower", "tracing", "tracing-subscriber"]
+
+[crates.fuzz]
+kind = "fuzzing"
+owns = "A fuzz target for every parser: provider decoding, MIME and substitution, SMTP both ways, DSN and ARF, MTA-STS, receiver replies and the store's records; the corpus each runs from, and the check that replays it"
+must_not_own = "Engine code, or an input that fails kept anywhere but its target's corpus once fixed"
+internal = ["engine-api", "engine-core", "engine-feedback", "engine-message", "engine-rules", "engine-smtp", "engine-store"]
+external = ["bytes", "libfuzzer-sys"]
+
+[crates.xtask]
+kind = "tool"
+owns = "The repository's checks: `cargo xtask check` and its parts"
+must_not_own = "Engine code, or a check that passes by skipping"
+internal = []
+external = ["serde", "serde_json", "toml"]

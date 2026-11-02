@@ -1,0 +1,588 @@
+# The receiver rule bundle: the provider sites the engine
+# recognises from their exchanges' names, the limits it keeps to at each site,
+# the replies that mean a site is refusing an egress for now, and what each
+# enhanced status code says of a failure.
+#
+# It changes only by a reviewed pull request with the evidence for the change,
+# and never at runtime. Every rule has a test at the end of this file, and
+# `cargo test` checks every one. An operator overrides it field by field in
+# the engine's configuration, under [receivers.defaults] and
+# [receivers.<Provider>].
+#
+# Seeded from KumoMTA (Apache-2.0, see NOTICE) at release 2026.09.29-b90d8bc1:
+# its providers, limits and automation from assets/policy-extras/shaping.toml,
+# and its status classes from assets/bounce_classifier/iana.toml, checked
+# against IANA's registry of enhanced status codes. Where this file differs
+# from them, a comment says how.
+#
+# - Providers keep KumoMTA's exchange suffixes. A site is a provider's when
+#   every one of its exchanges ends in one of them. A provider's limits are
+#   KumoMTA's provider_connection_limit and max_deliveries_per_connection,
+#   kept per egress, and shared by all the provider's sites, as its warmup
+#   budget and its cooldown are.
+# - Comcast's limits, keyed in KumoMTA by the domain comcast.net, are keyed
+#   here by its exchanges' suffix. Mimecast's and mail.com's limits equal the
+#   defaults, so they need no entry; Mimecast's regions keep a site each.
+# - KumoMTA's automation becomes throttle replies. A suspension's duration is
+#   the cooldown's minimum; a slowed rate is a throttle under the retry
+#   schedule. Its tenant suspension is a cooldown here, since nothing else
+#   changes sending behaviour, and its thresholds are not kept:
+#   the first matching reply throttles.
+# - KumoMTA's TLS settings are not kept: MTA-STS and DANE decide. Its smarthost,
+#   internal and test entries do not apply.
+
+revision = 1
+
+# A site no provider claims: the set of exchanges a domain names.
+[defaults]
+# Connections from one egress at most.
+connections = 10
+# Transactions one connection carries before it closes.
+transactions_per_connection = 100
+
+# Replies from any receiver that refuse an egress for now. Any 421 does too,
+# by SMTP itself.
+[[defaults.throttles]]
+name = "ip-temporarily-deferred"
+pattern = 'Messages from \d+\.\d+\.\d+\.\d+ temporarily deferred'
+
+[[defaults.throttles]]
+name = "ip-permanently-deferred"
+pattern = 'All messages from \d+\.\d+\.\d+\.\d+ will be permanently deferred'
+
+[[defaults.throttles]]
+name = "ip-reputation"
+pattern = 'has been temporarily rate limited due to IP reputation'
+
+[[defaults.throttles]]
+name = "ip-blocked"
+pattern = 'Unfortunately, messages from \d+\.\d+\.\d+\.\d+ weren.t sent'
+
+[[defaults.throttles]]
+name = "server-busy"
+pattern = 'Server busy\. Please try again later from'
+
+# Warmup: the daily caps an egress climbs at each site, rung by rung,
+# and the thresholds that hold a cap where it is or lower it a rung. A site is
+# judged on its own once its replies in a UTC day reach `sample` or half its
+# cap, whichever is fewer; the rest are pooled under the egress's own cap,
+# which climbs this ladder. A cap rises only after a day under every
+# threshold whose replies reached half of it, and there is none past the last
+# rung. A provider may give its own ladder or thresholds; one it leaves out is
+# these.
+#
+# The ladder starts low, as receivers ask of a new address, and about doubles
+# each day to 10,000, then climbs more slowly. Thresholds are in basis points
+# (hundredths of a percent), to hold and to lower, and a count of none is
+# under every one, so a threshold of 0 means any:
+# - complaints, of deliveries: Gmail's 0.1%, and its 0.3% never to reach;
+# - permanent failures, of replies: 2%, the most a clean list shows, and 5%;
+# - deferrals, of replies: 5% and 20%;
+# - throttles, of replies: any holds, and 1% lowers.
+[defaults.warmup]
+ladder = [
+  50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 40000, 70000, 100000,
+  150000, 250000, 400000, 600000, 1000000,
+]
+sample = 100
+complaints = [10, 30]
+failures = [200, 500]
+deferrals = [500, 2000]
+throttles = [0, 100]
+
+# Gmail and Google Workspace share their exchanges' addresses, so they are one
+# provider. https://support.google.com/mail/answer/81126
+# Google defers and rate-limits mail it receives without TLS, so KumoMTA
+# requires TLS to it.
+[receivers.Google]
+exchanges = [".google.com", ".googlemail.com"]
+connections = 5
+transactions_per_connection = 50
+require_tls = true
+
+# https://senders.yahooinc.com/best-practices
+[receivers.Yahoo]
+exchanges = [".yahoodns.net"]
+transactions_per_connection = 20
+
+[[receivers.Yahoo.throttles]]
+name = "TSS04"
+pattern = '\[TS?S04\]'
+cooldown_seconds = 7200
+
+# Microsoft's consumer mail, Microsoft 365, and Microsoft 365's exchanges for
+# DANE are separate groups of edge servers, so three providers.
+# https://techcommunity.microsoft.com/t5/exchange-team-blog/implementing-inbound-smtp-dane-with-dnssec-for-exchange-online/ba-p/3939694
+[receivers.Outlook]
+exchanges = [".olc.protection.outlook.com"]
+connections = 5
+transactions_per_connection = 50
+
+[receivers.Office365]
+exchanges = [".mail.protection.outlook.com"]
+connections = 5
+transactions_per_connection = 50
+
+[receivers.Office365Dane]
+exchanges = [".mx.microsoft"]
+connections = 5
+transactions_per_connection = 50
+
+# https://support.apple.com/en-us/102322
+[receivers.Apple]
+exchanges = [".icloud.com"]
+connections = 10
+transactions_per_connection = 5
+
+# https://spa.xfinity.com/help/postmaster
+[receivers.Comcast]
+exchanges = [".comcast.net"]
+connections = 25
+transactions_per_connection = 1000
+require_tls = true
+
+# KumoMTA slows its connections for two hours after two of these in an hour.
+[[receivers.Comcast.throttles]]
+name = "RL0000"
+pattern = 'RL0000'
+
+# A domain throttled: KumoMTA suspends the tenant for five minutes.
+[[receivers.Comcast.throttles]]
+name = "RL000010"
+pattern = 'RL000010'
+cooldown_seconds = 300
+
+# https://messagerie.orange.fr/postmaster.html
+[receivers.Orange]
+exchanges = [".orange.fr"]
+connections = 2
+transactions_per_connection = 100
+require_tls = true
+
+# What an enhanced status code says of a failure, by its subject and detail,
+# whatever its class (IANA, smtp-enhanced-status-codes). Its scope is what the
+# failure is about: the recipient, the message, the sender's identity, the
+# egress, or the site. Only a permanent failure whose class rules
+# the address out suppresses it; scope changes nothing else. KumoMTA's
+# classes are split here where its own lump holds failures of different
+# scopes.
+
+# KumoMTA's InvalidRecipient, less 1.4 and 2.4, which do not rule the address
+# out, and 7.17, the owner's change.
+[statuses.no-such-mailbox]
+codes = ["1.1", "1.3"]
+scope = "recipient"
+rules_out_address = true
+
+[statuses.no-such-system]
+codes = ["1.2"]
+scope = "recipient"
+rules_out_address = true
+
+[statuses.ambiguous-mailbox]
+codes = ["1.4"]
+scope = "recipient"
+
+# KumoMTA's InactiveMailbox.
+[statuses.mailbox-moved]
+codes = ["1.6"]
+scope = "recipient"
+rules_out_address = true
+
+[statuses.mailbox-disabled]
+codes = ["2.1", "7.13"]
+scope = "recipient"
+rules_out_address = true
+
+# KumoMTA's BadDomain, less 7.18, the owner's change.
+[statuses.null-mx]
+codes = ["1.10"]
+scope = "recipient"
+rules_out_address = true
+
+# The mailbox's or domain's owner has changed (RFC 7293).
+[statuses.owner-changed]
+codes = ["7.17", "7.18"]
+scope = "recipient"
+rules_out_address = true
+
+[statuses.mailbox-full]
+codes = ["2.2"]
+scope = "recipient"
+
+[statuses.list-expansion]
+codes = ["2.4", "7.2"]
+scope = "recipient"
+
+# KumoMTA's InvalidSender.
+[statuses.bad-sender]
+codes = ["1.7", "1.8", "7.27"]
+scope = "sender"
+
+# KumoMTA's QuotaIssues holds these, with the full mailbox and the full
+# system, whose scopes differ.
+[statuses.too-large]
+codes = ["2.3", "3.4", "7.16"]
+scope = "message"
+
+[statuses.system-unavailable]
+codes = ["3.1", "3.2", "3.5"]
+scope = "site"
+
+# KumoMTA's NoAnswerFromHost, BadConnection, DNSFailure, RoutingErrors and
+# TransientFailure.
+[statuses.network]
+codes = ["4.1", "4.2", "4.3", "4.4", "4.5", "4.6"]
+scope = "site"
+
+# KumoMTA's MessageExpired: a relay gave up on it.
+[statuses.expired]
+codes = ["4.7"]
+scope = "message"
+
+# KumoMTA's ProtocolErrors, less 5.3, its own class.
+[statuses.protocol]
+codes = [
+  "3.3", "5.0", "5.1", "5.2", "5.4", "5.5", "5.6",
+  "6.0", "6.1", "6.2", "6.3", "6.5", "6.6", "6.7", "6.8", "6.9",
+]
+scope = "message"
+
+[statuses.too-many-recipients]
+codes = ["5.3"]
+scope = "message"
+
+# KumoMTA's AuthenticationFailed holds these with the refusals below. DKIM,
+# SPF, ARC and alignment failures are about the sender's identity.
+[statuses.authentication]
+codes = ["7.20", "7.21", "7.22", "7.23", "7.24", "7.26", "7.29"]
+scope = "sender"
+
+[statuses.reverse-dns]
+codes = ["7.25"]
+scope = "egress"
+
+# IANA registers a mail flood as 7.28; KumoMTA's PolicyRelated names 7.38,
+# which IANA does not register.
+[statuses.flood]
+codes = ["7.28"]
+scope = "egress"
+
+[statuses.refused]
+codes = ["7.0", "7.1"]
+scope = "message"
+
+[statuses.security]
+codes = [
+  "7.3", "7.4", "7.5", "7.6", "7.7", "7.8", "7.9", "7.10", "7.11", "7.12",
+  "7.14", "7.15", "7.19", "7.30",
+]
+scope = "message"
+
+# The tests. Each is a reply, the exchanges of the site it came from, and the
+# verdict it must get: its site, its class, whether it rules the address out,
+# the throttle's minimum cooldown in seconds (0 for the retry schedule's) when
+# it throttles, and the rules that matched: its class, then the throttle
+# replies, the defaults' first. Its source says where the reply came
+# from. A constructed reply is one the rule's own pattern describes, until a
+# reply recorded in delivery replaces it.
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["gmail-smtp-in.l.google.com"]
+reply = "550 5.1.1 The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. Learn more at https://support.google.com/mail/?p=NoSuchUser - gsmtp"
+site = "Google"
+class = "no-such-mailbox"
+rules_out_address = true
+rules = ["no-such-mailbox"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["gmail-smtp-in.l.google.com"]
+reply = "553 5.1.2 The recipient address <example@example.com> is not a valid RFC-5321 address. - gsmtp"
+site = "Google"
+class = "no-such-system"
+rules_out_address = true
+rules = ["no-such-system"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "550 5.1.4 Destination mailbox address ambiguous"
+site = "mx.example.net"
+class = "ambiguous-mailbox"
+rules = ["ambiguous-mailbox"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["mta5.am0.yahoodns.net"]
+reply = "550 5.5.0 mailbox unavailable 550 user has moved with no forwarding address 550 This is line 3 of a multi-line DSN"
+site = "Yahoo"
+class = "protocol"
+rules = ["protocol"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "550 5.1.6 Destination mailbox has moved, no forwarding address"
+site = "mx.example.net"
+class = "mailbox-moved"
+rules_out_address = true
+rules = ["mailbox-moved"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["gmail-smtp-in.l.google.com"]
+reply = "550 5.2.1 The email account that you tried to reach is disabled. Learn more at https://support.google.com/mail/?p=DisabledUser - gsmtp"
+site = "Google"
+class = "mailbox-disabled"
+rules_out_address = true
+rules = ["mailbox-disabled"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx01.mail.icloud.com"]
+reply = "525 5.7.13 User account disabled"
+site = "Apple"
+class = "mailbox-disabled"
+rules_out_address = true
+rules = ["mailbox-disabled"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "556 5.1.10 Recipient address has null MX"
+site = "mx.example.net"
+class = "null-mx"
+rules_out_address = true
+rules = ["null-mx"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "550 5.7.17 Mailbox owner has changed"
+site = "mx.example.net"
+class = "owner-changed"
+rules_out_address = true
+rules = ["owner-changed"]
+
+# A temporary failure never rules the address out, whatever its class.
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "451 4.1.1 Recipient address rejected: unverified address, try again later"
+site = "mx.example.net"
+class = "no-such-mailbox"
+rules = ["no-such-mailbox"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["gmail-smtp-in.l.google.com"]
+reply = "552 5.2.2 The email account that you tried to reach is over quota. Please direct the recipient to https://support.google.com/mail/?p=OverQuotaPerm - gsmtp"
+site = "Google"
+class = "mailbox-full"
+rules = ["mailbox-full"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "450 4.2.4 Mailing list expansion problem"
+site = "mx.example.net"
+class = "list-expansion"
+rules = ["list-expansion"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "550 5.1.8 Sender address rejected: domain not found"
+site = "mx.example.net"
+class = "bad-sender"
+rules = ["bad-sender"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["gmail-smtp-in.l.google.com"]
+reply = "552 5.2.3 Your message exceeded Google's message size limits. Please visit http://mail.google.com/support/bin/answer.py?answer=8770 to review our size guidelines."
+site = "Google"
+class = "too-large"
+rules = ["too-large"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "452 4.3.1 Insufficient system storage"
+site = "mx.example.net"
+class = "system-unavailable"
+rules = ["system-unavailable"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["mta5.am0.yahoodns.net"]
+reply = "554 5.4.4 Domain Lookup Failed"
+site = "Yahoo"
+class = "network"
+rules = ["network"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "554 5.4.7 Delivery time expired"
+site = "mx.example.net"
+class = "expired"
+rules = ["expired"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "452 4.5.3 Too many recipients"
+site = "mx.example.net"
+class = "too-many-recipients"
+rules = ["too-many-recipients"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["gmail-smtp-in.l.google.com"]
+reply = "550 5.7.1 Unauthenticated email from example.com is not accepted due to domain's DMARC policy. Please contact the administrator of example.com domain if this was a legitimate mail. Please visit https://support.google.com/mail/answer/2451690 to learn about DMARC initiative."
+site = "Google"
+class = "refused"
+rules = ["refused"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "550 5.7.26 Multiple authentication checks failed"
+site = "mx.example.net"
+class = "authentication"
+rules = ["authentication"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "550 5.7.25 Reverse DNS validation failed"
+site = "mx.example.net"
+class = "reverse-dns"
+rules = ["reverse-dns"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "421 4.7.28 Mail flood detected"
+site = "mx.example.net"
+class = "flood"
+throttle_seconds = 0
+rules = ["flood"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx.example.net"]
+reply = "530 5.7.10 Encryption needed"
+site = "mx.example.net"
+class = "security"
+rules = ["security"]
+
+# A reply with no enhanced status code has no class, and one with a detail
+# IANA does not register, such as Microsoft's 4.7.650 below, has none either.
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["hotmail-com.olc.protection.outlook.com"]
+reply = "550 Requested action not taken: mailbox unavailable"
+site = "Outlook"
+rules = []
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["mta5.am0.yahoodns.net"]
+reply = "421 4.7.0 [TSS04] Messages from 0.0.0.0 temporarily deferred due to unexpected volume or user complaints - 4.16.55.1; see https://postmaster.yahooinc.com/error-codes"
+site = "Yahoo"
+class = "refused"
+throttle_seconds = 7200
+rules = ["refused", "defaults/ip-temporarily-deferred", "Yahoo/TSS04"]
+
+[[tests]]
+source = "KumoMTA community shaping, assets/community/shaping.toml, recorded at yahoo.co.jp"
+exchanges = ["mx.example.net"]
+reply = "421 [TSS04] Messages from 3.70.121.217 temporarily deferred due to unexpected volume or user complaints"
+site = "mx.example.net"
+throttle_seconds = 0
+rules = ["defaults/ip-temporarily-deferred"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["mta6.am0.yahoodns.net"]
+reply = "421 4.7.1 [TS03] All messages from 100.100.100.100 will be permanently deferred; Retrying will NOT succeed. See http://postmaster.yahoo.com/421-ts03.html"
+site = "Yahoo"
+class = "refused"
+throttle_seconds = 0
+rules = ["refused", "defaults/ip-permanently-deferred"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["contoso-com.mail.protection.outlook.com"]
+reply = "451 4.7.650 The mail server [192.0.2.1] has been temporarily rate limited due to IP reputation."
+site = "Office365"
+throttle_seconds = 0
+rules = ["defaults/ip-reputation"]
+
+# A permanent reply that throttles cools the site down and still rejects its
+# delivery.
+[[tests]]
+source = "constructed"
+exchanges = ["outlook-com.olc.protection.outlook.com"]
+reply = "550 5.7.1 Unfortunately, messages from 192.0.2.1 weren't sent. Please contact your Internet service provider since part of their network is on our block list."
+site = "Outlook"
+class = "refused"
+throttle_seconds = 0
+rules = ["refused", "defaults/ip-blocked"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["fabrikam-com.mx.microsoft"]
+reply = "451 4.7.500 Server busy. Please try again later from [192.0.2.1]."
+site = "Office365Dane"
+throttle_seconds = 0
+rules = ["defaults/server-busy"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx1a1.comcast.net"]
+reply = "421 Too many sessions are opened from your IP RL000001"
+site = "Comcast"
+throttle_seconds = 0
+rules = ["Comcast/RL0000"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["mx2h1.comcast.net"]
+reply = "421 Domain throttled RL000010"
+site = "Comcast"
+throttle_seconds = 300
+rules = ["Comcast/RL0000", "Comcast/RL000010"]
+
+[[tests]]
+source = "constructed"
+exchanges = ["smtp-in.orange.fr", "smtp-in2.orange.fr"]
+reply = "550 5.1.1 Recipient unknown"
+site = "Orange"
+class = "no-such-mailbox"
+rules_out_address = true
+rules = ["no-such-mailbox"]
+
+# A site is a provider's only when every one of its exchanges is: this one is
+# its own, under the defaults.
+[[tests]]
+source = "constructed"
+exchanges = ["smtp-in.orange.fr", "backup.example.net"]
+reply = "550 5.1.1 Recipient unknown"
+site = "backup.example.net,smtp-in.orange.fr"
+class = "no-such-mailbox"
+rules_out_address = true
+rules = ["no-such-mailbox"]
+
+[[tests]]
+source = "KumoMTA smart-sink, examples/smart-sink-docker/policy/responses.toml"
+exchanges = ["alt1.aspmx.l.google.com"]
+reply = "421 4.7.28 [x.xx.xx.xx] Our system has detected an unusual rate of unsolicited mail originating from your IP address. To protect our users from spam, mail sent from your IP address has been temporarily rate limited."
+site = "Google"
+class = "flood"
+throttle_seconds = 0
+rules = ["flood"]

@@ -1,0 +1,15 @@
+EHLO client.test
+STARTTLS
+EHLO client.test
+AUTH PLAIN AGFwcABzZWNyZXQ=
+MAIL FROM:<app@sender.test> SIZE=100
+RCPT TO:<one@plain.test>
+RCPT TO:<two@plain.test>
+DATA
+Subject: a test
+
+..hello
+.
+RSET
+NOOP
+QUIT

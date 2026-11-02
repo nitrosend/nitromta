@@ -1,0 +1,3 @@
+# The engine's system user and group, for systemd-sysusers:
+# installed as /usr/lib/sysusers.d/nitromta.conf, created at installation.
+u nitromta - "NitroMTA mail engine" /var/lib/nitromta

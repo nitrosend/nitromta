@@ -1,0 +1,9 @@
+@EHLO c
+STARTTLS
+EHLO c
+AUTH PLAIN
+AGFwcABzZWNyZXQ=
+MAIL FROM:<>
+RCPT TO:<postmaster>
+BDAT 5 LAST
+hello
