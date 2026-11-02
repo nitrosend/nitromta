@@ -36,11 +36,7 @@ Keep your SES code, change the endpoint, and deliver from IP addresses you contr
 - **One binary:** a Rust engine with its store in SQLite, a systemd unit,
   and a CLI that explains why any message is waiting.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/delivery-path-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/brand/delivery-path-light.svg">
-  <img alt="Your existing SES SDK or SMTP client submits to NitroMTA. NitroMTA queues, signs, retries and delivers directly from your IPs to recipient mail servers." src="docs/assets/brand/delivery-path-light.svg" width="1100">
-</picture>
+<img alt="Your existing SES SDK or SMTP client submits to NitroMTA. NitroMTA queues, signs, retries and delivers directly from your IPs to recipient mail servers." src="docs/assets/brand/delivery-path-light.svg" width="1100">
 
 ## Try it
 
