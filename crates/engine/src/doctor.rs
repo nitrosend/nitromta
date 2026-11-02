@@ -654,7 +654,7 @@ async fn identities(
         let aligned = return_path == domain || return_path.ends_with(&format!(".{domain}"));
         if !aligned {
             report.warn(format!(
-                "{area}: the return path's domain, {return_path}, is not {domain} or under it, so SPF does not align for DMARC, and DKIM alone must"
+                "{area}: the return path's domain, {return_path}, is not {domain} or under it, so SPF does not align for DMARC, and DMARC passes on DKIM alone"
             ));
         }
     }
