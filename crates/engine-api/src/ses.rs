@@ -20,7 +20,7 @@ use engine_core::policy::{Credential, Denial, Origin, Policy, Secret};
 use engine_core::time::Timestamp;
 use engine_message::compose::{self, ComposeError, Parts};
 use engine_message::header;
-use engine_message::prepare::{self, Limits, Rejection, Sender};
+use engine_message::prepare::{self, Limits, Rejection, Stamp};
 use engine_ses_v2::error::{
     BadRequestException, MailFromDomainNotVerifiedException, MessageRejected, NotFoundException,
     SendBulkEmailError, SendEmailError, SendingPausedException, TooManyRequestsException,
@@ -279,8 +279,8 @@ pub fn check(
 /// Its identity is FromEmailAddress's, or a raw message's own From's, and
 /// its tenant and configuration set are those the request names. It is
 /// composed from simple parts or taken raw, then prepared as that identity,
-/// and signed when it signs. A composed message's Message-ID carries `id`,
-/// as the answer does.
+/// and signed when it signs. Its Message-ID, where it has none of its own,
+/// carries `id`, as the answer does.
 #[allow(clippy::too_many_arguments, reason = "one request's whole context")]
 pub fn content(
     input: &SendEmailInput,
@@ -320,6 +320,11 @@ pub fn content(
                 .ok_or_else(|| bad(format!("Invalid FromEmailAddress: {from}")))
         })
         .transpose()?;
+    let shown = message_id(id);
+    let stamp = Stamp {
+        date: now,
+        id: &shown,
+    };
     match (&email.simple, &email.raw, &email.template) {
         (Some(_), None, None) | (None, None, Some(_)) => {
             let from = named.ok_or_else(|| {
@@ -329,13 +334,13 @@ pub fn content(
                 .sending(credential, &from, None, tenant, configuration)
                 .map_err(denied)?;
             let composed = match (&email.simple, &email.template) {
-                (Some(simple), _) => composed(input, simple, sender, id, now, limits.max_bytes)?,
+                (Some(simple), _) => composed(input, simple, &shown, limits.max_bytes)?,
                 (None, Some(template)) => {
                     let parts =
                         template_parts(template, snapshot.policy(), arns, &authority.origin)?;
                     // Checked again at commit, should its tenant lose it.
                     authority.template = parts.kept;
-                    templated(input, template, parts, sender, id, now, limits.max_bytes)?
+                    templated(input, template, parts, &shown, limits.max_bytes)?
                 }
                 (None, None) => {
                     return Err(bad(
@@ -343,13 +348,14 @@ pub fn content(
                     ));
                 }
             };
-            // Its rates are charged what it comes to, headers and encoding
-            // included, before it is signed, as bulk's and SMTP's are.
+            // Its rates are charged what it comes to as composed, headers
+            // and encoding included, before preparation adds its Date,
+            // Message-ID and signature, as bulk's and SMTP's are.
             if !admit(tenant, composed.len() as u64) {
                 return Err(too_fast());
             }
             let content = prepare::check(&composed, limits)
-                .and_then(|checked| checked.sign(sender))
+                .and_then(|checked| checked.sent_as(sender, stamp))
                 .map_err(|rejection| refused(&rejection))?;
             let mail = snapshot.mail(&authority, &composed, &content, recipients, || {
                 Some((from.clone(), tagged()))
@@ -374,6 +380,7 @@ pub fn content(
                     named.as_ref(),
                     tenant,
                     configuration,
+                    stamp,
                     admit,
                 )
                 .map_err(|unprepared| match unprepared {
@@ -497,9 +504,7 @@ fn unsupported(input: &SendEmailInput) -> Option<&'static str> {
 fn composed(
     input: &SendEmailInput,
     simple: &Message,
-    sender: &Sender,
-    id: MessageId,
-    now: Timestamp,
+    id: &str,
     most: usize,
 ) -> Result<Vec<u8>, SendEmailError> {
     if simple
@@ -530,7 +535,6 @@ fn composed(
                 .collect()
         })
         .unwrap_or_default();
-    let message_id = format!("{}@{}", message_id(id), sender.domain());
     let parts = Parts {
         from,
         to: destination
@@ -544,8 +548,7 @@ fn composed(
         text: simple.body.text.as_ref().map(utf8).transpose()?,
         html: simple.body.html.as_ref().map(utf8).transpose()?,
         headers: &headers,
-        date: now,
-        message_id: &message_id,
+        id,
         most,
     };
     compose::compose(&parts).map_err(|error| match error {
@@ -633,7 +636,9 @@ const NOT_VERIFIED: &str =
     "Email address is not verified. The From address is not an identity of this account.";
 const UNVERIFIED: &str = "Email address is not verified. The From address's identity is not yet verified: its DKIM record has not been found.";
 
-fn message_id(id: MessageId) -> String {
+/// A message's ID as callers see it: in SES's answers and SMTP's replies,
+/// and its Message-ID's part before the `@`.
+pub fn message_id(id: MessageId) -> String {
     format!("{:016x}", id.0.as_u64())
 }
 
@@ -834,10 +839,11 @@ pub fn bulk_content(
     // Once an entry would take them past the largest request, it and
     // every entry after it are refused.
     let mut left = Some(max_request_bytes(limits));
+    let shown: Vec<String> = ids.iter().copied().map(message_id).collect();
     let composed: Vec<Entry<Vec<u8>>> = entries
         .iter()
         .zip(&input.bulk_email_entries)
-        .zip(ids)
+        .zip(&shown)
         .map(|((checked, entry), id)| {
             checked.as_ref().map_err(Clone::clone)?;
             let room = left.ok_or_else(|| failed(rejected(TOO_LARGE_TOGETHER)))?;
@@ -847,9 +853,7 @@ pub fn bulk_content(
                 content,
                 template.template_data.as_ref().map(|data| data.as_str()),
                 &defaults,
-                sender,
-                *id,
-                now,
+                id,
                 limits.max_bytes,
             )
             .map_err(failed)?;
@@ -870,10 +874,12 @@ pub fn bulk_content(
         .into_iter()
         .zip(entries)
         .zip(&input.bulk_email_entries)
-        .map(|((composed, checked), entry)| {
+        .zip(&shown)
+        .map(|(((composed, checked), entry), id)| {
             let (composed, recipients) = (composed?, checked.as_ref().map_err(Clone::clone)?);
+            let stamp = Stamp { date: now, id };
             let content = prepare::check(&composed, limits)
-                .and_then(|checked| checked.sign(sender))
+                .and_then(|checked| checked.sent_as(sender, stamp))
                 .map_err(|rejection| failed(refused(&rejection)))?;
             let mail = snapshot.mail(&authority, &composed, &content, recipients, || {
                 // An entry's tag takes the place of the default's of its
@@ -922,9 +928,7 @@ fn entry_message(
     content: TemplateParts<'_>,
     default_data: Option<&str>,
     defaults: &[(String, String)],
-    sender: &Sender,
-    id: MessageId,
-    now: Timestamp,
+    id: &str,
     most: usize,
 ) -> Result<Vec<u8>, SendEmailError> {
     let own_data = entry
@@ -959,7 +963,6 @@ fn entry_message(
     headers.extend(own);
     let none = Vec::new();
     let destination = &entry.destination;
-    let message_id = format!("{}@{}", message_id(id), sender.domain());
     let parts = Parts {
         from: input.from_email_address.as_deref().unwrap_or_default(),
         to: destination.to_addresses.as_ref().unwrap_or(&none),
@@ -969,8 +972,7 @@ fn entry_message(
         text: text.as_deref(),
         html: html.as_deref(),
         headers: &headers,
-        date: now,
-        message_id: &message_id,
+        id,
         most,
     };
     compose::compose(&parts).map_err(|error| match error {
@@ -1061,9 +1063,7 @@ fn templated(
     input: &SendEmailInput,
     template: &Template,
     parts: TemplateParts<'_>,
-    sender: &Sender,
-    id: MessageId,
-    now: Timestamp,
+    id: &str,
     most: usize,
 ) -> Result<Vec<u8>, SendEmailError> {
     if template
@@ -1093,7 +1093,6 @@ fn templated(
     let headers = headers_of(template.headers.as_ref());
     let none = Vec::new();
     let destination = input.destination.as_ref();
-    let message_id = format!("{}@{}", message_id(id), sender.domain());
     let parts = Parts {
         from: input.from_email_address.as_deref().unwrap_or_default(),
         to: destination
@@ -1107,8 +1106,7 @@ fn templated(
         text: text.as_deref(),
         html: html.as_deref(),
         headers: &headers,
-        date: now,
-        message_id: &message_id,
+        id,
         most,
     };
     compose::compose(&parts).map_err(|error| match error {
@@ -1721,7 +1719,7 @@ mod tests {
     }
 
     #[test]
-    fn a_raw_message_is_signed_and_otherwise_kept() {
+    fn a_raw_message_is_signed_given_the_date_and_message_id_it_lacks_and_otherwise_kept() {
         let (snapshot, credential) = snapshot();
         let data = b"From: load@bench.test\r\nTo: a@sink.test\r\nSubject: hi\r\n\r\nbody\r\n";
         let (_, content, _) = content(
@@ -1738,6 +1736,14 @@ mod tests {
         .unwrap();
         assert!(content.starts_with(b"DKIM-Signature: "));
         assert!(content.ends_with(data));
+        // Its Message-ID is the ID the answer gives.
+        let text = String::from_utf8(content.to_vec()).unwrap();
+        let stamped = format!(
+            "\r\nMessage-ID: <{}@bench.test>\r\nFrom: load@bench.test\r\n",
+            message_id(id())
+        );
+        assert!(text.contains(&stamped), "{text}");
+        assert_eq!(text.matches("\r\nDate: ").count(), 1, "{text}");
     }
 
     #[test]

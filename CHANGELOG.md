@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.6 - 2026-11-03
+
+### Fixed
+
+- Mail submitted over SMTP, or as raw content through the SES API, is given
+  the `Date` and `Message-ID` fields it lacks before it is signed, as SES
+  gives them, its `Message-ID` naming the ID its acceptance gives. It went
+  without them, and Gmail refuses mail with no `Message-ID`.
+- `nitromta <command> --help` prints that command's forms, where it answered
+  that `--help` is not an option of the command, and `nitromta run --help`
+  no longer asks for `--config`.
+- `[delivery] port`, the port receivers are reached on, is documented, and
+  `nitromta setup` writes it commented out with its default.
+
 ## 0.1.5 - 2026-11-03
 
 ### Added

@@ -15,6 +15,7 @@ use engine_api::submission as mapping;
 use engine_core::component::Component;
 use engine_core::id::CredentialId;
 use engine_core::policy::Denial;
+use engine_message::prepare::Stamp;
 use engine_smtp::reply::Reply;
 use engine_smtp::server::{Config, Input, Output, Session, Transaction};
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -168,6 +169,7 @@ impl Submission {
         let acceptance = &self.acceptance;
         let recipients = transaction.recipients.len() as u64;
         let id = acceptance.message_id();
+        let accepted = self.clock.now().wall;
         let limits = acceptance.limits;
         let content = transaction.content;
         let to = transaction.recipients.clone();
@@ -179,8 +181,21 @@ impl Submission {
                 let admit = |tenant: Option<&str>, bytes| {
                     admitting.admit(snapshot.policy(), &credential, tenant, recipients, bytes)
                 };
-                let (authority, prepared) =
-                    snapshot.prepare(&content, limits, &credential, None, None, None, admit)?;
+                let shown = engine_api::ses::message_id(id);
+                let stamp = Stamp {
+                    date: accepted,
+                    id: &shown,
+                };
+                let (authority, prepared) = snapshot.prepare(
+                    &content,
+                    limits,
+                    &credential,
+                    None,
+                    None,
+                    None,
+                    stamp,
+                    admit,
+                )?;
                 let mail = snapshot.mail(&authority, &content, &prepared, &to, || {
                     let tagged = Tagged {
                         operation: "SendSmtpEmail",

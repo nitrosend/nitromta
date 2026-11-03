@@ -133,7 +133,7 @@ pub fn main(hooks: Hooks) -> ExitCode {
     let result = privileges::no_core_dumps()
         .and_then(|()| cli::Options::parse(&argv))
         .and_then(|options| match options.words().as_slice() {
-            ["run"] => options
+            ["run"] if !options.switch("help") => options
                 .required("config")
                 .and_then(|path| run(Path::new(path), hooks)),
             _ => cli::command(&options),

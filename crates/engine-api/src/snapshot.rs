@@ -16,7 +16,7 @@ use engine_core::message::Mail;
 use engine_core::policy::{Credential, Denial, Identity, Policy};
 use engine_message::dkim::Signer;
 use engine_message::header;
-use engine_message::prepare::{self, Limits, Rejection, Sender};
+use engine_message::prepare::{self, Limits, Rejection, Sender, Stamp};
 
 pub struct Snapshot {
     policy: Arc<Policy>,
@@ -182,9 +182,10 @@ impl Snapshot {
         Ok((authority, sender))
     }
 
-    /// A submitted message checked, resolved for `credential` and signed:
-    /// as the identity `from` names, if given, which must be its own From's
-    /// identity too, else as its own From. Before it is signed, `admit`
+    /// A submitted message checked, resolved for `credential`, given
+    /// `stamp`'s fields where it has none, and signed: as the identity
+    /// `from` names, if given, which must be its own From's identity too,
+    /// else as its own From. Before it is stamped and signed, `admit`
     /// charges its rates what it comes to, for the tenant it is sent for.
     #[allow(clippy::too_many_arguments)]
     pub fn prepare(
@@ -195,6 +196,7 @@ impl Snapshot {
         from: Option<&Address>,
         tenant: Option<&str>,
         configuration: Option<&str>,
+        stamp: Stamp<'_>,
         admit: impl FnOnce(Option<&str>, u64) -> bool,
     ) -> Result<(Authority, Bytes), Unprepared> {
         // SES's own fields, honoured as SES honours them over SMTP and in
@@ -214,7 +216,9 @@ impl Snapshot {
         if !admit(tenant, raw.len() as u64) {
             return Err(Unprepared::TooFast);
         }
-        let content = checked.sign(sender).map_err(Unprepared::Rejected)?;
+        let content = checked
+            .sent_as(sender, stamp)
+            .map_err(Unprepared::Rejected)?;
         Ok((authority, content))
     }
 }

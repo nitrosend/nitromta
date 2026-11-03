@@ -1,10 +1,14 @@
 //! Preparation of a submitted message: the checks that come before
-//! acceptance, which find the mailbox its From names, then its DKIM
-//! signature when the identity that mailbox sends as signs. A message is
-//! prepared once; the bytes it returns are kept and sent exactly as they are.
+//! acceptance, which find the mailbox its From names, then the Date and
+//! Message-ID it lacks, and its DKIM signature when the identity that
+//! mailbox sends as signs. A message is prepared once; the bytes it returns
+//! are kept and sent exactly as they are.
+
+use std::borrow::Cow;
 
 use bytes::Bytes;
 use engine_core::address::{self, Address};
+use engine_core::time::Timestamp;
 
 use crate::dkim::{Signer, SigningFailed, fields, name_of};
 
@@ -13,7 +17,8 @@ const MAX_LINE: usize = 998;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Limits {
-    /// The largest message accepted, before signing.
+    /// The largest message accepted, as it was given: before preparation
+    /// adds the Date and Message-ID it lacks, and its signature.
     pub max_bytes: usize,
 }
 
@@ -64,6 +69,17 @@ impl Sender {
     }
 }
 
+/// What a message is given where it has no field of its own, as SES and a
+/// submission server give it: a Date, when it was accepted, and a
+/// Message-ID, its ID at the domain it is sent as. Receivers may refuse
+/// mail without them; Gmail refuses mail with no Message-ID.
+#[derive(Clone, Copy)]
+pub struct Stamp<'a> {
+    pub date: Timestamp,
+    /// The Message-ID's part before its `@`.
+    pub id: &'a str,
+}
+
 /// A message that passed the checks, and the one mailbox its From names,
 /// which decides the identity it is sent as.
 pub struct Checked<'a> {
@@ -71,6 +87,9 @@ pub struct Checked<'a> {
     header: &'a [u8],
     body: &'a [u8],
     from: Address,
+    /// Whether it has a Date field of its own, and a Message-ID field.
+    dated: bool,
+    identified: bool,
 }
 
 impl Checked<'_> {
@@ -79,20 +98,40 @@ impl Checked<'_> {
     }
 
     /// The content exactly as it will be sent as `sender`, whose domain its
-    /// From must name: signed when the sender signs.
-    pub fn sign(&self, sender: &Sender) -> Result<Bytes, Rejection> {
+    /// From must name: given `stamp`'s fields where it has none of its own,
+    /// ahead of its header, and signed with them when the sender signs.
+    pub fn sent_as(&self, sender: &Sender, stamp: Stamp<'_>) -> Result<Bytes, Rejection> {
         if !self.from.domain().eq_ignore_ascii_case(sender.domain()) {
             return Err(Rejection::FromNotAllowed);
         }
-        let Some(signer) = &sender.signer else {
-            return Ok(Bytes::copy_from_slice(self.raw));
+        let mut stamped = String::new();
+        if !self.dated {
+            stamped.push_str(&format!("Date: {}\r\n", rfc5322(stamp.date)));
+        }
+        if !self.identified {
+            stamped.push_str(&format!(
+                "Message-ID: <{}@{}>\r\n",
+                stamp.id,
+                sender.domain()
+            ));
+        }
+        let signature = match &sender.signer {
+            Some(signer) => {
+                let header = if stamped.is_empty() {
+                    Cow::Borrowed(self.header)
+                } else {
+                    Cow::Owned([stamped.as_bytes(), self.header].concat())
+                };
+                signer
+                    .sign(&header, self.body)
+                    .map_err(Rejection::Signing)?
+            }
+            None => Vec::new(),
         };
-        let signature = signer
-            .sign(self.header, self.body)
-            .map_err(Rejection::Signing)?;
-        let mut content = Vec::with_capacity(signature.len() + self.raw.len());
-        content.extend_from_slice(&signature);
-        content.extend_from_slice(self.raw);
+        let mut content = Vec::with_capacity(signature.len() + stamped.len() + self.raw.len());
+        for part in [&signature, stamped.as_bytes(), self.raw] {
+            content.extend_from_slice(part);
+        }
         Ok(Bytes::from(content))
     }
 }
@@ -122,12 +161,39 @@ pub fn check(raw: &[u8], limits: Limits) -> Result<Checked<'_>, Rejection> {
         .position(|&byte| byte == b':')
         .map(|colon| &field[colon + 1..]);
     let from = value.and_then(mailbox).ok_or(Rejection::FromUnreadable)?;
+    // A line with no colon is no field, whatever it begins with.
+    let has = |name: &[u8]| {
+        fields
+            .iter()
+            .any(|field| field.contains(&b':') && name_of(field).eq_ignore_ascii_case(name))
+    };
     Ok(Checked {
         raw,
         header,
         body,
         from,
+        dated: has(b"date"),
+        identified: has(b"message-id"),
     })
+}
+
+/// `Tue, 27 Oct 2026 15:30:00 +0000` (RFC 5322, 3.3).
+fn rfc5322(at: Timestamp) -> String {
+    const DAYS: [&str; 7] = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
+    const MONTHS: [&str; 12] = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    let at = at.utc();
+    format!(
+        "{}, {:02} {} {:04} {:02}:{:02}:{:02} +0000",
+        DAYS[at.weekday as usize],
+        at.day,
+        MONTHS[(at.month - 1) as usize],
+        at.year,
+        at.hour,
+        at.minute,
+        at.second,
+    )
 }
 
 /// Every line ends in CRLF and fits RFC 5322's limit.
@@ -315,13 +381,22 @@ mod tests {
         let pair = KeyPair::generate(KeySize::Rsa2048).unwrap();
         let der = STANDARD.encode(pair.as_der().unwrap().as_ref());
         let pem = format!("-----BEGIN PRIVATE KEY-----\n{der}\n-----END PRIVATE KEY-----\n");
-        Sender::signing(Signer::from_pem(&pem, "bench.test", "s1", &["From", "Subject"]).unwrap())
+        let headers = ["From", "Subject", "Date", "Message-ID"];
+        Sender::signing(Signer::from_pem(&pem, "bench.test", "s1", &headers).unwrap())
     }
 
     const LIMITS: Limits = Limits { max_bytes: 1024 };
 
+    const STAMP: Stamp<'static> = Stamp {
+        date: Timestamp::from_micros(1_700_000_000_000_000),
+        id: "000000000000002a",
+    };
+
+    /// A message with a Date and a Message-ID of its own.
+    const DATED: &[u8] = b"From: load@bench.test\r\nDate: Mon, 2 Nov 2026 09:00:00 +0000\r\nMessage-ID: <theirs@bench.test>\r\nSubject: hi\r\n\r\nbody\r\n";
+
     fn prepare(raw: &[u8], sender: &Sender, limits: Limits) -> Result<Bytes, Rejection> {
-        check(raw, limits)?.sign(sender)
+        check(raw, limits)?.sent_as(sender, STAMP)
     }
 
     #[test]
@@ -338,10 +413,36 @@ mod tests {
     }
 
     #[test]
+    fn a_message_without_a_date_or_message_id_is_given_them_and_signed_with_them() {
+        let raw = b"From: load@bench.test\r\nSubject: hi\r\n\r\nbody\r\n";
+        let stamped = b"Date: Tue, 14 Nov 2023 22:13:20 +0000\r\nMessage-ID: <000000000000002a@bench.test>\r\n";
+        let unsigned = prepare(raw, &Sender::unsigned("bench.test"), LIMITS).unwrap();
+        assert_eq!(&unsigned[..], [stamped.as_slice(), raw].concat());
+        let signed = String::from_utf8(prepare(raw, &signer(), LIMITS).unwrap().to_vec()).unwrap();
+        assert!(
+            signed.contains("h=from:subject:date:message-id;"),
+            "{signed}"
+        );
+        assert!(signed.ends_with(std::str::from_utf8(&unsigned).unwrap()));
+        // Each is given only where the message has none: a Message-ID of
+        // its own, in any case, is kept and no other added.
+        let own = b"From: load@bench.test\r\nmessage-id: <theirs@bench.test>\r\n\r\nbody\r\n";
+        assert_eq!(
+            &prepare(own, &Sender::unsigned("bench.test"), LIMITS).unwrap()[..],
+            [b"Date: Tue, 14 Nov 2023 22:13:20 +0000\r\n".as_slice(), own].concat()
+        );
+        // A line that names one but has no colon is no field of it.
+        let colonless = b"From: load@bench.test\r\nDate\r\nMessage-ID";
+        assert_eq!(
+            &prepare(colonless, &Sender::unsigned("bench.test"), LIMITS).unwrap()[..],
+            [stamped.as_slice(), colonless].concat()
+        );
+    }
+
+    #[test]
     fn an_identity_that_does_not_sign_sends_its_message_as_it_came() {
         let sender = Sender::unsigned("bench.test");
-        let raw = b"From: load@bench.test\r\nSubject: hi\r\n\r\nbody\r\n";
-        assert_eq!(&prepare(raw, &sender, LIMITS).unwrap()[..], raw);
+        assert_eq!(&prepare(DATED, &sender, LIMITS).unwrap()[..], DATED);
         assert_eq!(
             prepare(b"From: a@other.test\r\n\r\n", &sender, LIMITS).err(),
             Some(Rejection::FromNotAllowed)

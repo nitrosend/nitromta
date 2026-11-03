@@ -445,6 +445,9 @@ pub struct Delivery {
     /// How long an idle connection stays open for reuse.
     #[serde(default = "Delivery::default_idle_seconds")]
     pub idle_seconds: u64,
+    /// The port every receiver is reached on: SMTP's 25. Another suits
+    /// only a receiver that listens on it, such as a test's, as all mail
+    /// goes there.
     #[serde(default = "Delivery::default_port")]
     pub port: u16,
     /// The recursive resolver lookups go to: in production a local one,

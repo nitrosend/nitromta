@@ -1,11 +1,10 @@
 //! MIME construction for a message given as parts: headers, a subject, and a
 //! text body, an HTML body or both. Every line of the result is 7-bit and
-//! fits RFC 5322's limit, so it is prepared and signed like any submitted
-//! message.
+//! fits RFC 5322's limit, so it is prepared, given its Date and Message-ID,
+//! and signed like any submitted message.
 
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD;
-use engine_core::time::Timestamp;
 
 /// RFC 2045's limit on an encoded line, without its CRLF.
 const ENCODED_LINE: usize = 76;
@@ -23,9 +22,8 @@ pub struct Parts<'a> {
     pub html: Option<&'a str>,
     /// Further header fields, by name and value.
     pub headers: &'a [(String, String)],
-    pub date: Timestamp,
-    /// The Message-ID, without its angle brackets.
-    pub message_id: &'a str,
+    /// The message's ID, which its multipart boundary derives from.
+    pub id: &'a str,
     /// The most bytes the message may come to: past it, it is refused
     /// before more of it is built.
     pub most: usize,
@@ -41,8 +39,8 @@ pub enum ComposeError {
     TooLarge,
 }
 
-/// Builds the message. Its multipart boundary derives from the Message-ID,
-/// so the same parts always make the same bytes.
+/// Builds the message. Its multipart boundary derives from its ID, so the
+/// same parts always make the same bytes.
 pub fn compose(parts: &Parts<'_>) -> Result<Vec<u8>, ComposeError> {
     let mut out = Vec::with_capacity(
         (1024 + parts.text.map_or(0, str::len) + parts.html.map_or(0, str::len)).min(parts.most),
@@ -66,8 +64,6 @@ pub fn compose(parts: &Parts<'_>) -> Result<Vec<u8>, ComposeError> {
         "Subject",
         &words(checked("Subject", parts.subject)?),
     )?;
-    field(&mut out, "Date", &rfc5322(parts.date))?;
-    field(&mut out, "Message-ID", &format!("<{}>", parts.message_id))?;
     for (name, value) in parts.headers {
         let reserved = [
             "from",
@@ -99,7 +95,7 @@ pub fn compose(parts: &Parts<'_>) -> Result<Vec<u8>, ComposeError> {
         (Some(body), None) => single(&mut out, "text/plain", body, most)?,
         (None, Some(body)) => single(&mut out, "text/html", body, most)?,
         (Some(text), Some(html)) => {
-            let boundary = boundary(parts.message_id, &[text, html]);
+            let boundary = boundary(parts.id, &[text, html]);
             out.extend_from_slice(
                 format!("Content-Type: multipart/alternative; boundary=\"{boundary}\"\r\n\r\n")
                     .as_bytes(),
@@ -260,37 +256,15 @@ fn display(address: &str) -> String {
     }
 }
 
-/// A boundary no part contains: one derived from the Message-ID, lengthened
-/// until it is unique.
-fn boundary(message_id: &str, parts: &[&str]) -> String {
-    let base: String = message_id
-        .chars()
-        .filter(char::is_ascii_alphanumeric)
-        .collect();
+/// A boundary no part contains: one derived from the message's ID,
+/// lengthened until it is unique.
+fn boundary(id: &str, parts: &[&str]) -> String {
+    let base: String = id.chars().filter(char::is_ascii_alphanumeric).collect();
     let mut boundary = format!("=_part_{base}");
     while parts.iter().any(|part| part.contains(&boundary)) {
         boundary.push('_');
     }
     boundary
-}
-
-/// `Tue, 27 Oct 2026 15:30:00 +0000` (RFC 5322, 3.3).
-fn rfc5322(at: Timestamp) -> String {
-    const DAYS: [&str; 7] = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
-    const MONTHS: [&str; 12] = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
-    let at = at.utc();
-    format!(
-        "{}, {:02} {} {:04} {:02}:{:02}:{:02} +0000",
-        DAYS[at.weekday as usize],
-        at.day,
-        MONTHS[(at.month - 1) as usize],
-        at.year,
-        at.hour,
-        at.minute,
-        at.second,
-    )
 }
 
 #[cfg(test)]
@@ -307,8 +281,7 @@ mod tests {
             text,
             html,
             headers: &[],
-            date: Timestamp::from_micros(1_700_000_000_000_000),
-            message_id: "0123abcd@bench.test",
+            id: "0123abcd",
             most: usize::MAX,
         }
     }
@@ -327,7 +300,6 @@ mod tests {
         assert_eq!(
             message,
             "From: Load <load@bench.test>\r\nTo: a@sink.test, b@sink.test\r\nSubject: Hello\r\n\
-             Date: Tue, 14 Nov 2023 22:13:20 +0000\r\nMessage-ID: <0123abcd@bench.test>\r\n\
              MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\n\
              Content-Transfer-Encoding: 7bit\r\n\r\nLine one\r\nLine two\r\n"
         );
@@ -339,14 +311,14 @@ mod tests {
             subject: "Grüße aus Köln, ein längerer Betreff mit Umlauten",
             ..parts(Some("Grüße"), Some("<p>Grüße</p>"))
         });
-        assert!(message.contains(
-            "Content-Type: multipart/alternative; boundary=\"=_part_0123abcdbenchtest\""
-        ));
+        assert!(
+            message.contains("Content-Type: multipart/alternative; boundary=\"=_part_0123abcd\"")
+        );
         assert!(
             message
                 .contains("Content-Transfer-Encoding: quoted-printable\r\n\r\nGr=C3=BC=C3=9Fe\r\n")
         );
-        assert!(message.ends_with("--=_part_0123abcdbenchtest--\r\n"));
+        assert!(message.ends_with("--=_part_0123abcd--\r\n"));
         let subject = message
             .lines()
             .find(|line| line.starts_with("Subject: "))

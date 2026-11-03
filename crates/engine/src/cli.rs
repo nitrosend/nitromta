@@ -56,6 +56,49 @@ const USAGE: &str =
 
   Each command about a running engine takes --json for the API's own lines.";
 
+/// How to run the command `words` name: each of its forms, as the usage
+/// gives them, or the whole usage when they name no command. Words past a
+/// command's own, as in `fence release`, name the command they follow.
+fn usage(words: &[&str]) -> String {
+    if words.is_empty() {
+        return USAGE.to_owned();
+    }
+    // Each form: the command's words it opens with, and its lines.
+    let mut forms: Vec<(Vec<&str>, Vec<&str>)> = Vec::new();
+    for line in USAGE.lines().skip(1) {
+        let Some(form) = line.strip_prefix("  ") else {
+            continue;
+        };
+        if form.starts_with(' ') {
+            // A line indented further goes on with the form above it.
+            if let Some((_, lines)) = forms.last_mut() {
+                lines.push(line);
+            }
+        } else {
+            let named = form
+                .split(' ')
+                .take_while(|word| word.starts_with(|c: char| c.is_ascii_lowercase()))
+                .collect();
+            forms.push((named, vec![line]));
+        }
+    }
+    let chosen = |fits: &dyn Fn(&[&str]) -> bool| -> Vec<&str> {
+        forms
+            .iter()
+            .filter(|(named, _)| !named.is_empty() && fits(named))
+            .flat_map(|(_, lines)| lines.iter().copied())
+            .collect()
+    };
+    let mut lines = chosen(&|named| named.starts_with(words));
+    if lines.is_empty() {
+        lines = chosen(&|named| words.starts_with(named));
+    }
+    if lines.is_empty() {
+        return USAGE.to_owned();
+    }
+    format!("usage:\n{}", lines.join("\n"))
+}
+
 /// A command's words and options, as given.
 pub struct Options {
     words: Vec<String>,
@@ -123,7 +166,7 @@ impl Options {
             .ok_or_else(|| format!("--{name} is needed\n\n{USAGE}"))
     }
 
-    fn switch(&self, name: &str) -> bool {
+    pub fn switch(&self, name: &str) -> bool {
         self.switches.iter().any(|switch| switch == name)
     }
 
@@ -147,14 +190,14 @@ impl Options {
     }
 }
 
-/// Runs a command other than `run`.
+/// Runs a command other than `run`, or says how to run any.
 pub fn command(options: &Options) -> Result<(), String> {
     let words = options.words();
+    if options.switch("help") {
+        println!("{}", usage(&words));
+        return Ok(());
+    }
     match words.as_slice() {
-        [] if options.switch("help") => {
-            println!("{USAGE}");
-            Ok(())
-        }
         [] if options.switch("version") => {
             println!("nitromta {}", env!("CARGO_PKG_VERSION"));
             Ok(())

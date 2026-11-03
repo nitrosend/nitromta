@@ -10,6 +10,7 @@ use engine_core::policy::{Credential, Denial, Policy, Secret};
 use engine_message::prepare::Rejection;
 use engine_smtp::reply::Reply;
 
+use crate::ses;
 use crate::snapshot::Unprepared;
 
 /// The credential an SMTP AUTH login names, if the password is its own.
@@ -137,7 +138,7 @@ pub fn answered(commit: &Commit<(), AcceptRefusal>, message: MessageId) -> Reply
     match commit {
         Commit::Committed(()) => Reply::new(
             250,
-            format!("2.0.0 Ok: queued as {:016x}", message.0.as_u64()),
+            format!("2.0.0 Ok: queued as {}", ses::message_id(message)),
         ),
         // Generated IDs collided: a new attempt draws new ones.
         Commit::Refused(AcceptRefusal::Conflict) => Reply::new(451, "4.3.0 Try again"),

@@ -44,6 +44,9 @@ usage: nitromta <command> [--option value ...] | nitromta --version | nitromta -
   Each command about a running engine takes --json for the API's own lines.
 ```
 
+`nitromta <command> --help` prints that command's forms alone, such as
+`nitromta setup --help`.
+
 [Installation](../install.md) shows the commands that set up an
 installation at work, and [operations](../operations.md) those about a
 running engine.

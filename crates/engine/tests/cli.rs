@@ -1,7 +1,8 @@
-//! The command line through the release binary: each command about
-//! a running engine reaches it through its admin socket and shows its
-//! answer as text, or with `--json` as the API's own lines; and an answer
-//! that is an error ends the command with its code and message.
+//! The command line through the release binary: each command says how to
+//! run it with `--help`; each command about a running engine reaches it
+//! through its admin socket and shows its answer as text, or with `--json`
+//! as the API's own lines; and an answer that is an error ends the command
+//! with its code and message.
 
 mod support;
 
@@ -60,6 +61,41 @@ fn the_binary_says_its_version() {
 
 /// Runs a command against the engine's configuration, which must succeed,
 /// and returns what it printed.
+#[test]
+fn each_command_says_how_to_run_it() {
+    let help = |arguments: &[&str]| {
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_nitromta"))
+            .args(arguments)
+            .arg("--help")
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{arguments:?}");
+        String::from_utf8(output.stdout).unwrap()
+    };
+    // Each of its forms, and only its own.
+    let setup = help(&["setup"]);
+    assert!(setup.starts_with("usage:\n  setup --config <file> --hostname"));
+    assert!(setup.contains("\n  setup --config <file> --capture"));
+    assert!(!setup.contains("\n  run "), "{setup}");
+    // `run` says how without a configuration to run with.
+    assert_eq!(
+        help(&["run"]),
+        "usage:\n  run --config <file>             serve\n"
+    );
+    let key = help(&["key"]);
+    assert_eq!(key.lines().count(), 4, "{key}");
+    let list = help(&["key", "list"]);
+    assert_eq!(list.lines().count(), 2, "{list}");
+    assert!(list.contains("key list --config <file>"), "{list}");
+    // A form's further lines come with it, and the words it takes after
+    // the command's own name the command.
+    assert!(help(&["list"]).contains("kinds: accounts"));
+    assert_eq!(help(&["list", "accounts"]), help(&["list"]));
+    assert!(help(&["fence", "release"]).starts_with("usage:\n  fence --config <file>"));
+    // A word that names no command is shown every command.
+    assert!(help(&["frobnicate"]).starts_with("usage: nitromta <command>"));
+}
+
 fn run(engine: &Engine, arguments: &[&str]) -> String {
     let mut arguments = arguments.to_vec();
     arguments.extend(["--config", "config.toml"]);

@@ -57,7 +57,9 @@ those alone.
 Raw content may carry `X-SES-CONFIGURATION-SET`, `X-SES-TENANT` and
 `X-SES-MESSAGE-TAGS` header fields, which the engine honours and removes,
 as SES does; it removes `X-SES-SOURCE-ARN`, `X-SES-FROM-ARN` and
-`X-SES-RETURN-PATH-ARN` too.
+`X-SES-RETURN-PATH-ARN` too. A message is given the `Date` and
+`Message-ID` fields it lacks, as SES gives them, its `Message-ID` naming
+the `MessageId` the answer gives.
 
 ## The SNS subset
 
@@ -89,7 +91,9 @@ event.
 **Submission**, on `[submission] listen`: STARTTLS, which is required before
 `AUTH PLAIN`; `PIPELINING`, `SIZE`, `8BITMIME` and `ENHANCEDSTATUSCODES`.
 The login decides the account, and the message's one From address the
-identity it is sent as.
+identity it is sent as. A message is given the `Date` and `Message-ID`
+fields it lacks, its `Message-ID` naming the ID the acceptance's reply
+gives.
 
 **Delivery**: to each domain's MX hosts, over STARTTLS. TLS is required by
 default (`[delivery] require_tls = true`): mail to a receiver that does not

@@ -1,8 +1,9 @@
-//! Capture mode through the release binary: mail accepted as ever
-//! is captured into a directory in place of being sent, finishes captured,
-//! never delivered, without a lookup or a connection, and the operator
-//! endpoint's inspector shows it; a delivery captured before the engine
-//! stopped, its outcome not yet kept, is found again, never written twice.
+//! Capture mode through the release binary: mail accepted as ever, given
+//! the Date and Message-ID it was submitted without, is captured into a
+//! directory in place of being sent, finishes captured, never delivered,
+//! without a lookup or a connection, and the operator endpoint's inspector
+//! shows it; a delivery captured before the engine stopped, its outcome not
+//! yet kept, is found again, never written twice.
 
 mod support;
 
@@ -44,9 +45,22 @@ fn captured_mail_is_never_sent_and_the_inspector_shows_it() {
         metrics.contains("nitromta_attempts_total{result=\"delivered\"} 0\n"),
         "{metrics}"
     );
-    // Its files are its owner's alone, the content as signed and sent.
+    // Its files are its owner's alone, the content as signed and sent:
+    // submitted without a Date or a Message-ID, given both, its Message-ID
+    // the ID its acceptance named.
     let name = &captured(&directory)[0];
     let content = std::fs::read(directory.join(format!("{name}.eml"))).unwrap();
+    let text = String::from_utf8_lossy(&content);
+    assert!(
+        text.lines().any(|line| line.starts_with("Date: ")),
+        "{text}"
+    );
+    assert!(
+        text.lines().any(|line| messages
+            .iter()
+            .any(|id| line == format!("Message-ID: <{id}@sender.test>"))),
+        "{text}"
+    );
     for file in [format!("{name}.eml"), format!("{name}.json")] {
         let mode = std::fs::metadata(directory.join(&file))
             .unwrap()
