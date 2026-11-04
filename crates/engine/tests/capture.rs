@@ -271,7 +271,7 @@ fn with_encryption_on_neither_the_store_nor_capture_keeps_a_body_or_address_in_t
 }
 
 fn start(name: &str) -> (Dns, Receiver, Engine) {
-    let dns = Dns::signed(&[
+    let dns = Dns::validating(&[
         ("plain.test", "mx.plain.test"),
         ("elsewhere.test", "mx.elsewhere.test"),
     ]);
@@ -280,16 +280,8 @@ fn start(name: &str) -> (Dns, Receiver, Engine) {
         dns.address_of(&format!("mta-sts.{domain}"));
     }
     let receiver = Receiver::start(Script::default());
-    let anchor = dns.trust_anchor();
     let sections = "[operator]\nlisten = \"127.0.0.1:0\"\n\n[capture]\ndirectory = \"capture\"";
-    let engine = Engine::start_with(
-        name,
-        &dns,
-        &receiver,
-        "trust_anchor = \"anchor.key\"",
-        sections,
-        &[("anchor.key", &anchor)],
-    );
+    let engine = Engine::start(name, &dns, &receiver, "", sections);
     (dns, receiver, engine)
 }
 

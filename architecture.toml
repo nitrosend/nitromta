@@ -243,8 +243,9 @@ internal = ["engine-api", "engine-core", "engine-events", "engine-feedback", "en
 # try the engine with, and its tests' certificates. serde_json reads the
 # admin socket's answers for the CLI; base64 decodes the DKIM keys `doctor`
 # compares, and mail-auth evaluates SPF and finds DMARC records for it;
-# mail-parser reads captured messages for capture mode's inspector.
-external = ["aws-lc-rs", "aws-smithy-http-server", "base64", "bytes", "hickory-resolver", "http", "http-body-util", "hyper", "hyper-util", "mail-auth", "mail-parser", "rcgen", "rusqlite", "rustix", "rustls", "rustls-webpki", "serde", "serde_json", "tokio", "tokio-rustls", "tokio-util", "toml", "tower", "tracing", "tracing-subscriber"]
+# mail-parser reads captured messages for capture mode's inspector;
+# futures-core names the stream delivery's resolver reads replies from.
+external = ["aws-lc-rs", "aws-smithy-http-server", "base64", "bytes", "futures-core", "hickory-resolver", "http", "http-body-util", "hyper", "hyper-util", "mail-auth", "mail-parser", "rcgen", "rusqlite", "rustix", "rustls", "rustls-webpki", "serde", "serde_json", "tokio", "tokio-rustls", "tokio-util", "toml", "tower", "tracing", "tracing-subscriber"]
 
 [crates.fuzz]
 kind = "fuzzing"

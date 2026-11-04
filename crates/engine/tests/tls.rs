@@ -6,11 +6,12 @@
 //! outlives its record's withdrawal, its host's silence and a restart; and
 //! an exchange that fails verification gives way to the next.
 //!
-//! DANE: in a DNSSEC-signed zone the engine validates with the test's
-//! trust anchor, an exchange's TLSA records bind its certificate whatever
-//! authority signed it; one that does not match holds the mail; a bogus
-//! TLSA answer leaves the exchange unused; unusable records still require
-//! TLS; and a secure exchange without records is delivered to as before.
+//! DANE: through a resolver on this host that validates DNSSEC, an
+//! exchange's secure TLSA records bind its certificate whatever authority
+//! signed it; one that does not match holds the mail; a bogus TLSA answer
+//! leaves the exchange unused; unusable records still require TLS; and a
+//! secure exchange without records is delivered to as before. Through a
+//! resolver that validates nothing, DANE is not used, and the mail goes.
 
 mod support;
 
@@ -72,10 +73,7 @@ fn sts(name: &str, policy: &str) -> Sts {
         name,
         &dns,
         &receiver,
-        &format!(
-            "mta_sts_port = {}\nidle_seconds = 1\n# The stub DNS signs nothing.\ndane = false",
-            host.port
-        ),
+        &format!("mta_sts_port = {}\nidle_seconds = 1", host.port),
         "[tls]\nauthorities = \"authority.pem\"\n\n[scheduler]\nroute_ttl_seconds = 1",
         &[("authority.pem", &authority.pem())],
     );
@@ -196,20 +194,12 @@ fn an_exchange_that_fails_verification_gives_way_to_the_next() {
     assert_eq!(delivered[0].tls.as_deref(), Some("mx2.s.test"));
 }
 
-/// A signed zone with one domain, d.test, whose exchange is mx.d.test, and
-/// an engine that validates it with the zone's trust anchor.
+/// A validating resolver holding one domain, d.test, whose exchange is
+/// mx.d.test, and an engine that asks it.
 fn dane(name: &str, receiver: &Receiver, tlsa: impl FnOnce(&Dns, u16)) -> (Dns, Engine) {
-    let dns = Dns::signed(&[("d.test", "mx.d.test")]);
+    let dns = Dns::validating(&[("d.test", "mx.d.test")]);
     tlsa(&dns, receiver.port);
-    let anchor = dns.trust_anchor();
-    let engine = Engine::start_with(
-        name,
-        &dns,
-        receiver,
-        "trust_anchor = \"anchor.key\"",
-        "",
-        &[("anchor.key", &anchor)],
-    );
+    let engine = Engine::start(name, &dns, receiver, "", "");
     (dns, engine)
 }
 
@@ -252,7 +242,7 @@ fn a_bogus_tlsa_answer_leaves_the_exchange_unused() {
     let key = sha256(&certified.public_key);
     let (_dns, mut engine) = dane("dane-bogus", &receiver, |dns, port| {
         dns.tlsa("mx.d.test", port, 3, 1, 1, key);
-        dns.forge(&format!("_{port}._tcp.mx.d.test"), RecordType::TLSA);
+        dns.bogus(&format!("_{port}._tcp.mx.d.test"), RecordType::TLSA);
     });
     let message = engine.submit(&["one@d.test"]).remove(0);
     let reply = failure(&engine, &message);
@@ -261,6 +251,34 @@ fn a_bogus_tlsa_answer_leaves_the_exchange_unused() {
         "{reply}"
     );
     assert!(receiver.connections().is_empty());
+}
+
+#[test]
+fn tlsa_records_a_resolver_did_not_validate_bind_nothing() {
+    // The records bind another key than the exchange presents, which would
+    // hold the mail were they secure; through a resolver that validates
+    // nothing they are not, so the mail goes over TLS as without DANE.
+    let receiver = Receiver::start(Script::default());
+    receiver.present(Some(Certified::self_signed(&["mx.d.test"]).server()));
+    let other = sha256(&Certified::self_signed(&["mx.d.test"]).public_key);
+    let dns = Dns::start(&[("d.test", "mx.d.test")]);
+    dns.tlsa("mx.d.test", receiver.port, 3, 1, 1, other);
+    let mut engine = Engine::start("dane-unvalidated", &dns, &receiver, "", "");
+    engine.submit(&["one@d.test"]);
+    wait_for("the delivery", || receiver.delivered() == ["one@d.test"]);
+    assert_eq!(receiver.connections()[0].tls.as_deref(), Some("mx.d.test"));
+    assert!(dns.asked() > 0, "its verdict was asked for");
+}
+
+#[test]
+fn nothing_is_asked_of_dnssec_while_dane_is_off() {
+    let receiver = Receiver::start(Script::default());
+    let dns = Dns::validating(&[("d.test", "mx.d.test")]);
+    let mut engine = Engine::start("dane-off", &dns, &receiver, "dane = false", "");
+    engine.submit(&["one@d.test"]);
+    wait_for("the delivery", || receiver.delivered() == ["one@d.test"]);
+    assert!(dns.queries() > 0);
+    assert_eq!(dns.asked(), 0);
 }
 
 #[test]

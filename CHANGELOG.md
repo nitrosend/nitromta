@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.0 - 2026-11-04
+
+### Changed
+
+- **DANE takes DNSSEC's verdict from the resolver on this host, as Postfix
+  does.** Delivery's lookups ask that resolver whether it validated each
+  answer (the AD bit), so it must validate DNSSEC itself, and the engine no
+  longer does. Through a resolver elsewhere, or one that does not
+  validate, such as Docker's or most routers', mail goes as it would
+  without DANE, and `doctor` and the log say DANE is not in effect; until
+  now every lookup failed and the mail waited until `[delivery] dane =
+  false` was set. Mail to zones the engine's own validation wrongly called
+  bogus, such as an unsigned zone with no NS records at its apex, is
+  delivered.
+- `/health/dispatch` no longer answers 503 while the resolver does not
+  validate DNSSEC, as the mail goes on without DANE.
+
+### Removed
+
+- `[delivery] trust_anchor`. The resolver's own trust anchor is the one
+  that counts: delete the line from your configuration before upgrading, or
+  the engine will not start.
+
 ## 0.1.6 - 2026-11-03
 
 ### Fixed

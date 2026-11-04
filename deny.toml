@@ -43,6 +43,6 @@ allow-wildcard-paths = true
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
-# hickory's own repository, for the release/0.26 fix the workspace patches
-# in until it is released (Cargo.toml, [patch.crates-io]).
+# hickory's own repository, for the release/0.26 branch the workspace
+# patches in until 0.26.4 is released (Cargo.toml, [patch.crates-io]).
 allow-git = ["https://github.com/hickory-dns/hickory-dns"]

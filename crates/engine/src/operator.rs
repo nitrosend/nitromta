@@ -79,9 +79,6 @@ pub struct Operations {
     pub connections_refused: [AtomicU64; Listener::ALL.len()],
     pub store_failed: AtomicBool,
     pub scheduler_failed: AtomicBool,
-    /// DANE is honoured, and the resolver has not yet proved the root's
-    /// keys secure: lookups of signed zones fail.
-    pub dnssec_unproven: AtomicBool,
     /// Free space on the store's disk, and whether it is below the reserve
     /// kept for outcomes, feedback and checkpoints.
     pub store_free_bytes: AtomicU64,
@@ -615,11 +612,6 @@ impl Operations {
         self.scheduler_failed
             .load(Ordering::Relaxed)
             .then_some("the scheduler stopped")
-            .or_else(|| {
-                self.dnssec_unproven
-                    .load(Ordering::Relaxed)
-                    .then_some("the resolver does not pass DNSSEC, which DANE needs")
-            })
     }
 
     /// Every count, in Prometheus's text format.

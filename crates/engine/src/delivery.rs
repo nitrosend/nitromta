@@ -20,14 +20,17 @@
 //! back to less after a failure.
 //!
 //! It also looks domains' routes up for the scheduler, through the
-//! resolver, which validates DNSSEC when DANE is honoured, with each
-//! domain's MTA-STS policy; what they mean is decided in
-//! `engine_smtp::route`.
+//! resolver, which says what DNSSEC proved of each answer while DANE is
+//! honoured and it is on this host, with each domain's MTA-STS policy; what
+//! they mean is decided in `engine_smtp::route`.
 
 use std::collections::{BTreeMap, VecDeque};
+use std::future::Future;
 use std::net::{IpAddr, SocketAddr};
+use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use std::task::{Context, Poll};
 use std::time::Duration;
 
 use bytes::Bytes;
@@ -48,12 +51,14 @@ use engine_smtp::route::{self, Answer};
 use engine_store::keys::Unopened;
 
 use crate::sealing::Sealer;
-use hickory_resolver::TokioResolver;
+use futures_core::Stream;
 use hickory_resolver::config::{ConnectionConfig, NameServerConfig, ResolverConfig};
 use hickory_resolver::net::runtime::TokioRuntimeProvider;
-use hickory_resolver::net::{DnsError, NetError, NoRecords};
-use hickory_resolver::proto::dnssec::TrustAnchors;
+use hickory_resolver::net::{DnsError, DnsHandle, NetError, NoRecords};
+use hickory_resolver::proto::dnssec::Proof;
+use hickory_resolver::proto::op::{DnsRequest, DnsResponse, Message};
 use hickory_resolver::proto::rr::{Name, RData, RecordType};
+use hickory_resolver::{ConnectionProvider, PoolContext, TokioResolver};
 use rustls::ClientConfig;
 use rustls::pki_types::ServerName;
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -64,7 +69,6 @@ use tokio_rustls::TlsConnector;
 
 use crate::clock::SystemClock;
 use crate::config;
-use crate::operator::Operations;
 use crate::stream::{self, Read};
 use crate::sts::Policies;
 
@@ -88,8 +92,8 @@ struct Inner {
     port: u16,
     return_path_domain: String,
     return_path_key: token::Key,
-    resolver: TokioResolver,
-    /// Whether the resolver validates DNSSEC, so DANE applies.
+    resolver: Resolver,
+    /// Whether DANE is honoured, so what an answer proved counts.
     dane: bool,
     /// Each domain's MTA-STS policy, when MTA-STS is honoured.
     policies: Option<Arc<Policies>>,
@@ -201,44 +205,151 @@ impl Lines {
     }
 }
 
+/// Delivery's resolver: hickory's, over connections that ask what DNSSEC
+/// proved of each answer.
+pub type Resolver = hickory_resolver::Resolver<Asking>;
+
 /// The resolver delivery's lookups go through: the one the configuration
-/// names, or the system's, validating DNSSEC when DANE is honoured.
-pub fn resolver(config: &config::Delivery) -> Result<TokioResolver, String> {
-    built(config, config.dane, |_| {})
+/// names, or the system's, as they are now; and its nameservers not on this
+/// host. It asks for DNSSEC's verdict while DANE is honoured and there are
+/// none.
+pub fn resolver(config: &config::Delivery) -> Result<(Resolver, Vec<IpAddr>), String> {
+    let nameservers = resolver_config(config)?;
+    let remote = elsewhere(&nameservers);
+    let asking = Asking {
+        ask: config.dane && remote.is_empty(),
+        runtime: TokioRuntimeProvider::default(),
+    };
+    let resolver = Resolver::builder_with_config(nameservers, asking)
+        .build()
+        .map_err(|error| format!("the resolver: {error}"))?;
+    Ok((resolver, remote))
 }
 
 /// The same resolver as receivers see the DNS, for `doctor`'s checks and
 /// identities' verification: never through this host's own hosts file, and
-/// validating no DNSSEC itself, which none of those records needs; a
-/// validating resolver behind it still refuses a bogus answer, while a
-/// fault in this one's own validation would only hide a record.
+/// asking nothing of DNSSEC, which none of those records needs; a
+/// validating resolver still refuses a bogus answer.
 pub fn public_resolver(config: &config::Delivery) -> Result<TokioResolver, String> {
-    built(config, false, |options| {
-        options.use_hosts_file = hickory_resolver::config::ResolveHosts::Never;
-    })
-}
-
-fn built(
-    config: &config::Delivery,
-    validate: bool,
-    options: impl FnOnce(&mut hickory_resolver::config::ResolverOpts),
-) -> Result<TokioResolver, String> {
     let mut builder = TokioResolver::builder_with_config(
         resolver_config(config)?,
         TokioRuntimeProvider::default(),
     );
-    options(builder.options_mut());
-    if validate {
-        builder.options_mut().validate = true;
-        if let Some(path) = &config.trust_anchor {
-            let anchors = TrustAnchors::from_file(path)
-                .map_err(|error| format!("{}: {error}", path.display()))?;
-            builder = builder.with_trust_anchor(Arc::new(anchors));
-        }
-    }
+    builder.options_mut().use_hosts_file = hickory_resolver::config::ResolveHosts::Never;
     builder
         .build()
         .map_err(|error| format!("the resolver: {error}"))
+}
+
+/// Connections to delivery's resolver. While they ask, each query sets
+/// the AD bit, which asks for the resolver's verdict without its DNSSEC
+/// records (RFC 6840, 5.7), and a reply with the AD bit set proves its
+/// answer and authority records secure, the sections that bit speaks for
+/// (RFC 4035, 3.2.3). It asks only a resolver on this host: the AD bit of
+/// one across a network proves nothing, its path unprotected (RFC 4035,
+/// 4.9.3). Unproved, an answer is insecure, so DANE is not used for it and
+/// its mail goes as it would without DANE, never held. Validating is that
+/// resolver's work, as it is for Postfix: the engine validates nothing, and
+/// takes the resolver at its word, so it must validate DNSSEC itself, not
+/// pass on another's verdict as a forwarder may.
+#[derive(Clone)]
+pub struct Asking {
+    ask: bool,
+    runtime: TokioRuntimeProvider,
+}
+
+/// hickory's own connection to a nameserver.
+type Exchange = <TokioRuntimeProvider as ConnectionProvider>::Conn;
+
+impl ConnectionProvider for Asking {
+    type Conn = Asked;
+    type FutureConn = Pin<Box<dyn Future<Output = Result<Asked, NetError>> + Send>>;
+    type RuntimeProvider = TokioRuntimeProvider;
+
+    fn new_connection(
+        &self,
+        ip: IpAddr,
+        config: &ConnectionConfig,
+        cx: &PoolContext,
+    ) -> Result<Self::FutureConn, NetError> {
+        let connecting = self.runtime.new_connection(ip, config, cx)?;
+        let ask = self.ask;
+        Ok(Box::pin(async move {
+            Ok(Asked {
+                exchange: connecting.await?,
+                ask,
+            })
+        }))
+    }
+
+    fn runtime_provider(&self) -> &TokioRuntimeProvider {
+        &self.runtime
+    }
+}
+
+/// One connection to a nameserver of delivery's resolver.
+#[derive(Clone)]
+pub struct Asked {
+    exchange: Exchange,
+    ask: bool,
+}
+
+impl DnsHandle for Asked {
+    type Response = Proved;
+    type Runtime = TokioRuntimeProvider;
+
+    fn send(&self, mut request: DnsRequest) -> Proved {
+        if self.ask {
+            request.metadata.authentic_data = true;
+        }
+        Proved {
+            replies: self.exchange.send(request),
+            ask: self.ask,
+        }
+    }
+}
+
+/// A query's replies, each with what it proved.
+pub struct Proved {
+    replies: <Exchange as DnsHandle>::Response,
+    ask: bool,
+}
+
+impl Stream for Proved {
+    type Item = Result<DnsResponse, NetError>;
+
+    fn poll_next(mut self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        let ask = self.ask;
+        Pin::new(&mut self.replies)
+            .poll_next(context)
+            .map_ok(|mut reply| {
+                prove(&mut reply, ask);
+                reply
+            })
+    }
+}
+
+/// Marks a reply's answer and authority records secure when it was
+/// `asked` for the resolver's verdict and its AD bit says the resolver
+/// validated them.
+fn prove(reply: &mut Message, asked: bool) {
+    if !asked || !reply.metadata.authentic_data {
+        return;
+    }
+    for record in reply.answers.iter_mut().chain(&mut reply.authorities) {
+        record.proof = Proof::Secure;
+    }
+}
+
+/// The nameservers among `nameservers` not on this host, whose word on
+/// DNSSEC is not taken.
+fn elsewhere(nameservers: &ResolverConfig) -> Vec<IpAddr> {
+    nameservers
+        .name_servers()
+        .iter()
+        .map(|server| server.ip)
+        .filter(|ip| !ip.to_canonical().is_loopback())
+        .collect()
 }
 
 /// The nameservers delivery's lookups go to: the one the configuration
@@ -271,37 +382,69 @@ pub fn resolver_config(config: &config::Delivery) -> Result<ResolverConfig, Stri
     Ok(ResolverConfig::from_name_servers(servers))
 }
 
-/// While DANE is honoured with the root's trust anchor, checks that the
-/// resolver passes DNSSEC: the root's own keys must prove secure. Until
-/// they do, every lookup of a signed zone fails, which the dispatch health
-/// says, and the log once; the check is made again each minute.
-pub fn check_dnssec(resolver: TokioResolver, operations: Arc<Operations>) {
-    operations.dnssec_unproven.store(true, Ordering::Relaxed);
+/// While DANE is honoured, says in the log whether it is in effect, and
+/// again whenever that changes: never while `remote`, nameservers of
+/// delivery's resolver, are not on this host, and otherwise as the resolver
+/// answers for the root's keys, asked each minute. While it is not, mail
+/// goes as it would without DANE.
+pub fn check_dane(resolver: Resolver, remote: &[IpAddr]) {
+    if !remote.is_empty() {
+        tracing::warn!("{}", not_local(remote));
+        return;
+    }
     tokio::spawn(async move {
-        let mut reported = false;
+        let mut said = None;
         loop {
-            let secure = match resolver.lookup(Name::root(), RecordType::DNSKEY).await {
-                Ok(lookup) => lookup.answers().iter().any(|record| {
-                    matches!(record.data, RData::DNSSEC(_)) && record.proof.is_secure()
-                }),
-                Err(_) => false,
-            };
-            if secure {
-                operations.dnssec_unproven.store(false, Ordering::Relaxed);
-                if reported {
-                    tracing::info!("the resolver now passes DNSSEC");
+            let validated = validates(&resolver).await;
+            let now = validated.as_ref().copied().map_err(|_| ());
+            if said != Some(now) {
+                if now == Ok(true) {
+                    tracing::info!("{}", verdict(&validated));
+                } else {
+                    tracing::warn!("{}", verdict(&validated));
                 }
-                return;
-            }
-            if !reported {
-                tracing::error!(
-                    "the resolver does not pass DNSSEC, so lookups of signed zones fail while DANE is honoured; point [delivery] resolver at one that does, such as a local unbound, or set [delivery] dane = false"
-                );
-                reported = true;
+                said = Some(now);
             }
             tokio::time::sleep(Duration::from_secs(60)).await;
         }
     });
+}
+
+/// Whether `resolver` validates DNSSEC, asked afresh: whether it says the
+/// root's keys are validated, or why it gave no answer.
+pub async fn validates(resolver: &Resolver) -> Result<bool, String> {
+    resolver.clear_lookup_cache(Name::root(), RecordType::DNSKEY);
+    match resolver.lookup(Name::root(), RecordType::DNSKEY).await {
+        Ok(lookup) => Ok(lookup
+            .answers()
+            .iter()
+            .any(|record| matches!(record.data, RData::DNSSEC(_)) && record.proof.is_secure())),
+        Err(error) if no_records(&error).is_some() => Ok(false),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// What [`validates`] found, as the log and `doctor` say it.
+pub fn verdict(validated: &Result<bool, String>) -> String {
+    match validated {
+        Ok(true) => {
+            "DANE is in effect: the resolver says it validated the root's keys".to_owned()
+        }
+        Ok(false) => "DANE is not in effect: the resolver does not validate DNSSEC, so mail goes as it would without DANE; point [delivery] resolver at one on this host that does, such as unbound".to_owned(),
+        Err(error) => format!(
+            "whether DANE is in effect is not known: the resolver did not answer for the root's keys ({error})"
+        ),
+    }
+}
+
+/// Why DANE is not in effect when `remote`, nameservers of delivery's
+/// resolver, are not on this host.
+pub fn not_local(remote: &[IpAddr]) -> String {
+    let remote: Vec<String> = remote.iter().map(IpAddr::to_string).collect();
+    format!(
+        "DANE is not in effect: the resolver at {} is not on this host, so its word on DNSSEC is not taken, and mail goes as it would without DANE; run a resolver that validates DNSSEC here, such as unbound, and name it as [delivery] resolver",
+        remote.join(", ")
+    )
 }
 
 /// The key return paths are made with, from configuration, checked once so
@@ -354,7 +497,7 @@ impl Deliverer {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         config: &config::Delivery,
-        resolver: TokioResolver,
+        resolver: Resolver,
         policies: Option<Arc<Policies>>,
         verified: Option<Arc<ClientConfig>>,
         outbound: Outbound,
@@ -442,8 +585,8 @@ impl Deliverer {
                     // empty, its denial and its zone's SOA are secure,
                     // which DANE applies to (RFC 7672, 2.2.2).
                     Some(none) => {
-                        // A validating resolver gives no negative TTL: the
-                        // SOA's gives it (RFC 2308, 5).
+                        // Given no negative TTL, the SOA's gives it (RFC
+                        // 2308, 5).
                         let ttl = none
                             .negative_ttl
                             .or_else(|| none.soa.as_ref().map(|soa| soa.ttl.min(soa.data.minimum)))
@@ -455,9 +598,20 @@ impl Deliverer {
                             .iter()
                             .filter(|record| record.record_type() != RecordType::RRSIG)
                             .collect();
-                        let secure = inner.dane
+                        let mut secure = inner.dane
                             && !proof.is_empty()
                             && proof.iter().all(|record| record.proof.is_secure());
+                        // A denial another name holds came through the
+                        // domain's aliases, which must be secure too.
+                        let denied = lowercase(none.query.name());
+                        if secure && denied != *domain {
+                            secure = match inner.aliases(&domain).await {
+                                Ok((aliases, end)) => {
+                                    aliases.iter().all(|(_, secure)| *secure) && end == denied
+                                }
+                                Err(_) => false,
+                            };
+                        }
                         if error.is_nx_domain() {
                             (Answer::NoSuchDomain, false, ttl)
                         } else {
@@ -1469,6 +1623,71 @@ mod tests {
         assert_eq!(lines.unserved().map(|queue| &**queue), Some("a"));
         assert_eq!(lines.take_all().len(), 3);
         assert_eq!(lines.unserved(), None);
+    }
+
+    #[test]
+    fn a_reply_proves_its_answers_and_authorities_only_when_asked_and_validated() {
+        use hickory_resolver::proto::op::OpCode;
+        use hickory_resolver::proto::rr::Record;
+        use hickory_resolver::proto::rr::rdata::A;
+        let record = |owner: &str| {
+            Record::from_rdata(
+                Name::from_ascii(owner).unwrap(),
+                60,
+                RData::A(A(std::net::Ipv4Addr::LOCALHOST)),
+            )
+        };
+        let reply = |validated| {
+            let mut reply = Message::response(1, OpCode::Query);
+            reply.metadata.authentic_data = validated;
+            reply.add_answers([record("a.example.")]);
+            reply.add_authorities([record("b.example.")]);
+            reply.add_additionals([record("c.example.")]);
+            reply
+        };
+        let mut validated = reply(true);
+        prove(&mut validated, true);
+        assert!(validated.answers[0].proof.is_secure());
+        assert!(validated.authorities[0].proof.is_secure());
+        assert!(
+            !validated.additionals[0].proof.is_secure(),
+            "the AD bit speaks for no additional record"
+        );
+        let mut unvalidated = reply(false);
+        prove(&mut unvalidated, true);
+        assert!(!unvalidated.answers[0].proof.is_secure());
+        assert!(!unvalidated.authorities[0].proof.is_secure());
+        let mut unasked = reply(true);
+        prove(&mut unasked, false);
+        assert!(
+            !unasked.answers[0].proof.is_secure(),
+            "a resolver not asked, its AD bit is not taken"
+        );
+    }
+
+    #[test]
+    fn only_nameservers_on_this_host_are_asked_about_dnssec() {
+        let nameservers = |addresses: &[&str]| {
+            ResolverConfig::from_name_servers(
+                addresses
+                    .iter()
+                    .map(|address| NameServerConfig::udp_and_tcp(address.parse().unwrap()))
+                    .collect(),
+            )
+        };
+        assert!(
+            elsewhere(&nameservers(&[
+                "127.0.0.1",
+                "127.0.0.53",
+                "::1",
+                "::ffff:127.0.0.1"
+            ]))
+            .is_empty()
+        );
+        assert_eq!(
+            elsewhere(&nameservers(&["127.0.0.1", "192.0.2.53"])),
+            ["192.0.2.53".parse::<IpAddr>().unwrap()]
+        );
     }
 
     #[test]

@@ -12,8 +12,9 @@ directly, so the host needs what any sending host needs:
   it;
 - for each domain mail is sent as, SPF, DKIM and DMARC records, which
   `nitromta doctor` writes out for you;
-- a synchronised clock (NTP), and, for DANE, a resolver that validates
-  DNSSEC, such as a local unbound.
+- a synchronised clock (NTP), and, for DANE, a resolver on this host that
+  validates DNSSEC, such as unbound; without one, mail goes as it would
+  without DANE.
 
 To try the engine first, without any of this, use
 [capture mode](capture.md).
@@ -106,6 +107,19 @@ require_tls`). It writes the installation's keys too, which seal the secrets
 the store keeps. It never writes over a file already there. Keep a copy of
 the configuration and the keys away from the host: a backup of the store can
 be restored only with them.
+
+For DANE, run a resolver that validates DNSSEC on this host and name it as
+`[delivery] resolver`: on Debian or Ubuntu, `sudo apt install unbound`, then
+`resolver = "127.0.0.1:53"`. The engine takes that resolver's word that it
+validated an answer, so it must validate DNSSEC itself: never name a
+forwarder that passes on another resolver's word, such as dnsmasq with
+`proxy-dnssec` or systemd-resolved's 127.0.0.54. Through a resolver
+elsewhere, or one that does not validate, mail goes as it would without
+DANE.
+
+The engine reads its resolver when it starts, so restart it after changing
+`[delivery] resolver` or the system's nameservers. `doctor` says whether
+DANE is in effect with the resolver a start would use.
 
 ## 3. Give it a certificate
 

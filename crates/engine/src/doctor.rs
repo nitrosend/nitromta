@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use hickory_resolver::TokioResolver;
-use hickory_resolver::proto::rr::{Name, RData, RecordType};
+use hickory_resolver::proto::rr::{RData, RecordType};
 use mail_auth::{MessageAuthenticator, SpfResult, spf::verify::SpfParameters};
 use rustls::pki_types::pem::PemObject as _;
 use rustls::pki_types::{CertificateDer, UnixTime};
@@ -118,7 +118,7 @@ pub fn run(config: &Config, running: Option<&Running>, probes: &Probes) -> Resul
     certificates(config, &mut report);
     runtime.block_on(async {
         clock(&probes.time_server, &mut report).await;
-        dnssec(config, &delivery::resolver(&config.delivery)?, &mut report).await;
+        dane(config, &mut report).await?;
         let resolver = delivery::public_resolver(&config.delivery)?;
         match running {
             Some(running) => {
@@ -441,27 +441,28 @@ fn ntp(at: SystemTime) -> [u8; 8] {
     bytes
 }
 
-/// Whether delivery's resolver validates DNSSEC, which DANE needs.
-async fn dnssec(config: &Config, resolver: &TokioResolver, report: &mut Report) {
+/// Whether DANE is in effect: delivery's resolver on this host, validating
+/// DNSSEC.
+async fn dane(config: &Config, report: &mut Report) -> Result<(), String> {
     if !config.delivery.dane {
-        return report.warn(
+        report.warn(
             "resolver: DANE is off ([delivery] dane = false), so a route's TLSA records are not honoured and DNSSEC is not checked",
         );
+        return Ok(());
     }
-    let secure = match resolver.lookup(Name::root(), RecordType::DNSKEY).await {
-        Ok(lookup) => lookup
-            .answers()
-            .iter()
-            .any(|record| matches!(record.data, RData::DNSSEC(_)) && record.proof.is_secure()),
-        Err(_) => false,
-    };
-    if secure {
-        report.ok("resolver: it validates DNSSEC, as DANE needs");
+    let (resolver, remote) = delivery::resolver(&config.delivery)?;
+    if !remote.is_empty() {
+        report.warn(format!("resolver: {}", delivery::not_local(&remote)));
     } else {
-        report.fail(
-            "resolver: it does not validate DNSSEC, so signed zones' lookups fail while DANE is honoured; point [delivery] resolver at one that does, such as a local unbound",
-        );
+        let validated = delivery::validates(&resolver).await;
+        let said = format!("resolver: {}", delivery::verdict(&validated));
+        if validated == Ok(true) {
+            report.ok(said);
+        } else {
+            report.warn(said);
+        }
     }
+    Ok(())
 }
 
 /// Each egress: its reverse DNS, confirmed forward and named by its HELO;

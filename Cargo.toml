@@ -8,7 +8,7 @@ exclude = ["crates/engine-ses-v2"]
 [workspace.package]
 # The release's version, every crate's, which `nitromta --version` prints and
 # a release's tag names.
-version = "0.1.6"
+version = "0.2.0"
 edition = "2024"
 license = "Apache-2.0"
 publish = false
@@ -31,6 +31,7 @@ engine-ses-v2 = { path = "crates/engine-ses-v2" }
 engine-smtp = { path = "crates/engine-smtp" }
 engine-store = { path = "crates/engine-store" }
 engine-warmup = { path = "crates/engine-warmup" }
+futures-core = { version = "0.3.34", default-features = false }
 hickory-resolver = { version = "0.26.3", default-features = false, features = ["dnssec-aws-lc-rs", "tokio"] }
 http = "1.5.0"
 http-body-util = "0.1.5"
@@ -56,11 +57,11 @@ tower = { version = "0.4.13", default-features = false, features = ["util"] }
 tracing = { version = "0.1.44", default-features = false, features = ["std"] }
 tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "json", "std"] }
 
-# hickory 0.26.3 calls a name bogus when its zone is delegated from an
-# unsigned parent and the child answers the DS query with its own SOA, as
-# Google's l.google.com does, so no mail reached Gmail while DANE was
-# honoured (hickory-dns#3974). The fix is on hickory's release/0.26 branch
-# (#4007) but in no release yet; back to the registry once 0.26.4 is out.
+# hickory from its release/0.26 branch until 0.26.4 is released. Its DNSSEC
+# validation fix (hickory-dns#3974) first brought the engine here, and the
+# engine no longer validates; the branch also carries fixes 0.26.3 lacks to
+# the resolver's cache and timeouts, and the fallible TXT construction the
+# tests use. Back to the registry once 0.26.4 is out.
 [patch.crates-io]
 hickory-net = { git = "https://github.com/hickory-dns/hickory-dns", rev = "8a448ff49139c0c2809610e476501fb278e10a01" }
 hickory-proto = { git = "https://github.com/hickory-dns/hickory-dns", rev = "8a448ff49139c0c2809610e476501fb278e10a01" }

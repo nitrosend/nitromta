@@ -329,9 +329,9 @@ async fn engine(
             )?)
         }
         None => {
-            let resolver = delivery::resolver(&config.delivery)?;
-            if config.delivery.dane && config.delivery.trust_anchor.is_none() {
-                delivery::check_dnssec(resolver.clone(), Arc::clone(&operations));
+            let (resolver, remote) = delivery::resolver(&config.delivery)?;
+            if config.delivery.dane {
+                delivery::check_dane(resolver.clone(), &remote);
             }
             let policies = match (&verified, config.delivery.mta_sts) {
                 (Some(verified), true) => {

@@ -15,7 +15,6 @@ use engine_core::outbound::Outbound;
 use engine_core::sts::Policy;
 use engine_core::time::Timestamp;
 use engine_smtp::sts::{self, Plan, Record};
-use hickory_resolver::TokioResolver;
 use hickory_resolver::proto::rr::RData;
 use http_body_util::{BodyExt, Empty, Limited};
 use hyper_util::rt::TokioIo;
@@ -25,6 +24,7 @@ use tokio::net::TcpStream;
 use tokio_rustls::TlsConnector;
 
 use crate::clock::SystemClock;
+use crate::delivery::Resolver;
 use crate::store::Store;
 
 /// How long a policy fetch may take, from the lookup of its host to the
@@ -87,7 +87,7 @@ impl Kept {
 }
 
 pub struct Policies {
-    resolver: TokioResolver,
+    resolver: Resolver,
     /// Verifies a policy host's certificate for its name.
     tls: TlsConnector,
     /// Where policy hosts serve: 443, RFC 8461's.
@@ -107,7 +107,7 @@ impl Policies {
     /// fetched last, at most one more than [`MOST_KEPT`], which tells
     /// whether there are more.
     pub fn new(
-        resolver: TokioResolver,
+        resolver: Resolver,
         tls: Arc<ClientConfig>,
         port: u16,
         outbound: Outbound,

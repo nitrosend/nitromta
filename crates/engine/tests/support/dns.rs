@@ -1,27 +1,25 @@
 //! A stub DNS on a port of its own, authoritative for the names it holds:
 //! their records, an empty answer for a type a name lacks, and NXDOMAIN for
-//! a name it lacks. Signed, it holds one zone, `test.`, under a key the
-//! engine takes as its trust anchor: every answer carries its RRSIG, and
-//! every empty answer or NXDOMAIN its NSEC proof, so a validating resolver
-//! proves them secure. A record can also be served with a broken signature,
-//! which such a resolver must find bogus.
+//! a name it lacks. Validating, it stands for a resolver on the test's host
+//! that validates DNSSEC, `test.` its one signed zone beside the root: to a
+//! query asking for DNSSEC's verdict, it sets the AD bit on a reply wholly
+//! about them, and a record it holds as bogus gets SERVFAIL, as such a
+//! resolver answers.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use base64::Engine as _;
+use hickory_resolver::proto::dnssec::SigningKey;
 use hickory_resolver::proto::dnssec::crypto::Ed25519SigningKey;
-use hickory_resolver::proto::dnssec::rdata::{DNSKEY, DNSSECRData, NSEC, RRSIG, SigInput};
-use hickory_resolver::proto::dnssec::{DnssecSigner, PublicKey, SigningKey, TBS};
+use hickory_resolver::proto::dnssec::rdata::{DNSKEY, DNSSECRData};
 use hickory_resolver::proto::op::{Edns, Message, MessageType, OpCode, ResponseCode};
 use hickory_resolver::proto::rr::rdata::tlsa::{CertUsage, Matching, Selector};
 use hickory_resolver::proto::rr::rdata::{A, CNAME, MX, NS, SOA, TLSA, TXT};
-use hickory_resolver::proto::rr::{DNSClass, Name, RData, Record, RecordType, SerialNumber};
+use hickory_resolver::proto::rr::{Name, RData, Record, RecordType};
 
-/// The zone a signed stub holds.
+/// The zone a validating stub holds as signed.
 pub const ZONE: &str = "test.";
 /// A second, so a record a test changes is seen as soon as it changes.
 const TTL: u32 = 1;
@@ -36,14 +34,17 @@ pub struct Dns {
 #[derive(Default)]
 struct Zone {
     records: BTreeMap<Name, BTreeMap<RecordType, Vec<RData>>>,
-    signer: Option<DnssecSigner>,
-    /// Records served with a broken signature, by name and type.
-    forged: BTreeSet<(Name, RecordType)>,
+    /// Whether it validates, so `test.` and the root are secure.
+    validating: bool,
+    /// Records it holds as bogus, by name and type.
+    bogus: BTreeSet<(Name, RecordType)>,
+    /// The queries that asked for DNSSEC's verdict.
+    asked: usize,
 }
 
 impl Dns {
-    /// An unsigned stub with an MX record for each of `routes`' domains,
-    /// naming its one exchange, which is at 127.0.0.1.
+    /// A stub that validates nothing, with an MX record for each of
+    /// `routes`' domains, naming its one exchange, which is at 127.0.0.1.
     pub fn start(routes: &[(&str, &str)]) -> Self {
         let dns = Self::serve(Zone::default());
         for (domain, exchange) in routes {
@@ -52,29 +53,13 @@ impl Dns {
         dns
     }
 
-    /// A signed stub holding `test.`, with `routes` as [`Dns::start`]'s.
-    pub fn signed(routes: &[(&str, &str)]) -> Self {
-        let key =
-            Ed25519SigningKey::from_pkcs8(&Ed25519SigningKey::generate_pkcs8().expect("a key"))
-                .expect("a key");
-        let dnskey = DNSKEY::new(
-            true,
-            true,
-            false,
-            key.to_public_key().expect("its public key"),
-        );
-        let apex = name(ZONE);
-        let signer = DnssecSigner::new(
-            dnskey.clone(),
-            Box::new(key),
-            apex.clone(),
-            Duration::from_secs(86_400),
-        );
+    /// A validating stub holding `test.`, with `routes` as [`Dns::start`]'s.
+    pub fn validating(routes: &[(&str, &str)]) -> Self {
         let mut zone = Zone {
-            signer: Some(signer),
+            validating: true,
             ..Zone::default()
         };
-        let ns = name("ns.test.");
+        let (apex, ns) = (name(ZONE), name("ns.test."));
         zone.add(
             &apex,
             RData::SOA(SOA::new(
@@ -88,8 +73,18 @@ impl Dns {
             )),
         );
         zone.add(&apex, RData::NS(NS(ns.clone())));
-        zone.add(&apex, RData::DNSSEC(DNSSECRData::DNSKEY(dnskey)));
         zone.add(&ns, RData::A(A(Ipv4Addr::LOCALHOST)));
+        // The root's keys, which a validating resolver proves secure.
+        let key =
+            Ed25519SigningKey::from_pkcs8(&Ed25519SigningKey::generate_pkcs8().expect("a key"))
+                .expect("a key");
+        let dnskey = DNSKEY::new(
+            true,
+            true,
+            false,
+            key.to_public_key().expect("its public key"),
+        );
+        zone.add(&Name::root(), RData::DNSSEC(DNSSECRData::DNSKEY(dnskey)));
         let dns = Self::serve(zone);
         for (domain, exchange) in routes {
             dns.route(domain, exchange);
@@ -125,18 +120,9 @@ impl Dns {
         self.queries.load(Ordering::Relaxed)
     }
 
-    /// The trust anchor a signed stub's answers are proved by, as the
-    /// DNSKEY record hickory reads from a file.
-    pub fn trust_anchor(&self) -> String {
-        let zone = lock(&self.zone);
-        let signer = zone.signer.as_ref().expect("a signed stub");
-        let key = signer.dnskey();
-        format!(
-            "{ZONE} {TTL} IN DNSKEY {} 3 {} {}\n",
-            key.flags(),
-            u8::from(key.public_key().algorithm()),
-            base64::engine::general_purpose::STANDARD.encode(key.public_key().public_bytes())
-        )
+    /// How many of them asked for DNSSEC's verdict.
+    pub fn asked(&self) -> usize {
+        lock(&self.zone).asked
     }
 
     /// An MX record for `domain` naming `exchange`, at 127.0.0.1.
@@ -213,11 +199,11 @@ impl Dns {
         }
     }
 
-    /// Serves `owner`'s records of `kind` with a signature that does not
+    /// Holds `owner`'s records of `kind` as bogus: their signatures do not
     /// verify.
-    pub fn forge(&self, owner: &str, kind: RecordType) {
+    pub fn bogus(&self, owner: &str, kind: RecordType) {
         lock(&self.zone)
-            .forged
+            .bogus
             .insert((name(&format!("{owner}.")), kind));
     }
 }
@@ -232,15 +218,18 @@ impl Zone {
             .push(data);
     }
 
-    fn answer(&self, query: &[u8]) -> Option<Vec<u8>> {
+    fn answer(&mut self, query: &[u8]) -> Option<Vec<u8>> {
         let query = Message::from_vec(query).ok()?;
         let question = query.queries.first()?.clone();
-        let asked = question.name().to_lowercase();
+        let mut asked = question.name().to_lowercase();
         let kind = question.query_type();
-        let dnssec = query
-            .edns
-            .as_ref()
-            .is_some_and(|edns| edns.flags().dnssec_ok);
+        // Either bit asks for DNSSEC's verdict (RFC 6840, 5.7).
+        let verdict = query.metadata.authentic_data
+            || query
+                .edns
+                .as_ref()
+                .is_some_and(|edns| edns.flags().dnssec_ok);
+        self.asked += usize::from(verdict);
         let mut reply = Message::new(query.metadata.id, MessageType::Response, OpCode::Query);
         reply.metadata.authoritative = true;
         reply.metadata.recursion_desired = query.metadata.recursion_desired;
@@ -252,9 +241,9 @@ impl Zone {
             edns.set_dnssec_ok(asked_edns.flags().dnssec_ok);
             reply.set_edns(edns);
         }
-        let sign = dnssec && self.signer.is_some();
-        // An alias's chain comes first, each link with its signature.
-        let mut asked = asked;
+        // An alias's chain comes first, link by link.
+        let mut owners = vec![asked.clone()];
+        let mut bogus = false;
         for _ in 0..8 {
             let Some(RData::CNAME(target)) = self
                 .records
@@ -266,147 +255,58 @@ impl Zone {
                 break;
             };
             let target = target.0.to_lowercase();
-            for record in self.rrset(&asked, RecordType::CNAME, sign) {
-                reply.add_answer(record);
-            }
+            bogus |= self.bogus.contains(&(asked.clone(), RecordType::CNAME));
+            reply.add_answers(self.rrset(&asked, RecordType::CNAME));
             asked = target;
+            owners.push(asked.clone());
         }
         match self.records.get(&asked) {
             Some(types) if types.contains_key(&kind) => {
-                for record in self.rrset(&asked, kind, sign) {
-                    reply.add_answer(record);
-                }
+                bogus |= self.bogus.contains(&(asked.clone(), kind));
+                reply.add_answers(self.rrset(&asked, kind));
             }
-            // An empty answer: the name's own NSEC proves it lacks the type.
             Some(_) => {
-                reply.add_authorities(self.soa(sign));
-                if sign {
-                    reply.add_authorities(self.nsec(&asked));
-                }
+                reply.add_authorities(self.soa());
             }
-            // NXDOMAIN: the NSEC covering the name, and the one covering
-            // the wildcard that might have answered for it.
             None => {
                 reply.metadata.response_code = ResponseCode::NXDomain;
-                reply.add_authorities(self.soa(sign));
-                if sign {
-                    let covering = self.covering(&asked);
-                    let wildcard = self.covering(&name("*.test."));
-                    reply.add_authorities(self.nsec(&covering));
-                    if wildcard != covering {
-                        reply.add_authorities(self.nsec(&wildcard));
-                    }
-                }
+                reply.add_authorities(self.soa());
             }
+        }
+        if self.validating && bogus {
+            reply.answers.clear();
+            reply.authorities.clear();
+            reply.metadata.response_code = ResponseCode::ServFail;
+        } else {
+            reply.metadata.authentic_data = self.validating && verdict && owners.iter().all(secure);
         }
         reply.to_vec().ok()
     }
 
-    /// `owner`'s records of `kind`, and their signature when `sign`.
-    fn rrset(&self, owner: &Name, kind: RecordType, sign: bool) -> Vec<Record> {
-        let records: Vec<Record> = self
-            .records
+    /// `owner`'s records of `kind`.
+    fn rrset(&self, owner: &Name, kind: RecordType) -> Vec<Record> {
+        self.records
             .get(owner)
             .and_then(|types| types.get(&kind))
             .into_iter()
             .flatten()
             .map(|data| Record::from_rdata(owner.clone(), TTL, data.clone()))
-            .collect();
-        let mut signed = records.clone();
-        if sign && let Some(signer) = &self.signer {
-            let forged = self.forged.contains(&(owner.clone(), kind));
-            signed.push(signature(signer, owner, kind, &records, forged));
-        }
-        signed
+            .collect()
     }
 
-    fn soa(&self, sign: bool) -> Vec<Record> {
-        if self.signer.is_none() {
+    /// The zone's SOA, for an empty answer, when it holds one.
+    fn soa(&self) -> Vec<Record> {
+        if !self.validating {
             return Vec::new();
         }
-        self.rrset(&name(ZONE), RecordType::SOA, sign)
-    }
-
-    /// The name in the zone at or before `asked` in canonical order, whose
-    /// NSEC covers `asked`.
-    fn covering(&self, asked: &Name) -> Name {
-        self.records
-            .keys()
-            .rfind(|owner| *owner <= asked)
-            .cloned()
-            .unwrap_or_else(|| name(ZONE))
-    }
-
-    /// `owner`'s NSEC record, naming the next name and the types `owner`
-    /// has, and its signature.
-    fn nsec(&self, owner: &Name) -> Vec<Record> {
-        let Some(signer) = &self.signer else {
-            return Vec::new();
-        };
-        let next = self
-            .records
-            .keys()
-            .find(|other| *other > owner)
-            .cloned()
-            .unwrap_or_else(|| name(ZONE));
-        let mut types: BTreeSet<RecordType> = self
-            .records
-            .get(owner)
-            .map(|types| types.keys().copied().collect())
-            .unwrap_or_default();
-        types.extend([RecordType::RRSIG, RecordType::NSEC]);
-        let record = Record::from_rdata(
-            owner.clone(),
-            TTL,
-            RData::DNSSEC(DNSSECRData::NSEC(NSEC::new(next, types))),
-        );
-        let signature = signature(
-            signer,
-            owner,
-            RecordType::NSEC,
-            std::slice::from_ref(&record),
-            false,
-        );
-        vec![record, signature]
+        self.rrset(&name(ZONE), RecordType::SOA)
     }
 }
 
-/// The RRSIG over `records`, `owner`'s of `kind`; `forged`, one that does
-/// not verify.
-fn signature(
-    signer: &DnssecSigner,
-    owner: &Name,
-    kind: RecordType,
-    records: &[Record],
-    forged: bool,
-) -> Record {
-    let now = u32::try_from(
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("after the epoch")
-            .as_secs(),
-    )
-    .expect("before 2106");
-    let input = SigInput {
-        type_covered: kind,
-        algorithm: signer.key().algorithm(),
-        num_labels: owner.num_labels(),
-        original_ttl: TTL,
-        sig_expiration: SerialNumber::new(now + 86_400),
-        sig_inception: SerialNumber::new(now - 3600),
-        key_tag: signer.calculate_key_tag().expect("a key tag"),
-        signer_name: signer.signer_name().clone(),
-    };
-    let tbs = TBS::from_input(owner, DNSClass::IN, &input, records.iter()).expect("signable");
-    let mut signed = signer.sign(&tbs).expect("signed");
-    if forged {
-        signed[0] ^= 0xFF;
-    }
-    Record::from_rdata(
-        owner.clone(),
-        TTL,
-        RData::DNSSEC(DNSSECRData::RRSIG(RRSIG::from_sig(input, signed))),
-    )
+/// Whether `owner` is the root or in `test.`, which a validating stub holds
+/// as signed.
+fn secure(owner: &Name) -> bool {
+    owner.is_root() || name(ZONE).zone_of(owner)
 }
 
 fn name(text: &str) -> Name {

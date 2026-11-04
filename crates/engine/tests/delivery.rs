@@ -93,7 +93,7 @@ fn start_scripted(name: &str, log: &str, script: Script) -> (Receiver, Engine) {
         name,
         &dns,
         &receiver,
-        "idle_seconds = 30\n# The stub DNS signs nothing.\ndane = false",
+        "idle_seconds = 30\ndane = false",
         &format!(
             "{PROVIDERS}\n[operator]\nlisten = \"127.0.0.1:0\"\n\n[log]\nformat = \"json\"\n{log}"
         ),

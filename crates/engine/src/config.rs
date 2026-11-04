@@ -464,15 +464,14 @@ pub struct Delivery {
     /// another only for testing.
     #[serde(default = "Delivery::default_mta_sts_port")]
     pub mta_sts_port: u16,
-    /// Honour DANE (RFC 7672): every lookup's DNSSEC is validated, which
-    /// the resolver must pass through, so an exchange's secure TLSA records
-    /// bind its certificate. A lookup that fails validation
-    /// fails.
+    /// Honour DANE (RFC 7672): an exchange's secure TLSA records bind its
+    /// certificate. An answer is secure when the resolver, on this host,
+    /// says it validated it; through a resolver elsewhere, or one that does
+    /// not validate DNSSEC, DANE is not in effect and mail goes as it would
+    /// without it. The resolver is taken at its word, so it must validate
+    /// DNSSEC itself, never pass on another's verdict as a forwarder may.
     #[serde(default = "Delivery::yes")]
     pub dane: bool,
-    /// DNSSEC's trust anchors, as DNSKEY records in a file; the root's,
-    /// built in, when absent.
-    pub trust_anchor: Option<PathBuf>,
 }
 
 impl Delivery {

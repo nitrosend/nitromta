@@ -219,8 +219,8 @@ fn doctor_finds_each_record_and_says_what_to_publish_for_one_missing() {
 #[test]
 fn records_are_found_as_receivers_see_them_while_dane_is_honoured() {
     // DANE honoured, as by default, through a resolver that validates
-    // nothing: doctor says so, and still finds each record, which no
-    // receiver needs DNSSEC to read.
+    // nothing: doctor says DANE is not in effect, and still finds each
+    // record, which no receiver needs DNSSEC to read.
     let dns = Dns::start(&[("plain.test", "mx.plain.test")]);
     let receiver = Receiver::start(Script::default());
     let engine = Engine::start(
@@ -258,10 +258,35 @@ fn records_are_found_as_receivers_see_them_while_dane_is_honoured() {
     ]);
     assert!(!passed, "{said}");
     for line in [
-        "fail  resolver: it does not validate DNSSEC",
+        "warn  resolver: DANE is not in effect: the resolver does not validate DNSSEC",
         "ok    identity signed.test: s1._domainkey.signed.test publishes its DKIM key",
         "ok    identity signed.test: DMARC governs it, with policy reject",
     ] {
         assert!(said.contains(line), "{line:?} in:\n{said}");
     }
+}
+
+#[test]
+fn dane_is_in_effect_through_a_resolver_here_that_validates() {
+    let dns = Dns::validating(&[]);
+    let receiver = Receiver::start(Script::default());
+    let engine = Engine::start(
+        "doctor-validated",
+        &dns,
+        &receiver,
+        "",
+        "[tls]\nauthorities = \"tls.crt\"",
+    );
+    let (time, port25) = (time_server(), format!("127.0.0.1:{}", receiver.port));
+    let (_, said) = engine.command(&[
+        "doctor",
+        "--config",
+        "config.toml",
+        "--time-server",
+        &time,
+        "--port25",
+        &port25,
+    ]);
+    let line = "ok    resolver: DANE is in effect: the resolver says it validated the root's keys";
+    assert!(said.contains(line), "{line:?} in:\n{said}");
 }

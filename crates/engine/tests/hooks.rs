@@ -222,7 +222,7 @@ fn start(name: &str, sections: &str) -> (Receiver, Engine) {
         name,
         &dns,
         &receiver,
-        "# The stub DNS signs nothing.\ndane = false",
+        "dane = false",
         &sections,
         &[],
     );

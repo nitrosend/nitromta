@@ -15,7 +15,7 @@ fn start(name: &str, store: &str) -> (Receiver, Engine) {
         name,
         &dns,
         &receiver,
-        "# The stub DNS signs nothing.\ndane = false",
+        "dane = false",
         &format!("[operator]\nlisten = \"127.0.0.1:0\"\n\n{store}"),
     );
     (receiver, engine)

@@ -33,6 +33,7 @@ engine-ses-v2.workspace = true
 engine-smtp.workspace = true
 engine-store.workspace = true
 engine-warmup.workspace = true
+futures-core.workspace = true
 hickory-resolver.workspace = true
 http.workspace = true
 http-body-util.workspace = true
