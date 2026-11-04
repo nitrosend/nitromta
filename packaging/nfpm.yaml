@@ -13,6 +13,10 @@ description: Self-hosted mail delivery engine that speaks the Amazon SES v2 API
 vendor: Nitrosend
 homepage: https://nitromta.com
 license: Apache-2.0
+# The system's certificate authorities, which delivery's TLS and MTA-STS
+# verify against: without them the engine does not start.
+depends:
+  - ca-certificates
 contents:
   - src: ./nitromta
     dst: /usr/bin/nitromta

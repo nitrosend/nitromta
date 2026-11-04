@@ -96,7 +96,7 @@ pkgdesc="{DESCRIPTION}"
 arch=('x86_64' 'aarch64')
 url="{HOMEPAGE}"
 license=('{LICENSE}')
-depends=('glibc')
+depends=('glibc' 'ca-certificates')
 provides=('nitromta')
 conflicts=('nitromta')
 source_x86_64=("{files["linux-intel"][0]}")
@@ -125,6 +125,7 @@ def srcinfo(version, files):
 \tarch = aarch64
 \tlicense = {LICENSE}
 \tdepends = glibc
+\tdepends = ca-certificates
 \tprovides = nitromta
 \tconflicts = nitromta
 \tsource_x86_64 = {files["linux-intel"][0]}

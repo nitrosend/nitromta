@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 - 2026-11-04
+
+### Fixed
+
+- The `.deb`, `.rpm` and AUR packages depend on `ca-certificates`. On a
+  host without them, such as a bare container image, the engine could not
+  build its resolver and did not start.
+
 ## 0.2.0 - 2026-11-04
 
 ### Changed
