@@ -5,7 +5,8 @@
 <h3>The open-source Amazon SES replacement.</h3>
 
 [Nitrosend](https://nitrosend.com)'s mail delivery engine, open sourced and built in Rust.<br>
-Keep your SES code, change the endpoint, and deliver from IP addresses you control.
+Keep your SES code, change the endpoint, and deliver from IP addresses you control.<br>
+Want it managed? [Use Nitrosend →](https://nitrosend.com/?utm_source=nitromta&utm_medium=readme&utm_campaign=managed&utm_content=header)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/nitrosend/nitromta/check.yml?branch=main&style=flat-square&label=ci&labelColor=111&color=111)](https://github.com/nitrosend/nitromta/actions/workflows/check.yml)
 [![Release](https://img.shields.io/github/v/release/nitrosend/nitromta?style=flat-square&label=release&labelColor=111&color=111)](https://github.com/nitrosend/nitromta/releases/latest)
@@ -93,6 +94,8 @@ DKIM, DMARC and the bounce MX, and tells you what to publish. Moving an applicat
 Followed step by step on a fresh server, those steps delivered every
 message they sent, to Gmail, Outlook, Yahoo, AOL, iCloud and Office 365
 mailboxes among others, signed and passing DKIM, SPF and DMARC.
+
+Want it managed? [Use Nitrosend →](https://nitrosend.com/?utm_source=nitromta&utm_medium=readme&utm_campaign=managed&utm_content=servers)
 
 ## Documentation
 
