@@ -153,7 +153,7 @@ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out dkim.pem
 key=$(jq -Rs . dkim.pem)
 sudo -u nitromta nitromta admin --config /etc/nitromta/config.toml <<END
 {"op":"put_account","account":1}
-{"op":"put_egress","account":1,"address":"203.0.113.10","helo":"mta.example.com"}
+{"op":"put_egress","account":1,"address":"203.0.113.10","helo":"mta.example.com","daily_cap":50}
 {"op":"put_identity","account":1,"name":"example.com","selector":"s1","private_key":$key}
 {"op":"create_login","account":1,"user":"app"}
 END
@@ -165,9 +165,19 @@ And an access key for an application that calls the SES API:
 sudo -u nitromta nitromta access-key create --config /etc/nitromta/config.toml --account 1
 ```
 
-An egress may take a daily cap at each receiver, and warms up from the
-receiver rules' ladder; [operations](operations.md) has the rest of policy:
-pools, configurations, tenants, holds and subscriptions.
+`daily_cap` is what turns warmup on, and a new address needs it, having no
+reputation with receivers yet. The egress sends at most 50 messages a day to
+each receiver, and the engine raises or lowers that once a day from how each
+receiver replied ([warming up an IP](operations.md#warming-up-an-ip)). Leave
+it out for an address that already has a sending history: with no cap, an
+egress sends as much as it is given, and warmup takes no part.
+
+After that, change a cap with `put_cap`. Running this `put_egress` line again
+sets the egress's own cap back to the one it names, or removes it if it names
+none.
+
+[Operations](operations.md) has the rest of policy: pools, configurations,
+tenants, holds and subscriptions.
 
 ## 6. Check it
 
