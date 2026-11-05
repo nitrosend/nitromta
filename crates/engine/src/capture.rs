@@ -309,7 +309,13 @@ impl Inner {
             .sealer
             .open_body(&dispatch.content)
             .map_err(delivery::unopened_body)?;
-        let content = opened.as_deref().unwrap_or(&dispatch.content);
+        let content = [
+            token::header_field(&token::local_part(&self.return_path_key, dispatch.message))
+                .as_bytes(),
+            opened.as_deref().unwrap_or(&dispatch.content),
+        ]
+        .concat();
+        let content = content.as_slice();
         let capture = dispatch.recipients[recipients[0]].0.delivery().0.as_u64();
         let sealed = |file, bytes| {
             self.sealer

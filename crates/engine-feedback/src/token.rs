@@ -15,6 +15,16 @@ use engine_core::id::{Id, MessageId};
 const PREFIX: &str = "b";
 const MAC_BYTES: usize = 10;
 
+/// The header field a message's token also goes out in. A complaint loop may
+/// strip the return path from its report and redact whatever looks like an
+/// address, and keeps a field that does not.
+pub const HEADER: &str = "X-NitroMTA-Report";
+
+/// The header field carrying `local_part`, a return path's token.
+pub fn header_field(local_part: &str) -> String {
+    format!("{HEADER}: {local_part}\r\n")
+}
+
 /// The secret the tokens are made with.
 pub struct Key(hmac::Key);
 

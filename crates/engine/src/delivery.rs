@@ -657,6 +657,7 @@ impl Deliverer {
                     .expect("the installation's return path is checked at the start")
             });
         let job = Job {
+            header: Bytes::from(token::header_field(sender.local_part())),
             sender: Some(sender),
             recipients: dispatch.recipients,
             content: dispatch.content,
@@ -1588,6 +1589,7 @@ mod tests {
         Job {
             sender: None,
             recipients: vec![(permit, Address::parse("r@example.net").unwrap())],
+            header: Bytes::new(),
             content: Bytes::new(),
         }
     }

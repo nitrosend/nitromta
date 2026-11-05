@@ -99,6 +99,11 @@ impl Intake {
                 read.return_path
                     .as_deref()
                     .and_then(|path| self.message_of(path))
+            })
+            .or_else(|| {
+                read.token
+                    .as_deref()
+                    .and_then(|local| self.keys.iter().find_map(|key| token::message(key, local)))
             });
         let kind = match read.kind {
             report::Kind::DeliveryStatus => Kind::DeliveryStatus,
@@ -349,6 +354,55 @@ Original-Mail-From: <{}>\r\n\
         assert!(!unsigned.trusted);
         let signed = strict.report(report_id(15), &[to()], complaint.as_bytes(), at, true);
         assert!(signed.trusted && signed.authenticated);
+    }
+
+    #[test]
+    fn a_redacted_complaint_names_its_message_by_the_header_it_kept() {
+        let intake = intake();
+        let id = message(4 << 40);
+        let local = token::local_part(&intake.keys[0], id);
+        // As Microsoft's loop sends one since June 2026: no return path, no
+        // recipient, and what looks like an address replaced.
+        let redacted = |kept: &str| {
+            format!(
+                "Content-Type: multipart/report; report-type=feedback-report; boundary=b\r\n\
+\r\n\
+--b\r\n\
+Content-Type: message/feedback-report\r\n\
+\r\n\
+Feedback-Type: abuse\r\n\
+User-Agent: JMRP/1.0\r\n\
+Version: 1\r\n\
+\r\n\
+--b\r\n\
+Content-Type: message/rfc822\r\n\
+\r\n\
+{kept}From: <news@example.test>\r\n\
+To: Undisclosed Recipients <X>\r\n\
+Message-ID: <own@example.test>\r\n\
+\r\n\
+--b--\r\n"
+            )
+        };
+        let read = |content: String| {
+            intake.report(
+                report_id(16),
+                &[Address::parse("fbl@example.test").unwrap()],
+                content.as_bytes(),
+                Timestamp::from_micros(5),
+                false,
+            )
+        };
+        let kept = read(redacted(&token::header_field(&local)));
+        assert_eq!(kept.message, Some(id));
+        assert_eq!(kept.kind, Kind::Feedback("abuse".to_owned()));
+        assert_eq!(read(redacted("")).message, None, "nothing names it");
+        // Forged, it names nothing: its message's ID under another's MAC.
+        let other = token::local_part(&intake.keys[0], message(5 << 40));
+        let (_, mac) = other.split_once('-').unwrap();
+        let (named, _) = local.split_once('-').unwrap();
+        let forged = token::header_field(&format!("{named}-{mac}"));
+        assert_eq!(read(redacted(&forged)).message, None);
     }
 
     #[test]

@@ -26,6 +26,9 @@ pub struct Report {
     /// The envelope sender of the message it is about, from its own copy
     /// of that message, or a feedback report's `Original-Mail-From`.
     pub return_path: Option<String>,
+    /// The token in its copy of that message's header, for a report that
+    /// has lost its return path.
+    pub token: Option<String>,
     /// Its `Message-ID`, which a reporter that sends it again repeats.
     pub id: Option<String>,
 }
@@ -72,6 +75,7 @@ pub fn read(content: &[u8]) -> Report {
         kind: Kind::Unrecognised,
         recipients: Vec::new(),
         return_path: None,
+        token: None,
         id: id.clone(),
     };
     let Some(boundary) = content_type.parameter("boundary") else {
@@ -118,6 +122,9 @@ pub fn read(content: &[u8]) -> Report {
                     && let Some(path) = original.field("return-path")
                 {
                     report.return_path = Some(angle_free(path));
+                }
+                if let Some(token) = original.field(&crate::token::HEADER.to_ascii_lowercase()) {
+                    report.token = Some(token.trim().to_owned());
                 }
             }
             _ => {}

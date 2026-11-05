@@ -84,11 +84,10 @@ TLS and throttle rules, and differ by provider.
 
 For warmup, every receiver falls through to the default ladder, 50, 100, 200,
 500, 1,000, 2,000, 5,000, 10,000 a day and on to 1,000,000, past which there is
-no cap. The exception is the shipped `Outlook` entry, because its replies are
-most of what warmup can hear from it, as the next section explains. Its ladder
-takes 14 clean days to reach 10,000, where the default takes 7, and a deferral
-holds it from 0.5%, not 5%. Both are defaults, which your configuration
-overrides like any other.
+no cap. The exception is the shipped `Outlook` entry, which climbs more
+cautiously: its ladder takes 14 clean days to reach 10,000, where the default
+takes 7, and a deferral holds it from 0.5%, not 5%. Both are defaults, which your
+configuration overrides like any other.
 
 These are the receivers the rules ship, by the names `queue`, `explain`,
 `put_cap` and your configuration use:
@@ -96,7 +95,7 @@ These are the receivers the rules ship, by the names `queue`, `explain`,
 | Receiver | Covers | Complaints the engine can count |
 |---|---|---|
 | `Google` | Gmail and Google Workspace | None: Gmail sends no per-recipient reports |
-| `Outlook` | Outlook.com and Hotmail | Few: its reports can lack what names their message |
+| `Outlook` | Outlook.com and Hotmail | Yes, once your addresses are enrolled, for messages with one recipient |
 | `Office365`, `Office365Dane` | Microsoft 365 | None known: operators report Microsoft's program covering its consumer mail |
 | `Yahoo` | Yahoo Mail and AOL | Yes, once your DKIM domain is enrolled |
 | `Apple` | iCloud Mail | None: Apple offers no feedback loop |
@@ -144,17 +143,19 @@ a message as junk, to an address you set in
 [SNDS](https://substrate.office.com/ip-domain-management-snds/SNDS), once you
 have registered your addresses there.
 
-Microsoft's SNDS pages do not say what those reports contain. Operators report
-that since June 2026 they carry
-[no recipient and no body](https://emailexpert.com/microsoft-redacts-jmrp-the-end-of-unblinded-feedback-loops/),
-and [in some samples no return path](https://www.suped.com/learn/email-deliverability/did-microsoft-change-the-jmrp-spam-complaint-report-format),
-while the Message-ID and custom headers remain. The engine finds a complaint's
-message by its return path, so a report without one neither suppresses its
-recipient, nor counts toward warmup, nor makes an event.
+Microsoft's SNDS pages do not say what those reports contain. Operators who
+receive them report that
+[since June 2026](https://www.mail-archive.com/mailop@mailop.org/msg26880.html)
+they
+[carry no return path, no recipient and no body](https://www.mail-archive.com/mailop@mailop.org/msg27259.html),
+and replace whatever looks like an address, while the Message-ID and custom
+headers remain.
 
-Enrol anyway, and check what your reports do
-([below](#receiving-complaint-reports)), but treat Outlook's replies as your
-warning signs, and lower its cap by `put_cap` when SNDS shows a problem.
+So the engine sends each message's return path token in a header of its own as
+well, `X-NitroMTA-Report`, which is how such a report finds its message. It
+cannot say which recipient complained, so it only reaches suppression, events
+and warmup for a message with one recipient. Send one recipient per message if
+you want Outlook's complaints to count.
 
 Operators report JMRP covering Microsoft's consumer mail, so expect no complaint
 reports for Microsoft 365.
@@ -188,9 +189,9 @@ loops = ["complaints@bounces.example.com"]
 ```
 
 A report finds its message by the `Original-Mail-From` field, or the
-`Return-Path` of the copy it carries. Found, it suppresses its recipient, makes
-a `Complaint` event, and counts toward warmup at the receiver that message was
-delivered to. A report that names no recipient is taken to be about its
+`Return-Path` or `X-NitroMTA-Report` of the copy it carries. Found, it suppresses
+its recipient, makes a `Complaint` event, and counts toward warmup at the
+receiver that message was delivered to. A report that names no recipient is taken to be about its
 message's only delivery, so on a message sent to several recipients it does none
 of these. A report that names no message is set aside as evidence and does
 nothing else.

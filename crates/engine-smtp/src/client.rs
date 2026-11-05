@@ -37,6 +37,9 @@ pub struct Job<T> {
     pub sender: Option<Address>,
     /// Each recipient, with the tag its outcome is reported under.
     pub recipients: Vec<(T, Address)>,
+    /// Header fields sent ahead of the content, none starting with a dot:
+    /// the transport's own, outside any signature in the content.
+    pub header: Bytes,
     /// The prepared message, sent exactly as it is.
     pub content: Bytes,
 }
@@ -48,6 +51,7 @@ struct Transaction<T> {
     recipients: Vec<Address>,
     tags: Vec<Option<T>>,
     accepted: Vec<bool>,
+    header: Bytes,
     content: Bytes,
 }
 
@@ -63,6 +67,7 @@ impl<T> From<Job<T>> for Transaction<T> {
             accepted: vec![false; recipients.len()],
             recipients,
             tags,
+            header: job.header,
             content: job.content,
         }
     }
@@ -501,6 +506,9 @@ impl<T> Session<T> {
         let Some(job) = &self.job else {
             return;
         };
+        if !job.header.is_empty() {
+            out.push(Output::SendContent(job.header.clone()));
+        }
         let content = &job.content;
         let stuffed =
             content.first() == Some(&b'.') || content.windows(3).any(|window| window == b"\r\n.");
@@ -656,6 +664,7 @@ mod tests {
         Job {
             sender: Some(Address::parse("s@a.test").unwrap()),
             recipients: vec![(7, Address::parse("r@b.test").unwrap())],
+            header: Bytes::new(),
             content: Bytes::from_static(content),
         }
     }
@@ -747,6 +756,7 @@ mod tests {
                 .iter()
                 .map(|&(tag, address)| (tag, Address::parse(address).unwrap()))
                 .collect(),
+            header: Bytes::new(),
             content: Bytes::from_static(b"Subject: x\r\n\r\nbody\r\n"),
         }
     }
@@ -1124,5 +1134,26 @@ mod tests {
         );
         let out = reply(&mut session, "250 ok\r\n250 ok\r\n354 go\r\n");
         assert_eq!(sent(&out), "..a\r\nb\r\n...c\r\nend\r\n.\r\n");
+    }
+
+    #[test]
+    fn its_header_goes_ahead_of_the_content_without_a_copy_of_either() {
+        let mut session = ready(true);
+        let mut with_header = job(b"Subject: x\r\n\r\nbody\r\n");
+        with_header.header = Bytes::from_static(b"X-Token: t\r\n");
+        step(&mut session, 2, Input::Deliver(with_header));
+        let out = reply(&mut session, "250 ok\r\n250 ok\r\n354 go\r\n");
+        assert!(matches!(
+            out.as_slice(),
+            [
+                Output::SendContent(_),
+                Output::SendContent(_),
+                Output::Send(_)
+            ]
+        ));
+        assert_eq!(
+            sent(&out),
+            "[X-Token: t\r\n][Subject: x\r\n\r\nbody\r\n].\r\n"
+        );
     }
 }

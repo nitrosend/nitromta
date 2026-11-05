@@ -106,8 +106,9 @@ identity says.
 
 **Feedback**, on `[feedback] listen`, the return path domain's MX: delivery
 status notifications (RFC 3464) and complaint reports (RFC 5965), matched
-to the mail they are about by its return path. By default a report that
-matches the engine's own mail suppresses its recipient and counts toward
+to the mail they are about by its return path, or the same token in its
+`X-NitroMTA-Report` header, for a report that has lost it. By default a report
+that matches the engine's own mail suppresses its recipient and counts toward
 its IP's warmup; with `[feedback] trusted = "authenticated"`, only one
 whose DKIM signature verifies for a reporter enrolled in
 `[feedback] reporters` does, and any other is recorded as an event alone.

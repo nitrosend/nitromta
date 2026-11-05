@@ -119,9 +119,7 @@ connections = 5
 transactions_per_connection = 50
 
 # A default like any other here. Half the shared ladder's pace to 10,000, and a
-# deferral holds a cap of 200 or less: since June 2026 Microsoft's complaint
-# reports can lack the return path that names their message, so its replies are
-# most of what warmup hears from it.
+# deferral holds a cap of 200 or less.
 [receivers.Outlook.warmup]
 ladder = [
   50, 75, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500,

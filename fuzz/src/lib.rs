@@ -183,6 +183,7 @@ pub fn smtp_client(data: &[u8]) {
                     (0_u8, address("one@fuzz.test")),
                     (1, address("two@fuzz.test")),
                 ],
+                header: Bytes::new(),
                 content: Bytes::from_static(b"Subject: a test\r\n\r\nhello\r\n"),
             }),
         );

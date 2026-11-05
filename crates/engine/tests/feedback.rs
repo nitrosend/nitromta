@@ -186,3 +186,97 @@ fn only_an_enrolled_reporters_signed_complaint_suppresses_when_only_those_are_tr
         .json();
     assert_eq!(got["SuppressedDestination"]["Reason"], "COMPLAINT", "{got}");
 }
+
+/// A complaint as Microsoft's loop has sent one since June 2026: no return
+/// path, no recipient, and whatever looks like an address replaced, with
+/// `kept` among the fields of the copy it carries.
+fn redacted(id: &str, kept: &str) -> String {
+    format!(
+        "From: <X>\r\n\
+Message-ID: <{id}@jmrp.protection.outlook.com>\r\n\
+Auto-Submitted: auto-generated\r\n\
+Content-Type: multipart/report; report-type=feedback-report; boundary=b\r\n\
+\r\n\
+--b\r\n\
+Content-Type: message/feedback-report\r\n\
+\r\n\
+Feedback-Type: abuse\r\n\
+User-Agent: JMRP/1.0\r\n\
+Version: 1\r\n\
+\r\n\
+--b\r\n\
+Content-Type: message/rfc822\r\n\
+\r\n\
+{kept}From: news@brand.test\r\n\
+To: Undisclosed Recipients <X>\r\n\
+Subject: a test\r\n\
+\r\n\
+--b--\r\n"
+    )
+}
+
+#[test]
+fn a_redacted_complaint_finds_its_mail_by_the_header_it_kept() {
+    let dns = Dns::start(&[("plain.test", "mx.plain.test")]);
+    let receiver = Receiver::start(Script::default());
+    let sections = format!(
+        "{SES}\n\n[capture]\ndirectory = \"capture\"\n\n[feedback]\nlisten = \"127.0.0.1:0\"\nhostname = \"mx.bounces.test\"\ncertificate = \"tls.crt\"\nkey = \"tls.key\"\nloops = [\"fbl@mx.bounces.test\"]\n\n[operator]\nlisten = \"127.0.0.1:0\""
+    );
+    let mut engine = Engine::start("redacted", &dns, &receiver, "dane = false", &sections);
+    let ses = engine.ses_permitted(&["send", "manage"]);
+    let feedback = engine
+        .listening("taking bounce and complaint reports")
+        .expect("a feedback listener");
+    let answers =
+        engine.admin(&[json!({"op": "put_identity", "account": 1, "name": "brand.test"})]);
+    assert!(answers[0]["ok"].is_object(), "{answers:?}");
+    let body = json!({
+        "FromEmailAddress": "news@brand.test",
+        "Destination": {"ToAddresses": ["one@plain.test"]},
+        "Content": {"Simple": {"Subject": {"Data": "a test"}, "Body": {"Text": {"Data": "hello"}}}},
+    });
+    let sent = ses.send("POST", "/v2/email/outbound-emails", "", &body.to_string());
+    assert_eq!(sent.status, 200, "{}", sent.body);
+    // The field as it went out: the return path's token, ahead of the rest.
+    let directory = engine.dir.join("capture");
+    let captured = |extension: &str| -> Option<String> {
+        std::fs::read_dir(&directory)
+            .ok()?
+            .flatten()
+            .find(|entry| entry.file_name().to_string_lossy().ends_with(extension))
+            .and_then(|entry| std::fs::read_to_string(entry.path()).ok())
+    };
+    wait_for("its capture", || captured(".json").is_some());
+    let envelope: Value = serde_json::from_str(&captured(".json").unwrap()).unwrap();
+    let (token, _) = envelope["from"].as_str().unwrap().split_once('@').unwrap();
+    let kept = format!("X-NitroMTA-Report: {token}\r\n");
+    assert!(captured(".eml").unwrap().starts_with(&kept));
+
+    let suppressed = || {
+        ses.send(
+            "GET",
+            "/v2/email/suppression/addresses/one%40plain.test",
+            "",
+            "",
+        )
+        .status
+            == 200
+    };
+    let unmatched = || {
+        engine
+            .operator("/metrics")
+            .1
+            .contains("nitromta_reports_unmatched_total 1")
+    };
+    // Without the field nothing names its message: recorded, and counted as
+    // finding no mail, whatever the listener answers.
+    let taken = report(feedback, "fbl@mx.bounces.test", &redacted("stripped", ""));
+    assert!(taken.starts_with("250"), "{taken}");
+    assert!(!suppressed());
+    assert!(unmatched());
+    // With it, its recipient is suppressed, and it is not counted so.
+    let taken = report(feedback, "fbl@mx.bounces.test", &redacted("kept", &kept));
+    assert!(taken.starts_with("250"), "{taken}");
+    assert!(suppressed(), "the field names its message");
+    assert!(unmatched(), "still only the first");
+}
