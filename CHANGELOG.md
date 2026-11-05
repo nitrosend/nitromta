@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.2.2 - 2026-11-06
+
+### Added
+
+- Complaint reports that have lost their return path now find their message.
+  Each message goes out with its return path token in an `X-NitroMTA-Report`
+  header as well, outside its signature. Microsoft's reports carry no return
+  path and no recipient, so this reaches a message with one recipient.
+- `reports_unmatched_total`, the reports about none of the engine's deliveries.
+- A page on deliverability: how warmup works, how provider settings layer, what
+  each provider reports back, and how to configure warmup for any provider.
+
+### Changed
+
+- The rules shipped in `rules/receivers.toml` give `Outlook` warmup defaults:
+  half the shared ladder's pace to 10,000 a day, and a deferral holding a cap
+  from 0.5%. `[receivers.Outlook.warmup]` overrides them, as any provider's
+  settings can be configured. An egress already warming moves to them at its
+  next judgment.
+
+### Fixed
+
+- `put_egress` no longer changes a cap warmup is using. Run again, a line naming
+  no cap removed the egress's own cap, and a line naming one set it back. It can
+  still start warmup on an egress with no cap, and `put_cap` changes a cap after
+  that.
+- `nitromta doctor` no longer says to ask the provider about port 25 when this
+  host does not hold an egress's address.
+
 ## 0.2.1 - 2026-11-04
 
 ### Fixed
