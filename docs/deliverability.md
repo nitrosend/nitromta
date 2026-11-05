@@ -107,8 +107,8 @@ mail and Microsoft 365 are configured separately, as they do not.
 
 ## What each provider tells you
 
-What each provider's own documentation said on 6 November 2026, except where
-this says otherwise. Policies change.
+What each provider's own documentation says, except where this says otherwise.
+Policies change.
 
 ### Gmail and Google Workspace
 
@@ -144,12 +144,10 @@ a message as junk, to an address you set in
 have registered your addresses there.
 
 Microsoft's SNDS pages do not say what those reports contain. Operators who
-receive them report that
-[since June 2026](https://www.mail-archive.com/mailop@mailop.org/msg26880.html)
-they
+receive them report that they
 [carry no return path, no recipient and no body](https://www.mail-archive.com/mailop@mailop.org/msg27259.html),
-and replace whatever looks like an address, while the Message-ID and custom
-headers remain.
+and [replace whatever looks like an address](https://www.mail-archive.com/mailop@mailop.org/msg26880.html),
+while the Message-ID and custom headers remain.
 
 So the engine sends each message's return path token in a header of its own as
 well, `X-NitroMTA-Report`, which is how such a report finds its message. It

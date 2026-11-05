@@ -41,12 +41,12 @@ sends over IPv4 from an IPv4 egress.
 
 ## Providers
 
-What each provider's own documentation said on 2 November 2026. Policies
-change; the check above is the one to trust.
+What each provider's own documentation says. Policies change; the check above
+is the one to trust.
 
 | Provider | Outbound port 25 | To send |
 |---|---|---|
-| [Hostinger](https://www.hostinger.com/support/7854530-is-smtp-port-25-blocked-on-vps/) (VPS) | Open, limited to 5 messages a minute | Nothing to ask. Reverse DNS is set in its panel |
+| [Hostinger](https://www.hostinger.com/support/7854530-is-smtp-port-25-blocked-on-vps/) (VPS) | Open, limited to 5 messages a minute | Nothing to ask. Reverse DNS is set in its panel. Outlook.com has refused an address here, naming the network as on its block list (S3150) |
 | [OVHcloud](https://docs.ovhcloud.com/en/guides/bare-metal-cloud/dedicated-servers/mail-sending-optimization) | Not blocked on VPS and dedicated servers, its mail guide says, though its anti-spam monitoring can block an address; its US VPS FAQ says blocked by default | Check from the server; ask support if blocked |
 | [Amazon EC2](https://repost.aws/knowledge-center/ec2-port-25-throttle) | Blocked | Submit the "Request to remove email sending limitations" form. An Elastic IP's reverse DNS is set by its owner, once its forward record points at it |
 | [Microsoft Azure](https://learn.microsoft.com/en-us/azure/virtual-network/troubleshoot-outbound-smtp-connectivity) | Open on Enterprise Agreement and MCA-E subscriptions; blocked on others | Enterprise Dev/Test: run the portal's port 25 diagnostic. Others: no route |
@@ -55,13 +55,6 @@ change; the check above is the one to trust.
 | [DigitalOcean](https://docs.digitalocean.com/support/why-is-smtp-blocked/) | Blocked, with 465 and 587 | No route published |
 | [Vultr](https://docs.vultr.com/support/products/compute/why-is-smtp-blocked) | Blocked on new instances | A support ticket with the use case, protections and volume, decided case by case |
 | [Akamai (Linode)](https://techdocs.akamai.com/cloud-computing/docs/send-email) | Restricted on some new accounts | A support request with the use case and sending domains |
-
-The installation guide's steps were followed on a Hostinger VPS on 2
-November 2026: port 25 reached Gmail, Outlook and Yahoo from the start, its
-reverse DNS was set in the panel, and every message sent was delivered.
-Five messages a minute is enough to try the engine and for low volume;
-volume needs a provider that sets no such limit, or one that lifts it on
-request.
 
 ## A new address
 
