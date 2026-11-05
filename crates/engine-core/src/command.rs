@@ -303,6 +303,9 @@ pub struct FeedbackRecorded {
     /// It named no message the engine sent, and the quarantine for such
     /// reports was full, so it was not kept.
     pub unkept: bool,
+    /// It came for the first time and was about none of the engine's
+    /// deliveries, so it had no effect.
+    pub unmatched: bool,
 }
 
 /// A report's first effect on a delivery: a bounce or a complaint, and

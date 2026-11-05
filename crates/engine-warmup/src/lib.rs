@@ -392,7 +392,43 @@ mod tests {
             warmed.sites["Outlook"].verdict,
             Verdict::Lowered(Signal::Failed)
         );
-        assert_eq!(caps.at("Outlook"), Some(500));
+        assert_eq!(caps.at("Outlook"), Some(750), "down its own ladder");
+
+        // On the same clean day each climbs its own ladder, and one deferral
+        // holds Outlook's where it leaves Google's to rise.
+        let mut policy = Policy::default();
+        let id = egress(&mut policy, 12, "203.0.113.3", Some(200));
+        let clean = vec![
+            (id, Arc::<str>::from("Google"), delivered(200)),
+            (id, Arc::<str>::from("Outlook"), delivered(200)),
+        ];
+        let cappings = judge(&policy, &rules, DAY, &clean);
+        let caps = applied(&mut policy, cappings, id);
+        assert_eq!(
+            (caps.at("Google"), caps.at("Outlook")),
+            (Some(500), Some(300))
+        );
+        let mut policy = Policy::default();
+        let id = egress(&mut policy, 13, "203.0.113.4", Some(200));
+        let one_deferred = Counts {
+            delivered: 199,
+            deferred: 1,
+            ..Counts::default()
+        };
+        let deferred = vec![
+            (id, Arc::<str>::from("Google"), one_deferred),
+            (id, Arc::<str>::from("Outlook"), one_deferred),
+        ];
+        let cappings = judge(&policy, &rules, DAY, &deferred);
+        let caps = applied(&mut policy, cappings, id);
+        assert_eq!(
+            (caps.at("Google"), caps.at("Outlook")),
+            (Some(500), Some(200))
+        );
+        assert_eq!(
+            caps.warmed.unwrap().sites["Outlook"].verdict,
+            Verdict::Held(Signal::Deferred)
+        );
 
         // At the first rung, a lowering keeps it there.
         let mut policy = Policy::default();

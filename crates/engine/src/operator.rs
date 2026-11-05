@@ -73,6 +73,8 @@ pub struct Operations {
     /// Reports naming no message the engine sent, taken past the
     /// quarantine's bound and not kept.
     pub reports_unkept: AtomicU64,
+    /// Reports about none of the engine's deliveries, so of no effect.
+    pub reports_unmatched: AtomicU64,
     pub authentication_failures: AtomicU64,
     /// Connections each listener closed as they came, with its most open
     /// already, by [`Listener`].
@@ -518,6 +520,8 @@ impl Operations {
             .fetch_add(u64::from(recorded.suppressed), Ordering::Relaxed);
         self.reports_unkept
             .fetch_add(u64::from(recorded.unkept), Ordering::Relaxed);
+        self.reports_unmatched
+            .fetch_add(u64::from(recorded.unmatched), Ordering::Relaxed);
         for reported in &recorded.effects {
             self.reported(reported);
         }
@@ -803,6 +807,13 @@ impl Operations {
             "counter",
             "Reports naming no message the engine sent, taken once the quarantine was full and not kept.",
             &[("", read(&self.reports_unkept))],
+        );
+        metric(
+            &mut text,
+            "reports_unmatched_total",
+            "counter",
+            "Reports about none of the engine's deliveries, which suppressed nothing, made no event and counted toward no warmup.",
+            &[("", read(&self.reports_unmatched))],
         );
         metric(
             &mut text,

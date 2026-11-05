@@ -767,12 +767,21 @@ mod tests {
         let shipped = rules.default_warmup();
         assert_eq!(shipped.ladder.first(), Some(&50));
         assert_eq!(shipped.sample, 100);
-        assert_eq!(
-            rules.warmup_of("Google"),
-            shipped,
-            "no provider gives its own"
-        );
+        assert_eq!(rules.warmup_of("Google"), shipped, "it falls through");
         assert_eq!(rules.warmup_of("mx1.example.net"), shipped);
+        // Outlook's own, half the pace to 10,000, and the rest falls through.
+        let rungs_to = |ladder: &[u64]| ladder.iter().position(|rung| *rung == 10_000);
+        let slower = rules.warmup_of("Outlook");
+        assert_eq!(rungs_to(&shipped.ladder), Some(7));
+        assert_eq!(rungs_to(&slower.ladder), Some(14));
+        assert_eq!(
+            slower.deferrals,
+            Threshold {
+                hold: 50,
+                lower: 2_000
+            }
+        );
+        assert_eq!(slower.throttles, shipped.throttles);
         let overrides: BTreeMap<String, Entry> = toml::from_str(
             r#"
             [defaults.warmup]

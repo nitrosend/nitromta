@@ -157,8 +157,8 @@ SES.
 The engine sends from addresses you own, and a new address has no
 reputation yet. Give each egress a starting cap, and keep sending most mail
 through SES while warmup raises the caps receiver by receiver
-([operations](operations.md#warming-up-an-ip)); move more of it to the
-engine as they rise.
+([deliverability](deliverability.md#warming-up-a-new-address)); move more of it
+to the engine as they rise.
 
 ## Where it differs
 

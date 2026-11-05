@@ -62,6 +62,7 @@ The metrics, each prefixed `nitromta_`, among them:
   subscription, and the event batches posted, parked and replayed;
 - `reports_total`, the bounce and complaint reports recorded,
   `reports_suppressing_total`, the recipients they suppressed, and
+  `reports_unmatched_total`, those about none of the engine's deliveries,
   `reports_unkept_total`, those naming no message of the engine's that
   were not kept once the quarantine was full; and `reports_by_egress_total`
   and `reports_by_tenant_total`, the reports by kind;
@@ -103,33 +104,22 @@ the queue to be delivered, for a planned stop; `undrain` takes mail again.
 
 ## Warming up an IP
 
-Warmup is optional, and a daily cap is what turns it on: an egress with no
-cap sends as much as it is given. A new address starts at the ladder's first
-rung, 50 messages a day at each receiver, with `"daily_cap":50` on
-`put_egress`, or afterwards:
+Warmup is optional, and a daily cap is what turns it on.
+[Deliverability](deliverability.md) says how it works, how each provider is
+treated, and how to set your own warmup for each. To see and change caps:
 
 ```sh
+nitromta list --config /etc/nitromta/config.toml egresses
 echo '{"op":"put_cap","account":1,"address":"203.0.113.10","daily_cap":50}' | \
   sudo -u nitromta nitromta admin --config /etc/nitromta/config.toml
 ```
 
-An egress may have a daily cap at each receiver site. With
-`[warmup] automatic = true`, the default, the engine judges each capped
-egress once a day from what its receivers said, and raises, holds or lowers
-its caps along the receiver rules' ladder; otherwise caps change only by
-`put_cap` on the admin socket.
+`list` shows each egress's caps and its last judgment. `put_cap` sets the
+egress's own cap, or with `"site":"Outlook"` one receiver's, as `queue` and
+`explain` name them, and with no `daily_cap` removes it.
 
-Each receiver climbs on its own. A cap rises a rung after a clean day on
-which replies reached half of it; complaints, bounces, deferrals or
-throttling hold it or take it down a rung. Past the last rung there is no
-cap, and warmup is done. `nitromta list --config <file> egresses` shows each
-egress's caps and its last judgment.
-
-Mail a cap has no room for is put off in the store, not held in memory, so a
-warming IP never delays mail to other receivers, and `queue` counts it. It
-still expires when its lifetime ends (`[submission] lifetime_seconds`, three
-days by default), so send a warming address no more than its caps allow, and
-keep the rest on the sender you have.
+Mail a cap has no room for is put off in the store, not held in memory, so
+`queue` counts it, and `explain` says which cap it waits for.
 
 ## Events
 

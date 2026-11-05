@@ -66,3 +66,22 @@ fn the_configuration_reference_shows_what_setup_writes() {
         "docs/reference/configuration.md shows what `nitromta setup` writes:\n{written}"
     );
 }
+
+#[test]
+fn the_deliverability_pages_receiver_settings_are_ones_the_engine_takes() {
+    let text = page("../deliverability.md");
+    let (_, example) = text
+        .split_once("```toml\n# Outlook")
+        .expect("the page's example");
+    let (example, _) = example.split_once("```").unwrap();
+    let wrapped = format!("[receivers]\n# Outlook{example}");
+    #[derive(serde::Deserialize)]
+    struct Page {
+        receivers: std::collections::BTreeMap<String, engine_rules::Entry>,
+    }
+    let page: Page = toml::from_str(&wrapped).unwrap();
+    let rules = engine_rules::Rules::new(&page.receivers).unwrap();
+    assert_eq!(rules.warmup_of("Outlook").ladder.first(), Some(&20));
+    assert_eq!(rules.warmup_of("Outlook").deferrals.hold, 0);
+    assert_ne!(rules.warmup_of("Google"), rules.default_warmup());
+}

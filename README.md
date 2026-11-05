@@ -118,6 +118,8 @@ Reference:
 
 - [Operations](https://nitromta.com/docs/operations/): explaining a message, the queue,
   metrics, holds, warmup and keys
+- [Deliverability](https://nitromta.com/docs/deliverability/): how a new address warms up, how
+  each provider is treated, and what each one tells you
 - [Compatibility](https://nitromta.com/docs/compatibility/): the SES operations, SMTP, events,
   and where the engine differs from SES
 - [Durability](https://nitromta.com/docs/durability/): what an acceptance promises, and the

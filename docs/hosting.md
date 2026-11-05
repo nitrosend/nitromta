@@ -68,4 +68,5 @@ request.
 An address with no sending history starts with none of the reputation
 receivers judge mail by, however well its mail is authenticated. Give each
 new egress a starting cap, and warmup raises it receiver by receiver as the
-receivers accept its mail ([operations](operations.md#warming-up-an-ip)).
+receivers accept its mail
+([deliverability](deliverability.md#warming-up-a-new-address)).

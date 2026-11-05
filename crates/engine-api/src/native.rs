@@ -112,8 +112,9 @@ enum Request {
         name: String,
     },
     /// A source address the host sends from, the name it greets with, its
-    /// pool, and its daily cap for each receiver site, unlimited when
-    /// absent.
+    /// pool, and the daily cap for each receiver site that starts its
+    /// warmup, unlimited when absent. One already capped, or ever judged,
+    /// keeps its caps, which `PutCap` changes.
     PutEgress {
         account: u64,
         address: String,

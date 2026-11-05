@@ -168,13 +168,14 @@ sudo -u nitromta nitromta access-key create --config /etc/nitromta/config.toml -
 `daily_cap` is what turns warmup on, and a new address needs it, having no
 reputation with receivers yet. The egress sends at most 50 messages a day to
 each receiver, and the engine raises or lowers that once a day from how each
-receiver replied ([warming up an IP](operations.md#warming-up-an-ip)). Leave
-it out for an address that already has a sending history: with no cap, an
-egress sends as much as it is given, and warmup takes no part.
+receiver replied ([deliverability](deliverability.md#warming-up-a-new-address)
+says how, and how each provider is treated). Leave it out for an address that
+already has a sending history: with no cap, an egress sends as much as it is
+given, and warmup takes no part.
 
-After that, change a cap with `put_cap`. Running this `put_egress` line again
-sets the egress's own cap back to the one it names, or removes it if it names
-none.
+This line can start warmup on an egress with no cap, and never changes it after
+that: running it again, to change the HELO name, leaves the caps where warmup
+has taken them. `put_cap` changes a cap.
 
 [Operations](operations.md) has the rest of policy: pools, configurations,
 tenants, holds and subscriptions.
@@ -187,9 +188,9 @@ sudo -u nitromta nitromta doctor --config /etc/nitromta/config.toml
 
 `doctor` checks the installation with what the engine itself uses: its
 configuration, store and certificates, its clock, its resolver, and,
-through the running engine, each egress's reverse DNS, its blocklist
-listings and the return path's SPF record covering it, and each identity's
-DKIM and DMARC records. Each check prints
+through the running engine, each egress's reverse DNS, port 25 from it, its
+blocklist listings and the return path's SPF record covering it, and each
+identity's DKIM and DMARC records. Each check prints
 `ok`, `warn` or `fail` with what it found, and a failure says what to
 change: for a missing SPF, DKIM or DMARC record, the exact record to
 publish. It changes nothing.

@@ -103,3 +103,7 @@ The engine reads the configuration as it starts, and `nitromta doctor`
 checks it. Policy, the accounts, identities and egresses mail is sent
 with, is not configuration: it is given through the admin socket and kept
 in the store, as [installation](../install.md#5-give-it-its-policy) shows.
+
+[Deliverability](../deliverability.md) covers the settings `setup` leaves out
+for warmup and complaints: `[warmup]`, `[receivers.<Provider>.warmup]` and
+`[feedback] loops`.

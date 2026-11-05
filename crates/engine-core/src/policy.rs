@@ -809,7 +809,9 @@ pub enum Change {
         pool: Option<String>,
     },
     /// An egress, put under its address, which no other account's may hold.
-    /// One already there keeps its sites' caps and warmup's judgment.
+    /// One already there keeps its caps and warmup's judgment: `daily_cap`
+    /// starts warmup on an egress that has neither, and only `Change::Cap`
+    /// changes a cap after that.
     Egress {
         id: EgressId,
         account: AccountId,
@@ -1472,7 +1474,7 @@ impl Policy {
                     .and_then(|id| self.egresses.get(id))
                     .map(|egress| egress.caps.clone())
                     .unwrap_or_default();
-                if caps.daily != daily_cap {
+                if daily_cap.is_some() && !caps.any() && caps.warmed.is_none() {
                     caps.set(None, daily_cap, self.next());
                 }
                 Record::Egress(Egress {
@@ -4299,6 +4301,59 @@ mod tests {
     }
 
     #[test]
+    fn a_put_starts_warmup_and_never_changes_it() {
+        let mut policy = with(Vec::new());
+        let put = |cap| {
+            let mut put = egress(60, "203.0.113.1", None);
+            if let Change::Egress { daily_cap, .. } = &mut put {
+                *daily_cap = cap;
+            }
+            put
+        };
+        let egress_id = EgressId(id(60));
+        let caps = |policy: &Policy| policy.egress(egress_id).unwrap().caps.clone();
+        policy.apply(put(None)).unwrap();
+        assert!(!caps(&policy).any(), "made with none");
+        policy.apply(put(Some(50))).unwrap();
+        assert_eq!(caps(&policy).daily, Some(50), "one with none starts");
+        policy.apply(put(None)).unwrap();
+        assert_eq!(caps(&policy).daily, Some(50), "naming none keeps it");
+        policy.apply(put(Some(100))).unwrap();
+        assert_eq!(caps(&policy).daily, Some(50), "naming another keeps it");
+        let cap = |cap| Change::Cap {
+            account: ACCOUNT,
+            address: "203.0.113.1".parse().unwrap(),
+            site: None,
+            cap,
+        };
+        policy.apply(cap(Some(200))).unwrap();
+        assert_eq!(caps(&policy).daily, Some(200), "an operator's cap does");
+        let from = caps(&policy);
+        let judged = Caps {
+            daily: None,
+            warmed: Some(Warmed {
+                day: 20_000,
+                pool: Judgment {
+                    counts: Counts::default(),
+                    verdict: Verdict::Raised,
+                },
+                sites: BTreeMap::new(),
+            }),
+            ..from.clone()
+        };
+        policy
+            .apply(Change::Caps(vec![Capping {
+                egress: egress_id,
+                from,
+                to: judged,
+                evidence: Vec::new(),
+            }]))
+            .unwrap();
+        policy.apply(put(Some(50))).unwrap();
+        assert!(!caps(&policy).any(), "done stays done");
+    }
+
+    #[test]
     fn an_egress_caps_each_site_by_its_own_cap_or_its_own_and_warmup_judges_a_day_once() {
         let mut policy = with(Vec::new());
         policy.apply(egress(60, "203.0.113.1", None)).unwrap();
@@ -4360,21 +4415,19 @@ mod tests {
         policy.apply(Change::Caps(vec![again])).unwrap();
         assert_eq!(caps(&policy).daily, Some(5_000));
 
-        // Put again under its address, it keeps its sites' caps and the day
-        // judged, and takes the cap the put gives, which the judgment no
-        // longer explains.
-        let mut put = egress(61, "203.0.113.1", None);
-        if let Change::Egress { daily_cap, .. } = &mut put {
-            *daily_cap = None;
-        }
-        policy.apply(put).unwrap();
+        // Put again under its address, it keeps its caps and the day judged,
+        // whatever cap the put names, so a judgment decided before it holds.
         let kept = caps(&policy);
-        assert_eq!(kept.daily, None);
-        assert_eq!(kept.at("Google"), Some(2_000));
-        let judged = kept.warmed.clone().unwrap();
-        assert_eq!((judged.day, judged.pool.verdict), (20_000, Verdict::Set));
-        assert!(kept.any(), "still capped at a site");
+        for named in [None, Some(50)] {
+            let mut put = egress(61, "203.0.113.1", None);
+            if let Change::Egress { daily_cap, .. } = &mut put {
+                *daily_cap = named;
+            }
+            policy.apply(put).unwrap();
+            assert_eq!(caps(&policy), kept);
+        }
         let mut done = kept.clone();
+        done.daily = None;
         done.sites.clear();
         policy
             .apply(Change::Caps(vec![Capping {

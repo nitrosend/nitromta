@@ -157,7 +157,7 @@ fn doctor_finds_each_record_and_says_what_to_publish_for_one_missing() {
         ],
     );
     // An egress, its reverse DNS published and confirmed: each found, and
-    // port 25 from it failing here, where nothing has its address.
+    // sending from it refused here, where nothing has its address.
     changed(&[
         json!({"op": "put_egress", "account": 1, "address": "192.0.2.10", "helo": "mx.out.test"}),
     ]);
@@ -174,7 +174,7 @@ fn doctor_finds_each_record_and_says_what_to_publish_for_one_missing() {
             "ok    egress 192.0.2.10: its PTR names mx.out.test, which resolves back to it, and its HELO is that name",
             "ok    egress 192.0.2.10: not on zen.spamhaus.org",
             "ok    egress 192.0.2.10: bounces.example.test's SPF covers it",
-            &format!("fail  egress 192.0.2.10: port 25 does not reach {port25} (binding to it:"),
+            "fail  egress 192.0.2.10: this host cannot send from it (",
         ],
     );
     // Its PTR gone, and the DKIM record: what to do about each.

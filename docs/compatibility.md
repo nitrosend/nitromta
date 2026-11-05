@@ -111,6 +111,8 @@ matches the engine's own mail suppresses its recipient and counts toward
 its IP's warmup; with `[feedback] trusted = "authenticated"`, only one
 whose DKIM signature verifies for a reporter enrolled in
 `[feedback] reporters` does, and any other is recorded as an event alone.
+[Deliverability](deliverability.md#receiving-complaint-reports) says how to
+receive each provider's reports.
 
 ## The SDKs, tested
 

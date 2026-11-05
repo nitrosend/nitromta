@@ -23,6 +23,8 @@ API. These guides take it from your own machine to your own servers.
 
 - [Operations](operations.md): why a message is waiting, the queue,
   metrics, holds, warmup and keys.
+- [Deliverability](deliverability.md): how a new address warms up, how each
+  provider is treated, and what each one tells you.
 - [Durability](durability.md): what an acceptance promises.
 - [Benchmarks](benchmarks.md): NitroMTA, KumoMTA and Postfix on the same
   machine, and how to run it yourself.

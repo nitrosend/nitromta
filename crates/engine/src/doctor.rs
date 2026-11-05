@@ -563,46 +563,61 @@ async fn egresses(
     }
 }
 
+/// Why port 25 was not reached from an address.
+enum Unreached {
+    /// The address cannot be bound, so the host does not hold it, and port
+    /// 25 was never tried.
+    NotHeld(std::io::Error),
+    Failed(String),
+}
+
+impl From<std::io::Error> for Unreached {
+    fn from(error: std::io::Error) -> Self {
+        Self::Failed(error.to_string())
+    }
+}
+
+impl From<&str> for Unreached {
+    fn from(why: &str) -> Self {
+        Self::Failed(why.to_owned())
+    }
+}
+
 /// Port 25 to `probe`, from `from` or the host's own address: some
 /// providers block it, and delivery waits until they lift it.
 async fn port25(from: Option<IpAddr>, probe: &str, report: &mut Report) {
     let area = from.map_or("port 25".to_owned(), |address| format!("egress {address}"));
     let reached = tokio::time::timeout(PATIENCE, async {
         let target: SocketAddr = tokio::net::lookup_host(probe)
-            .await
-            .map_err(|error| error.to_string())?
+            .await?
             .find(|target| from.is_none_or(|from| from.is_ipv4() == target.is_ipv4()))
             .ok_or("no address of the same family")?;
         let socket = if target.is_ipv4() {
             tokio::net::TcpSocket::new_v4()
         } else {
             tokio::net::TcpSocket::new_v6()
-        }
-        .map_err(|error| error.to_string())?;
+        }?;
         if let Some(from) = from {
             socket
                 .bind(SocketAddr::new(from, 0))
-                .map_err(|error| format!("binding to it: {error}"))?;
+                .map_err(Unreached::NotHeld)?;
         }
-        let mut stream = socket
-            .connect(target)
-            .await
-            .map_err(|error| error.to_string())?;
+        let mut stream = socket.connect(target).await?;
         let mut greeting = [0u8; 3];
-        stream
-            .read_exact(&mut greeting)
-            .await
-            .map_err(|error| error.to_string())?;
+        stream.read_exact(&mut greeting).await?;
         if &greeting == b"220" {
-            Ok::<(), String>(())
+            Ok::<(), Unreached>(())
         } else {
-            Err("it did not greet".to_owned())
+            Err("it did not greet".into())
         }
     })
     .await;
     match reached {
         Ok(Ok(())) => report.ok(format!("{area}: port 25 reaches {probe}")),
-        Ok(Err(why)) => report.fail(format!(
+        Ok(Err(Unreached::NotHeld(error))) => report.fail(format!(
+            "{area}: this host cannot send from it ({error}): an egress's address must be on one of this host's interfaces"
+        )),
+        Ok(Err(Unreached::Failed(why))) => report.fail(format!(
             "{area}: port 25 does not reach {probe} ({why}): ask the provider to lift its block on outbound port 25"
         )),
         Err(_) => report.fail(format!(

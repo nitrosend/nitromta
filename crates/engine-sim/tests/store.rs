@@ -3221,6 +3221,7 @@ fn an_untrusted_report_is_its_events_alone_and_the_quarantine_keeps_its_bound() 
     }
     assert!(!uncorrelated[0].1.unkept && !uncorrelated[1].1.unkept);
     assert!(uncorrelated[2].1.unkept, "past the bound");
+    assert!(uncorrelated.iter().all(|(_, answer)| answer.unmatched));
     assert_eq!(harness.store().report(uncorrelated[2].0.id).unwrap(), None);
     let first = &uncorrelated[0].0;
     let again = Report {
@@ -3228,7 +3229,7 @@ fn an_untrusted_report_is_its_events_alone_and_the_quarantine_keeps_its_bound() 
         ..first.clone()
     };
     let resent = recorded(harness.one(Command::RecordFeedback(again), later(12)));
-    assert!(resent.duplicate && !resent.unkept);
+    assert!(resent.duplicate && !resent.unkept && !resent.unmatched);
 }
 
 #[test]

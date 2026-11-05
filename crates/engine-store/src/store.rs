@@ -2705,6 +2705,7 @@ impl<C: Borrow<Connection>> Store<C> {
             if u64::try_from(held).unwrap_or(u64::MAX) >= self.quarantine {
                 return Ok(FeedbackRecorded {
                     unkept: true,
+                    unmatched: true,
                     ..FeedbackRecorded::default()
                 });
             }
@@ -2741,6 +2742,7 @@ impl<C: Borrow<Connection>> Store<C> {
         };
         let mut recorded = FeedbackRecorded {
             duplicate,
+            unmatched: quarantined && !duplicate,
             ..FeedbackRecorded::default()
         };
         // Whether this copy, after one kept before, applied any effect.
