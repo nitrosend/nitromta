@@ -8,6 +8,7 @@
 
 use std::os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt};
 use std::path::Path;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -16,7 +17,7 @@ use std::pin::Pin;
 
 use engine_api::inspect::{self, Asked};
 use engine_api::native::{self, Entropy, Issued, MAX_REQUEST_BYTES, Refusal};
-use engine_api::{backup, drain, list, parked, sealing};
+use engine_api::{backup, drain, list, parked, sealing, space};
 use engine_core::command::{Answer, Command, Commit, FenceDecision};
 use engine_core::id::{Id, IdGenerator};
 use engine_scheduler::{Inspection, Report};
@@ -193,6 +194,20 @@ impl Admin {
                     }
                     Err(refused) => refused,
                 };
+                if pending.send(Pending::Ready(answer)).await.is_err() {
+                    return;
+                }
+                continue;
+            }
+            if let Some(asked) = space::asked(&line) {
+                let answer = asked.map_or_else(
+                    |refused| refused,
+                    |()| {
+                        space::answered(
+                            self.operations.store_reusable_bytes.load(Ordering::Relaxed),
+                        )
+                    },
+                );
                 if pending.send(Pending::Ready(answer)).await.is_err() {
                     return;
                 }

@@ -60,6 +60,8 @@ pub struct Running {
     pub older: Vec<(u8, Result<Kept, String>)>,
     /// Its store's fence, as the admin socket gives it: null if it has none.
     pub fence: Value,
+    /// What its store holds free.
+    pub reusable: u64,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -152,22 +154,30 @@ fn store(config: &Config, running: Option<&Running>, report: &mut Report) {
         .filter(|parent| !parent.as_os_str().is_empty())
         .unwrap_or(Path::new("."));
     let reserve = store.reserve_mib << 20;
+    let reusable = running.map_or_else(
+        || crate::store::reusable(&store.path).unwrap_or(0),
+        |running| running.reusable,
+    );
     match rustix::fs::statvfs(directory) {
         Ok(stat) => {
             let free = stat.f_bavail.saturating_mul(stat.f_frsize);
+            let inside = match reusable >> 20 {
+                0 => String::new(),
+                mib => format!(" and {mib} MiB free in the store"),
+            };
             let said = format!(
-                "store: {} MiB free on its disk, against a reserve of {} MiB",
+                "store: {} MiB free on its disk{inside}, against a reserve of {} MiB",
                 free >> 20,
                 reserve >> 20
             );
-            if free > reserve.saturating_mul(4) {
+            if crate::store::below_reserve(free, reusable, reserve) {
+                report.fail(format!("{said}: new mail is refused until space is freed"));
+            } else if free.saturating_add(reusable) > reserve.saturating_mul(4) {
                 report.ok(said);
-            } else if free > reserve {
+            } else {
                 report.warn(format!(
                     "{said}: new mail is refused once it reaches the reserve"
                 ));
-            } else {
-                report.fail(format!("{said}: new mail is refused until space is freed"));
             }
         }
         Err(error) => report.fail(format!(

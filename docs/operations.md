@@ -66,7 +66,8 @@ The metrics, each prefixed `nitromta_`, among them:
   `reports_unkept_total`, those naming no message of the engine's that
   were not kept once the quarantine was full; and `reports_by_egress_total`
   and `reports_by_tenant_total`, the reports by kind;
-- `store_bytes`, `store_free_bytes`, `pending_bytes`,
+- `store_bytes`, the store's file; `store_reusable_bytes`, its free pages;
+  `store_free_bytes`, the free space on its disk; `pending_bytes`,
   `refused_for_storage_total`, `commit_groups_total` and
   `commit_seconds_total`;
 - `authentication_failures_total`, and `connections_refused_total` by
@@ -76,6 +77,76 @@ The metrics, each prefixed `nitromta_`, among them:
 
 Logs go to standard output, as JSON lines by default (`[log] format`), at
 `[log] level` (`info` by default).
+
+## How much disk the store needs
+
+The store does not grow forever. A message's body is deleted as its last
+delivery finishes, and what is kept of finished mail, for the bounces and
+complaints that come after it, is deleted after `[store]
+feedback_window_seconds`, seven days by default. So its size follows how much
+mail is sent in that window, and how much is waiting.
+
+Measured through the engine, each finished recipient of a message to one
+recipient keeps about 420 bytes. It keeps about 1.8 KB when its configuration
+publishes SES-shaped events, which keep the message's header block to say in
+those events; that is with a 750-byte header block, and a longer one keeps
+more, up to 10 KiB.
+
+| Mail a day | No SES-shaped events | SES-shaped events |
+|---:|---:|---:|
+| 100,000 | 0.3 GB | 1.2 GB |
+| 1,000,000 | 3 GB | 12 GB |
+| 10,000,000 | 30 GB | 125 GB |
+
+Mail still waiting adds its bodies on top: 1,000,000 messages of 16 KiB are
+another 16 GB, for up to `[submission] lifetime_seconds`, three days by
+default. This is how a warming IP uses the disk, since mail its caps have no
+room for waits in the store.
+
+A shorter `feedback_window_seconds` makes the store smaller. A report that
+comes later than that no longer finds its mail, and counts in
+`reports_unmatched_total`, and a subscriber down for longer misses the events
+trimmed meanwhile.
+
+### Space inside the store
+
+The file does not shrink as mail is deleted. Its pages go free, new mail fills
+them before the file grows, and `store_bytes` stays at its peak while
+`store_reusable_bytes` says how much of that is free.
+
+The reserve counts them. New mail is refused while the free space on the disk
+and the store's free pages together are below `[store] reserve_mib`, or while
+the disk itself has less than 128 MiB, or the reserve if that is smaller, which
+a commit's log needs whatever the store holds free.
+
+To give the disk back after a backlog that will not come again, stop the engine
+and rebuild the file, with room on the disk for a copy of what the store still
+holds, using `sqlite3` 3.37 or later:
+
+```sh
+sudo -u nitromta sqlite3 /var/lib/nitromta/store.db VACUUM
+```
+
+### When the disk fills
+
+The store stops rather than answer for what it could not keep: `/health/accept`
+and `/health/dispatch` answer 503, and the log says `database or disk is full`.
+A full disk does not damage it. Make room, by growing the disk or removing
+something else from it, and start the engine, which goes on delivering what it
+holds.
+
+Do not restore a backup over it, which loses whatever was accepted since the
+copy was taken. If the disk is too full for the store even to be checked, the
+engine says so as it refuses to start: `it could not be checked, so nothing is
+known to be wrong with it`. It says a store is damaged only when the check
+found damage.
+
+### After a stop that did not close the store
+
+The engine checks the whole store before it starts, and says so in its log
+first: `the store was not closed at the last stop; checking it before the
+engine starts`. Nothing listens until the check ends, which takes longer the
+more the store holds. Let it finish, since a restart begins it again.
 
 ## Checking the installation
 

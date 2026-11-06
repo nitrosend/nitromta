@@ -14,5 +14,6 @@ pub mod ses_manage;
 pub mod sigv4;
 pub mod snapshot;
 pub mod sns;
+pub mod space;
 pub mod submission;
 pub mod template;

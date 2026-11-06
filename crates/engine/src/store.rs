@@ -6,10 +6,11 @@
 //! timer. Each answer goes back the way its command came, once
 //! any policy the group changed is published to the adapters.
 //!
-//! Once a second the thread reads the store's size and its disk's free
-//! space; below the reserve, new mail is refused until space is free again.
-//! A store left by a stop that did not close it is checked at
-//! start, and the engine does not start on one that is damaged.
+//! Once a second the thread reads the store's size, what it holds free and
+//! its disk's free space; with too little of those for the reserve, new mail
+//! is refused until there is room again. A store left by a stop that did not
+//! close it is checked at start, and the engine does not start on one that
+//! is damaged.
 //!
 //! A backup runs on the thread too: a step of pages between
 //! turns, each of which commits what came meanwhile, so commits go first.
@@ -212,6 +213,12 @@ pub fn start(
         // so a damaged store keeps its log, and the next start checks it
         // again.
         let started = std::time::Instant::now();
+        // Mail waits on this, longer the larger the store, with nothing else
+        // yet to say the engine is at work.
+        tracing::info!(
+            store_mib = std::fs::metadata(path).map_or(0, |store| store.len() >> 20),
+            "the store was not closed at the last stop; checking it before the engine starts"
+        );
         let checking = Connection::open(path).map_err(|error| failed(&error))?;
         checking
             .set_db_config(
@@ -220,9 +227,15 @@ pub fn start(
             )
             .map_err(|error| failed(&error))?;
         engine_store::store::quick_check(&checking).map_err(|error| {
-            failed(&format!(
-                "{error}; it is damaged, and the engine does not start on it: restore it from a backup, or keep it as evidence"
-            ))
+            failed(&if error.is_damage() {
+                format!(
+                    "{error}; it is damaged, and the engine does not start on it: restore it from a backup, or keep it as evidence"
+                )
+            } else {
+                format!(
+                    "{error}; it could not be checked, so nothing is known to be wrong with it: do not restore a backup over it; make room on its disk if it is full, and start the engine again"
+                )
+            })
         })?;
         drop(checking);
         tracing::info!(
@@ -239,8 +252,6 @@ pub fn start(
             .to_owned(),
         reserve,
     };
-    // Measured before anything is accepted.
-    measure(&disk, &operations);
     let handle = Store {
         sender,
         operations: Arc::clone(&operations),
@@ -282,6 +293,9 @@ pub fn start(
             })();
             match started {
                 Ok((owner, source, policy, after, abandoned)) => {
+                    // Measured before anything is accepted.
+                    read_space(owner.store(), &operations);
+                    measure(&disk, &operations);
                     let _ = opened.send(Ok((Arc::clone(&policy), after, abandoned)));
                     run(
                         owner,
@@ -356,9 +370,16 @@ impl Disk {
     }
 }
 
-/// Reads the disk's free space, and refuses new mail below the reserve, or
-/// while the space cannot be read (fail closed). Each crossing is logged
-/// once.
+/// Whether there is too little room for the reserve, with `free` bytes on the
+/// store's disk and `reusable` in its free pages, which new mail fills before
+/// the file grows, so what a delivered backlog left in the file is room. Only
+/// a commit's log needs the disk itself, at most about the largest group's
+/// content, so that much of it is kept whatever the store holds free.
+pub fn below_reserve(free: u64, reusable: u64, reserve: u64) -> bool {
+    let log = 2 * GroupLimits::default().content_bytes as u64;
+    free < reserve.min(log) || free.saturating_add(reusable) < reserve
+}
+
 /// The queue's depth, by state, and its age and lag, and how far behind
 /// the furthest-behind subscription is: counts the store keeps,
 /// and a few index seeks.
@@ -403,16 +424,34 @@ fn queue_and_lag(store: &SqliteStore<Rc<Connection>>, now: Timestamp, operations
     }
 }
 
+/// Reads the store's size and what it holds free.
+fn read_space(store: &SqliteStore<Rc<Connection>>, operations: &Operations) {
+    if let Ok(space) = store.space() {
+        operations.store_bytes.store(space.bytes, Ordering::Relaxed);
+        operations
+            .store_reusable_bytes
+            .store(space.reusable, Ordering::Relaxed);
+    }
+}
+
+/// Reads the disk's free space, and refuses new mail below the reserve, or
+/// while the space cannot be read (fail closed).
 fn measure(disk: &Disk, operations: &Operations) {
-    let free = disk.free();
+    judge(disk.free(), disk, operations);
+}
+
+/// Decides on `free`, with what the store last said it holds free. Each
+/// crossing is logged once.
+fn judge(free: Option<u64>, disk: &Disk, operations: &Operations) {
     operations
         .store_free_bytes
         .store(free.unwrap_or(0), Ordering::Relaxed);
-    let low = free.is_none_or(|free| free < disk.reserve);
+    let reusable = operations.store_reusable_bytes.load(Ordering::Relaxed);
+    let low = free.is_none_or(|free| below_reserve(free, reusable, disk.reserve));
     if operations.disk_low.swap(low, Ordering::Relaxed) == low {
         return;
     }
-    let reserve_mib = disk.reserve >> 20;
+    let (reserve_mib, reusable_mib) = (disk.reserve >> 20, reusable >> 20);
     match free {
         None => tracing::error!(
             directory = %disk.directory.display(),
@@ -420,11 +459,13 @@ fn measure(disk: &Disk, operations: &Operations) {
         ),
         Some(free) if low => tracing::warn!(
             free_mib = free >> 20,
+            reusable_mib,
             reserve_mib,
             "the store's disk is below its reserve: new mail is refused until space is free"
         ),
         Some(free) => tracing::info!(
             free_mib = free >> 20,
+            reusable_mib,
             reserve_mib,
             "the store's disk has its reserve again"
         ),
@@ -437,6 +478,15 @@ pub fn quick_check(path: &Path) -> Result<(), String> {
     let connection = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
         .map_err(|error| failed(&error))?;
     engine_store::store::quick_check(&connection).map_err(|error| failed(&error))
+}
+
+/// What the stopped store at `path` holds free.
+pub fn reusable(path: &Path) -> Result<u64, String> {
+    let failed = |error: &dyn std::fmt::Display| format!("store: {}: {error}", path.display());
+    let connection = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+        .map_err(|error| failed(&error))?;
+    let space = engine_store::store::space(&connection).map_err(|error| failed(&error))?;
+    Ok(space.reusable)
 }
 
 /// Brings the stopped store at `path` up to the schema this release
@@ -673,9 +723,7 @@ impl Turns<'_> {
         if self.measured.is_none_or(|at| at.elapsed() >= MEASURE_EVERY) {
             self.measured = Some(std::time::Instant::now());
             let store = self.owner.store();
-            if let Ok(bytes) = store.bytes() {
-                operations.store_bytes.store(bytes, Ordering::Relaxed);
-            }
+            read_space(store, operations);
             if let Ok(Some(parked)) = store.parked_batches() {
                 operations
                     .events_parked_now
@@ -725,7 +773,9 @@ impl Turns<'_> {
         if self.owner.has_failed() && !self.reported {
             self.reported = true;
             operations.store_failed.store(true, Ordering::Relaxed);
+            let error = self.owner.failure().map(ToString::to_string);
             tracing::error!(
+                error,
                 "the store failed; every command is answered as unavailable until the engine restarts"
             );
         }
@@ -736,6 +786,44 @@ impl Turns<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn free_pages_are_room_but_the_log_keeps_some_of_the_disk() {
+        let low = |free: u64, reusable: u64, reserve: u64| {
+            below_reserve(free << 20, reusable << 20, reserve << 20)
+        };
+        // With nothing free inside, the disk alone.
+        assert!(low(1023, 0, 1024));
+        assert!(!low(1024, 0, 1024));
+        // What a delivered backlog left in the file is room.
+        assert!(!low(512, 512, 1024));
+        assert!(low(512, 511, 1024));
+        // Not for the log, which needs the disk itself.
+        assert!(low(127, 4096, 1024));
+        assert!(!low(128, 4096, 1024));
+        // A reserve smaller than that asks for no more than itself.
+        assert!(!low(32, 0, 32));
+        assert!(low(31, 4096, 32));
+    }
+
+    #[test]
+    fn what_the_store_holds_free_lifts_a_refusal() {
+        let operations = Operations::default();
+        let low = || operations.disk_low.load(Ordering::Relaxed);
+        let disk = Disk {
+            directory: PathBuf::from("."),
+            reserve: 1024 << 20,
+        };
+        judge(Some(512 << 20), &disk, &operations);
+        assert!(low(), "the disk alone is below it");
+        operations
+            .store_reusable_bytes
+            .store(512 << 20, Ordering::Relaxed);
+        judge(Some(512 << 20), &disk, &operations);
+        assert!(!low(), "with the store's free pages it is not");
+        judge(None, &disk, &operations);
+        assert!(low(), "a disk that does not say is refused");
+    }
 
     fn mode(path: &Path) -> u32 {
         std::fs::metadata(path).unwrap().permissions().mode() & 0o777

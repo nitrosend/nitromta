@@ -149,7 +149,8 @@ path = {store}
 # The installation's keys, which seal the secrets in policy: a file of its
 # own, apart from the store and its backups, which only its owner may read.
 keys = {keys}
-# Free space kept on the store's disk; new mail is refused below it.
+# Room kept on the store's disk and in its free pages; new mail is refused
+# below it.
 # reserve_mib = 1024
 # Bytes of mail waiting for their commit before new mail is refused.
 # pending_mib = 512

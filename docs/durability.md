@@ -91,8 +91,14 @@ both the host and its backups.
   subscriber down for longer misses what was trimmed meanwhile, counted in
   its cursor's skipped positions, and a parked batch past the window can
   no longer be replayed.
-- **The disk reserve is advisory.** New mail is refused once free space
-  falls below `[store] reserve_mib`, but mail already accepted, outcomes,
-  the log and checkpoints can still fill the disk; then the store stops,
-  answering nothing it could not keep, until it is restarted with space
-  free.
+- **The disk reserve is advisory.** New mail is refused once the free space
+  on the disk and the store's free pages together fall below `[store]
+  reserve_mib`. Those are read once a second, so a burst of large messages
+  can pass the reserve, and mail already accepted, outcomes, the log and
+  checkpoints can still fill the disk. Then the store stops, answering
+  nothing it could not keep, until it is restarted with space free
+  ([when the disk fills](operations.md#when-the-disk-fills)).
+- **Deleted mail stays in free pages until they are used.** A delivered
+  body's pages go free without being overwritten, and a backup copies free
+  pages with the rest, so while encryption is off a store and its backups can
+  hold the bodies of finished mail until new mail takes those pages.

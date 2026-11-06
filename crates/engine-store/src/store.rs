@@ -47,6 +47,14 @@ use crate::keys::{self, Keyring, Keys, NO_KEY, TenantKey};
 use crate::records;
 use crate::schema;
 
+/// A store's file: its size, without its write-ahead log, and how much of
+/// that is free pages, which new pages take before the file grows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Space {
+    pub bytes: u64,
+    pub reusable: u64,
+}
+
 #[derive(Debug)]
 pub enum StoreError {
     Sqlite(rusqlite::Error),
@@ -68,6 +76,21 @@ pub enum StoreError {
     /// A restore was given a store `nitromta backup` did not copy, which
     /// says nothing of when it was taken.
     NotACopy,
+}
+
+impl StoreError {
+    /// Whether this says the store itself is damaged, not that it could not
+    /// be read just now, as on a disk with no room left.
+    pub fn is_damage(&self) -> bool {
+        match self {
+            Self::Damaged(_) | Self::Corrupt { .. } => true,
+            Self::Sqlite(error) => matches!(
+                error.sqlite_error_code(),
+                Some(rusqlite::ErrorCode::DatabaseCorrupt | rusqlite::ErrorCode::NotADatabase)
+            ),
+            Self::Newer { .. } | Self::JournalMode(_) | Self::NotACopy => false,
+        }
+    }
 }
 
 impl fmt::Display for StoreError {
@@ -1157,12 +1180,9 @@ impl<C: Borrow<Connection>> Store<C> {
         Ok(position.map(|position| u64::try_from(position).unwrap_or_default()))
     }
 
-    /// The store's size on disk, without its write-ahead log.
-    pub fn bytes(&self) -> Result<u64, StoreError> {
-        let db = self.db();
-        let pages: i64 = db.query_row("PRAGMA page_count", [], |row| row.get(0))?;
-        let size: i64 = db.query_row("PRAGMA page_size", [], |row| row.get(0))?;
-        Ok(u64::try_from(pages.saturating_mul(size)).unwrap_or_default())
+    /// The store's size on disk and what it holds free.
+    pub fn space(&self) -> Result<Space, StoreError> {
+        space(self.db())
     }
 
     /// How long finished mail is kept.
@@ -3097,6 +3117,20 @@ pub fn verify(db: &Connection) -> Result<(), StoreError> {
 /// without comparing each index with its table, so quicker than
 /// [`verify`]. A store left open at its last stop is checked this way
 /// before it opens.
+/// The size on disk of the store on `db` and what it holds free, a few
+/// reads of its first page.
+pub fn space(db: &Connection) -> Result<Space, StoreError> {
+    let read = |pragma: &str| -> Result<u64, StoreError> {
+        let value: i64 = db.query_row(&format!("PRAGMA {pragma}"), [], |row| row.get(0))?;
+        Ok(u64::try_from(value).unwrap_or_default())
+    };
+    let size = read("page_size")?;
+    Ok(Space {
+        bytes: read("page_count")?.saturating_mul(size),
+        reusable: read("freelist_count")?.saturating_mul(size),
+    })
+}
+
 pub fn quick_check(db: &Connection) -> Result<(), StoreError> {
     checked(db, "quick_check")
 }

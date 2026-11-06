@@ -87,7 +87,8 @@ pub struct CommitOwner<C> {
     reads: VecDeque<(Ticket, Read)>,
     /// When the next trim is due, by the wall clock trims are decided on.
     trim_after: Timestamp,
-    failed: bool,
+    /// What made storage fail: the commit owner stops once it has.
+    failure: Option<StoreError>,
 }
 
 #[derive(Debug)]
@@ -251,7 +252,7 @@ impl<C: Borrow<Connection>> CommitOwner<C> {
             acceptances: VecDeque::new(),
             reads: VecDeque::new(),
             trim_after: now,
-            failed: false,
+            failure: None,
         };
         Ok((owner, abandoned))
     }
@@ -266,7 +267,12 @@ impl<C: Borrow<Connection>> CommitOwner<C> {
     }
 
     pub fn has_failed(&self) -> bool {
-        self.failed
+        self.failure.is_some()
+    }
+
+    /// What made storage fail, if it has.
+    pub fn failure(&self) -> Option<&StoreError> {
+        self.failure.as_ref()
     }
 
     fn has_work(&self) -> bool {
@@ -811,20 +817,16 @@ impl<C: Borrow<Connection>> Component for CommitOwner<C> {
     }
 
     fn poll(&mut self, now: Now, out: &mut Vec<Response>) -> Option<Monotonic> {
-        if !self.failed && self.commit_group(now, out).is_err() {
-            self.failed = true;
+        if self.failure.is_none() {
+            self.failure = self.commit_group(now, out).err();
         }
-        if !self.failed && self.answer_reads(out).is_err() {
-            self.failed = true;
+        if self.failure.is_none() {
+            self.failure = self.answer_reads(out).err();
         }
-        if !self.failed
-            && !self.has_work()
-            && now.wall >= self.trim_after
-            && self.trim_alone(now).is_err()
-        {
-            self.failed = true;
+        if self.failure.is_none() && !self.has_work() && now.wall >= self.trim_after {
+            self.failure = self.trim_alone(now).err();
         }
-        if self.failed {
+        if self.failure.is_some() {
             self.answer_unavailable(out);
             return None;
         }

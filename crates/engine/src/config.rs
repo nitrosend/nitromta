@@ -205,8 +205,8 @@ pub struct Store {
     /// How long finished mail is kept for the bounces and complaints that
     /// arrive after it; 7 days when absent.
     pub feedback_window_seconds: Option<u64>,
-    /// Free space kept on the store's disk for outcomes, feedback and
-    /// checkpoints: below it, new mail is refused for now.
+    /// Room kept for outcomes, feedback and checkpoints, on the store's disk
+    /// and in its free pages: below it, new mail is refused for now.
     #[serde(default = "Store::default_reserve_mib")]
     pub reserve_mib: u64,
     /// Mail accepted and waiting for its commit, at most, before new mail

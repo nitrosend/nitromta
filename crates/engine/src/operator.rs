@@ -66,6 +66,7 @@ pub struct Operations {
     pub commit_groups: AtomicU64,
     pub commit_micros: AtomicU64,
     pub store_bytes: AtomicU64,
+    pub store_reusable_bytes: AtomicU64,
     pub batches_taken: AtomicU64,
     pub batches_refused: AtomicU64,
     pub reports: AtomicU64,
@@ -688,6 +689,13 @@ impl Operations {
             "gauge",
             "The store's size on disk, without its write-ahead log.",
             &[("", read(&self.store_bytes))],
+        );
+        metric(
+            &mut text,
+            "store_reusable_bytes",
+            "gauge",
+            "The store's free pages, which new mail fills before its file grows.",
+            &[("", read(&self.store_reusable_bytes))],
         );
         metric(
             &mut text,

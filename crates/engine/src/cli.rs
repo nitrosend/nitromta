@@ -656,6 +656,7 @@ fn running(options: &Options, config: &config::Config) -> Option<doctor::Running
         json!({"op": "list", "kind": "egresses"}),
         json!({"op": "keys"}),
         json!({"op": "fence"}),
+        json!({"op": "space"}),
     ];
     let answers = admin::ask(&socket, &requests).ok()?;
     let rows = |answer: &Value, kind: &str| -> Option<Vec<Value>> {
@@ -678,6 +679,7 @@ fn running(options: &Options, config: &config::Config) -> Option<doctor::Running
         sealing,
         older,
         fence: ok(&answers[3]).ok()?["fence"].clone(),
+        reusable: ok(&answers[4]).ok()?["reusable_bytes"].as_u64()?,
     })
 }
 
