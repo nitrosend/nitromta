@@ -4,8 +4,8 @@
 
 <h3>The open-source Amazon SES replacement.</h3>
 
-[Nitrosend](https://nitrosend.com)'s mail delivery engine, open sourced and built in Rust.<br>
-Keep your SES code, change the endpoint, and deliver from IP addresses you control.<br>
+Nitrosend's mail delivery engine, open sourced and built in Rust.<br>
+Keep your SES v2 sending code, change the endpoint, and deliver from IP addresses you control. [Compatibility →](https://nitromta.com/docs/compatibility/)<br>
 Want it managed? [Use Nitrosend →](https://nitrosend.com/?utm_source=nitromta&utm_medium=readme&utm_campaign=managed&utm_content=header)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/nitrosend/nitromta/check.yml?branch=main&style=flat-square&label=ci&labelColor=111&color=111)](https://github.com/nitrosend/nitromta/actions/workflows/check.yml)
@@ -49,8 +49,26 @@ nitromta setup --config config.toml --capture
 nitromta run --config config.toml
 ```
 
-Give it an account and an access key, then send with the SES SDK you
-already use:
+In another terminal, in the same directory, give it an account, a sending
+identity and an access key:
+
+```sh
+nitromta admin --config config.toml <<'END'
+{"op":"put_account","account":1}
+{"op":"put_identity","account":1,"name":"example.test"}
+END
+nitromta access-key create --config config.toml --account 1
+```
+
+Use the ID and secret it prints, and trust capture mode's local certificate:
+
+```sh
+export AWS_ACCESS_KEY_ID='<the printed access key ID>'
+export AWS_SECRET_ACCESS_KEY='<the printed secret>'
+export AWS_CA_BUNDLE=./tls.crt
+```
+
+Then send with your SES v2 SDK (`python3 -m pip install boto3` for this example):
 
 ```python
 import boto3

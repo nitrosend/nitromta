@@ -1,0 +1,178 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -8,7 +8,7 @@
+ [workspace.package]
+ # The release's version, every crate's, which `nitromta --version` prints and
+ # a release's tag names.
+-version = "0.1.2"
++version = "0.1.0"
+ edition = "2024"
+ license = "Apache-2.0"
+ publish = false
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -377,7 +377,7 @@
+ 
+ [[package]]
+ name = "ceilings"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "base64",
+@@ -585,7 +585,7 @@
+ 
+ [[package]]
+ name = "engine"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "aws-smithy-http-server",
+@@ -627,7 +627,7 @@
+ 
+ [[package]]
+ name = "engine-api"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "base64",
+@@ -643,14 +643,14 @@
+ 
+ [[package]]
+ name = "engine-core"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "bytes",
+ ]
+ 
+ [[package]]
+ name = "engine-events"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "base64",
+@@ -662,7 +662,7 @@
+ 
+ [[package]]
+ name = "engine-feedback"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "base64",
+@@ -673,7 +673,7 @@
+ 
+ [[package]]
+ name = "engine-message"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "base64",
+@@ -683,7 +683,7 @@
+ 
+ [[package]]
+ name = "engine-rules"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "engine-core",
+  "regex",
+@@ -693,7 +693,7 @@
+ 
+ [[package]]
+ name = "engine-scheduler"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "bytes",
+  "engine-core",
+@@ -725,7 +725,7 @@
+ 
+ [[package]]
+ name = "engine-sim"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "bytes",
+  "engine-core",
+@@ -738,7 +738,7 @@
+ 
+ [[package]]
+ name = "engine-smtp"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "base64",
+@@ -750,7 +750,7 @@
+ 
+ [[package]]
+ name = "engine-store"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "bytes",
+@@ -760,7 +760,7 @@
+ 
+ [[package]]
+ name = "engine-warmup"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "engine-core",
+  "engine-rules",
+@@ -886,7 +886,7 @@
+ 
+ [[package]]
+ name = "fuzz"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "bytes",
+  "engine-api",
+@@ -964,7 +964,7 @@
+ 
+ [[package]]
+ name = "harness"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "aws-lc-rs",
+  "base64",
+@@ -1514,7 +1514,7 @@
+ 
+ [[package]]
+ name = "measure-store"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "bytes",
+  "engine-core",
+@@ -2888,7 +2888,7 @@
+ 
+ [[package]]
+ name = "xtask"
+-version = "0.1.2"
++version = "0.1.0"
+ dependencies = [
+  "serde",
+  "serde_json",
+--- a/crates/engine/tests/events.rs
++++ b/crates/engine/tests/events.rs
+@@ -54,9 +54,7 @@
+     });
+     assert_eq!(listed.len(), 1);
+     assert_eq!(listed[0]["failure"], "answered 503");
+-    // Posted again only if the retry falls inside its one-second budget;
+-    // parked at the deadline otherwise, so one failed post is the floor.
+-    assert!(listed[0]["attempts"].as_u64().unwrap_or_default() >= 1);
++    assert!(listed[0]["attempts"].as_u64().unwrap_or_default() >= 2);
+     let refused = subscriber.bodies();
+     assert!(refused.iter().all(|body| body.get("replay").is_none()));
+     let gauge = |count: u32| {

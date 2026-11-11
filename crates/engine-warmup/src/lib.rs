@@ -6,7 +6,9 @@
 //! A site with a cap of its own is judged on its own, on whatever it saw
 //! that day, nothing included. One without is judged on its own once its
 //! replies reach the bundle's sample or half the cap it takes, whichever is
-//! fewer, and given a cap of its own from then; the rest are pooled, and the
+//! fewer, and given a cap of its own from then. A provider whose promotion
+//! is held gets its own cap even with no traffic, so the pool cannot raise
+//! its inherited cap. The rest are pooled, and the
 //! pool is judged against the egress's own cap on the bundle's default
 //! ladder. A judgment over a signal's threshold to lower takes the cap down
 //! a rung, never below the first; over its threshold to hold, it stays;
@@ -69,6 +71,12 @@ fn judged(egress: &Egress, rules: &Rules, day: u64, sites: &[(&Arc<str>, &Counts
     let none = Counts::default();
     let mut every: BTreeMap<&Arc<str>, &Counts> =
         caps.sites.keys().map(|site| (site, &none)).collect();
+    every.extend(
+        rules
+            .provider_warmups()
+            .filter(|(_, warmup)| !warmup.promote)
+            .map(|(site, _)| (site, &none)),
+    );
     every.extend(sites.iter().copied());
     for (site, counts) in every {
         // Done there: nothing is counted, nothing to judge.
@@ -77,7 +85,7 @@ fn judged(egress: &Egress, rules: &Rules, day: u64, sites: &[(&Arc<str>, &Counts
         };
         let warmup = rules.warmup_of(site);
         let own = caps.sites.contains_key(site);
-        if !own && counts.replies() < needed(warmup, cap) {
+        if !own && warmup.promote && counts.replies() < needed(warmup, cap) {
             pooled.add(counts);
             continue;
         }
@@ -162,6 +170,7 @@ fn judge_one(warmup: &Warmup, counts: &Counts, cap: u64) -> (Judgment, Option<u6
             (judgment(Verdict::Lowered(signal)), Some(lower))
         }
         Some((Reached::Hold, signal)) => (judgment(Verdict::Held(signal)), Some(cap)),
+        None if !warmup.promote => (judgment(Verdict::PromotionHeld), Some(cap)),
         None if replies > 0 && replies.saturating_mul(2) >= cap => {
             let next = warmup.ladder.iter().find(|rung| **rung > cap).copied();
             (judgment(Verdict::Raised), next)
@@ -482,5 +491,80 @@ mod tests {
         assert!(caps.sites.is_empty(), "{:?}", caps.sites);
         assert!(!caps.any(), "done");
         assert!(judge(&policy, &rules, DAY + 1, &[]).is_empty());
+    }
+    #[test]
+    fn a_provider_promotion_hold_survives_clean_days_and_still_lowers_on_bad_signals() {
+        let mut policy = Policy::default();
+        let id = egress(&mut policy, 10, "203.0.113.1", Some(500));
+        let override_entry = engine_rules::Entry {
+            warmup: Some(engine_rules::WarmupEntry {
+                promote: Some(false),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let rules = Rules::new(&BTreeMap::from([("Google".to_owned(), override_entry)])).unwrap();
+        let site = |name: &str, counts| (id, Arc::<str>::from(name), counts);
+        // Even a small sample gets its own held cap, rather than pooling
+        // into an automatic increase from other sites' traffic.
+        let counts = [site("Google", delivered(10)), site("Yahoo", delivered(500))];
+        let changes = judge(&policy, &rules, DAY, &counts);
+        let caps = applied(&mut policy, changes, id);
+        assert_eq!(caps.at("Google"), Some(500));
+        assert_eq!(caps.at("Yahoo"), Some(1000));
+        assert_eq!(
+            caps.warmed.unwrap().sites["Google"].verdict,
+            Verdict::PromotionHeld
+        );
+        let counts = [site("Google", delivered(500))];
+        let changes = judge(&policy, &rules, DAY + 1, &counts);
+        assert_eq!(applied(&mut policy, changes, id).at("Google"), Some(500));
+        let counts = [site(
+            "Google",
+            Counts {
+                delivered: 500,
+                complained: 5,
+                ..Counts::default()
+            },
+        )];
+        let changes = judge(&policy, &rules, DAY + 2, &counts);
+        assert_eq!(applied(&mut policy, changes, id).at("Google"), Some(200));
+        // Explicitly re-enable promotion; the existing cap becomes the
+        // starting point, without resetting progress or adding new state.
+        let changes = judge(
+            &policy,
+            &self::rules(),
+            DAY + 3,
+            &[site("Google", delivered(200))],
+        );
+        assert_eq!(applied(&mut policy, changes, id).at("Google"), Some(500));
+    }
+
+    #[test]
+    fn an_idle_held_provider_does_not_inherit_the_pools_increase() {
+        let mut policy = Policy::default();
+        let id = egress(&mut policy, 10, "203.0.113.1", Some(500));
+        let rules = Rules::new(&BTreeMap::from([(
+            "Google".to_owned(),
+            engine_rules::Entry {
+                warmup: Some(engine_rules::WarmupEntry {
+                    promote: Some(false),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        )]))
+        .unwrap();
+        let counts: Vec<_> = (0..5)
+            .map(|n| (id, Arc::<str>::from(format!("mx{n}.test")), delivered(50)))
+            .collect();
+        let changes = judge(&policy, &rules, DAY, &counts);
+        let caps = applied(&mut policy, changes, id);
+        assert_eq!(caps.daily, Some(1000), "small sites promote the pool");
+        assert_eq!(caps.at("Google"), Some(500), "the idle provider stays held");
+        assert_eq!(
+            caps.warmed.unwrap().sites["Google"].verdict,
+            Verdict::PromotionHeld
+        );
     }
 }

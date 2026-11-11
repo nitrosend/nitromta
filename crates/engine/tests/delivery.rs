@@ -409,3 +409,39 @@ fn at_debug_a_message_its_deliveries_and_their_attempts_each_have_a_line() {
         }) && metrics.contains("nitromta_queue_oldest_seconds 0\n")
     });
 }
+
+#[test]
+fn unsupported_eight_bit_content_bounces_without_suppressing_its_recipient() {
+    let (receiver, mut engine) = start_scripted(
+        "eight-bit",
+        "",
+        Script {
+            eight_bit_mime: false,
+            ..Script::default()
+        },
+    );
+    let mut session = engine.session();
+    session.send("MAIL FROM:<app@sender.test> BODY=8BITMIME", 250);
+    session.send("RCPT TO:<one@plain.test>", 250);
+    session.send("DATA", 354);
+    let accepted = session.send("From: app@sender.test\r\nTo: one@plain.test\r\nSubject: utf8\r\nContent-Transfer-Encoding: 8bit\r\n\r\ncafé\r\n.",250);
+    let id = accepted.split_ascii_whitespace().last().unwrap();
+    wait_for("the local transport rejection", || {
+        engine.explain(id)[0]["completion"] == "rejected"
+    });
+    assert_eq!(
+        receiver.asked("one@plain.test"),
+        0,
+        "no envelope reached the receiver"
+    );
+    assert!(receiver.delivered().is_empty());
+    let next = engine.submit(&["one@plain.test"]);
+    wait_for("the 7-bit delivery", || {
+        engine.explain(&next[0])[0]["completion"] == "delivered"
+    });
+    assert_eq!(
+        receiver.delivered(),
+        ["one@plain.test"],
+        "the transport mismatch did not suppress the recipient"
+    );
+}

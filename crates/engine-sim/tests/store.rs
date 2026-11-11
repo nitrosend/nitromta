@@ -2308,6 +2308,10 @@ fn warmup_counts_what_receivers_said_at_a_capped_egress_and_a_complaint_where_it
         &[("a@example.com", false, ""), ("c@example.com", false, "")],
         9,
     );
+    let complaint = Report {
+        authenticated: true,
+        ..complaint
+    };
     for report in [simulated, complaint] {
         let recorded = harness.one(Command::RecordFeedback(report), later(10));
         assert!(
@@ -2387,6 +2391,10 @@ fn warmup_counts_what_receivers_said_at_a_capped_egress_and_a_complaint_where_it
         &[("a@example.com", false, "")],
         10,
     );
+    let again = Report {
+        authenticated: true,
+        ..again
+    };
     let recorded = harness.one(Command::RecordFeedback(again), later(10));
     assert!(
         matches!(recorded, Answer::Feedback(Commit::Committed(_))),
@@ -3278,6 +3286,10 @@ fn a_report_proves_only_what_its_message_and_recipients_support() {
         ],
         1,
     );
+    let bounce = Report {
+        authenticated: true,
+        ..bounce
+    };
     let first = recorded(harness.one(Command::RecordFeedback(bounce.clone()), later(10)));
     assert_eq!(
         (first.duplicate, first.deliveries, first.suppressed),
@@ -3602,6 +3614,10 @@ fn the_same_report_again_has_only_the_effects_it_had_not_had() {
         &[("a@example.com", true, "5.2.2")],
         7,
     );
+    let first = Report {
+        authenticated: true,
+        ..first
+    };
     let recorded = |harness: &mut Harness<'_>, report: Report| match harness
         .one(Command::RecordFeedback(report), later(10))
     {
@@ -3720,6 +3736,10 @@ fn a_report_finds_its_messages_deliveries_whatever_another_lane_issued_among_the
         &[("r599@example.com", true, "5.1.1")],
         8,
     );
+    let last = Report {
+        authenticated: true,
+        ..last
+    };
     match harness.one(Command::RecordFeedback(last), later(10)) {
         Answer::Feedback(Commit::Committed(recorded)) => {
             assert_eq!((recorded.deliveries, recorded.suppressed), (1, 1));
@@ -3778,6 +3798,10 @@ fn a_report_finds_the_deliveries_retention_left_however_many_it_took_before_them
         &[("r599@example.com", true, "5.1.1")],
         10,
     );
+    let late = Report {
+        authenticated: true,
+        ..late
+    };
     match harness.one(Command::RecordFeedback(late), later(71)) {
         Answer::Feedback(Commit::Committed(recorded)) => assert_eq!(recorded.deliveries, 1),
         other => panic!("expected the report recorded, got {other:?}"),
@@ -3814,6 +3838,28 @@ fn a_recipientless_report_is_about_a_message_of_one_recipient_not_one_left() {
     );
     match harness.one(Command::RecordFeedback(complaint), later(71)) {
         Answer::Feedback(Commit::Committed(recorded)) => assert_eq!(recorded.deliveries, 0),
+        other => panic!("expected the report recorded, got {other:?}"),
+    }
+    assert!(
+        !harness
+            .store()
+            .is_suppressed(account, &Address::parse("b@example.com").unwrap())
+            .unwrap()
+    );
+    // Naming the remaining recipient does not make a shared token private
+    // after retention: the original recipient count still governs effects.
+    let named = report(
+        &mut harness,
+        Some(message),
+        Kind::Feedback("abuse".to_owned()),
+        &[("b@example.com", false, "")],
+        12,
+    );
+    match harness.one(Command::RecordFeedback(named), later(71)) {
+        Answer::Feedback(Commit::Committed(recorded)) => {
+            assert_eq!((recorded.deliveries, recorded.suppressed), (1, 0));
+            assert!(recorded.effects.is_empty());
+        }
         other => panic!("expected the report recorded, got {other:?}"),
     }
     assert!(

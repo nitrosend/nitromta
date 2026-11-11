@@ -280,3 +280,75 @@ fn a_redacted_complaint_finds_its_mail_by_the_header_it_kept() {
     assert!(suppressed(), "the field names its message");
     assert!(unmatched(), "still only the first");
 }
+
+#[test]
+fn a_shared_token_cannot_suppress_without_an_authenticated_reporter() {
+    let dns = Dns::start(&[("plain.test", "mx.plain.test")]);
+    let receiver = Receiver::start(Script::default());
+    let sections = format!(
+        "{SES}\n\n[capture]\ndirectory = \"capture\"\n\n[feedback]\nlisten = \"127.0.0.1:0\"\nhostname = \"mx.bounces.test\"\ncertificate = \"tls.crt\"\nkey = \"tls.key\"\nloops = [\"fbl@mx.bounces.test\"]\nreporters = [\"reporter.test\"]"
+    );
+    let mut engine = Engine::start("shared-token", &dns, &receiver, "dane = false", &sections);
+    let ses = engine.ses_permitted(&["send", "manage"]);
+    let feedback = engine
+        .listening("taking bounce and complaint reports")
+        .unwrap();
+    engine.admin(&[json!({"op":"put_identity", "account":1, "name":"brand.test"})]);
+    let body = json!({
+        "FromEmailAddress":"news@brand.test",
+        "Destination":{"ToAddresses":["one@plain.test", "attacker@plain.test"]},
+        "Content":{"Simple":{"Subject":{"Data":"shared"},"Body":{"Text":{"Data":"hello"}}}}
+    });
+    let sent = ses.send("POST", "/v2/email/outbound-emails", "", &body.to_string());
+    assert_eq!(sent.status, 200, "{}", sent.body);
+    let directory = engine.dir.join("capture");
+    let captures = || -> Vec<Value> {
+        std::fs::read_dir(&directory)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter(|e| e.file_name().to_string_lossy().ends_with(".json"))
+            .filter_map(|e| serde_json::from_slice(&std::fs::read(e.path()).ok()?).ok())
+            .collect()
+    };
+    wait_for("the capture", || !captures().is_empty());
+    let envelopes = captures();
+    let return_path = envelopes[0]["from"].as_str().unwrap();
+    let suppressed = |address: &str| {
+        ses.send(
+            "GET",
+            &format!("/v2/email/suppression/addresses/{address}%40plain.test"),
+            "",
+            "",
+        )
+        .status
+            == 200
+    };
+    assert!(!suppressed("one"));
+    assert!(!suppressed("attacker"));
+    // This unsigned report knows the token visible to every recipient of
+    // this message and names the other, visible To recipient.
+    let (header, body) = complaint("reporter.test", "shared", return_path);
+    let reply = report(
+        feedback,
+        "fbl@mx.bounces.test",
+        &format!("{header}\r\n{body}"),
+    );
+    assert!(reply.starts_with("250"), "{reply}");
+    assert!(
+        !suppressed("one"),
+        "correlation alone cannot suppress another recipient"
+    );
+    let (enrolled, record) = signer("reporter.test");
+    dns.txt("s1._domainkey.reporter.test", &record);
+    let signature =
+        String::from_utf8(enrolled.sign(header.as_bytes(), body.as_bytes()).unwrap()).unwrap();
+    let signed = format!("{signature}{header}\r\n{body}");
+    let answer = report(feedback, "fbl@mx.bounces.test", &signed);
+    assert!(answer.starts_with("250"), "{answer}");
+    assert!(
+        suppressed("one"),
+        "an authenticated copy still applies after an unsigned copy"
+    );
+    assert!(!suppressed("attacker"));
+}

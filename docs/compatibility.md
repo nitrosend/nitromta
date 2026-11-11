@@ -108,8 +108,12 @@ identity says.
 status notifications (RFC 3464) and complaint reports (RFC 5965), matched
 to the mail they are about by its return path, or the same token in its
 `X-NitroMTA-Report` header, for a report that has lost it. By default a report
-that matches the engine's own mail suppresses its recipient and counts toward
-its IP's warmup; with `[feedback] trusted = "authenticated"`, only one
+that matches a message originally sent to one recipient may suppress that
+recipient and count toward its IP's warmup. A message sent to several
+recipients shares its correlation token, so an external report about it
+must be authenticated before it may suppress or count. An unsigned report
+is still recorded as an event, and a later authenticated copy applies its
+effects once. With `[feedback] trusted = "authenticated"`, only one
 whose DKIM signature verifies for a reporter enrolled in
 `[feedback] reporters` does, and any other is recorded as an event alone.
 [Deliverability](deliverability.md#receiving-complaint-reports) says how to
@@ -146,9 +150,11 @@ JavaScript, `boto3` and django-ses in Python, and `aws-sdk-sesv2` in Ruby.
   `TrackingOptions` is refused, and there are no `Open` or `Click` events.
 - **No request is made idempotent.** As with SES, a `SendEmail` retried
   after its answer was lost sends a second message.
-- **8BITMIME is not negotiated on delivery.** Content is sent as it was
-  submitted, so a message with 8-bit content should be submitted with a
-  transfer encoding.
+- **8BITMIME is negotiated on delivery.** Content is sent unchanged, with
+  `BODY=8BITMIME` when the receiver offers it. If the receiver does not,
+  7-bit content still sends; 8-bit content fails permanently with a local
+  `5.6.3` diagnostic, without suppressing the recipient. Submit raw content
+  with a 7-bit-safe transfer encoding to reach those receivers too.
 - **One host.** The engine runs on one host, with its store on that host's
   disk. There are no regions; `[ses] region` is the one it signs and
   answers as.

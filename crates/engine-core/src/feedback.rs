@@ -6,8 +6,9 @@
 //! count only when they are that message's own. Even then a report is
 //! strongly correlated, not authenticated, unless a reporter the operator
 //! enrolled with signed it. The operator names the least of those classes
-//! whose reports may suppress and count; a report below it is
-//! recorded, and changes nothing else.
+//! whose reports may suppress and count. A message token shared by several
+//! recipients cannot authorize an unsigned report against any one of them:
+//! such a report is recorded, but only an authenticated copy may apply effects.
 
 use bytes::Bytes;
 
@@ -102,14 +103,22 @@ pub enum Effect {
 }
 
 impl Report {
+    /// Whether the report may apply effects within a correlation that names
+    /// `recipients` original recipients. An external report is correlated to
+    /// its whole message, even after retention removes some deliveries. A
+    /// transport's own report is already scoped to its single delivery.
+    pub fn trusts_recipients(&self, recipients: u32) -> bool {
+        self.trusted && (self.authenticated || recipients == 1)
+    }
+
     /// What it does to a delivery whose recipient `claim` names.
     /// A failure suppresses only when its status rules the address
     /// out; a complaint only when it reports abuse; and either
     /// only when the report is trusted. Fraud, virus and other reports are
     /// complaints without a suppression, and a `not-spam` or
     /// `auth-failure` report is not a complaint at all.
-    pub fn effect(&self, claim: &Claim) -> Effect {
-        let suppresses = self.trusted && !self.simulated;
+    pub fn effect(&self, claim: &Claim, recipients: u32) -> Effect {
+        let suppresses = self.trusts_recipients(recipients) && !self.simulated;
         match &self.kind {
             Kind::DeliveryStatus if claim.failed => Effect::Bounced {
                 suppress: claim.rules_out_address && suppresses,
@@ -160,21 +169,21 @@ mod tests {
     fn a_failure_suppresses_only_when_it_rules_the_address_out() {
         let bounce = report(Kind::DeliveryStatus);
         assert_eq!(
-            bounce.effect(&claim(true, true)),
+            bounce.effect(&claim(true, true), 1),
             Effect::Bounced { suppress: true }
         );
         assert_eq!(
-            bounce.effect(&claim(true, false)),
+            bounce.effect(&claim(true, false), 1),
             Effect::Bounced { suppress: false }
         );
         // A delay, or a relay's notice, is no bounce.
-        assert_eq!(bounce.effect(&claim(false, false)), Effect::None);
+        assert_eq!(bounce.effect(&claim(false, false), 1), Effect::None);
     }
 
     #[test]
     fn only_a_complaint_of_abuse_suppresses() {
         let of = |feedback_type: &str| {
-            report(Kind::Feedback(feedback_type.to_owned())).effect(&claim(false, false))
+            report(Kind::Feedback(feedback_type.to_owned())).effect(&claim(false, false), 1)
         };
         assert_eq!(of("abuse"), Effect::Complained { suppress: true });
         for complaint in ["fraud", "virus", "other"] {
@@ -184,7 +193,7 @@ mod tests {
             assert_eq!(of(not_one), Effect::None);
         }
         assert_eq!(
-            report(Kind::Unrecognised).effect(&claim(true, true)),
+            report(Kind::Unrecognised).effect(&claim(true, true), 1),
             Effect::None
         );
     }
@@ -196,12 +205,30 @@ mod tests {
             ..report(kind)
         };
         assert_eq!(
-            untrusted(Kind::DeliveryStatus).effect(&claim(true, true)),
+            untrusted(Kind::DeliveryStatus).effect(&claim(true, true), 1),
             Effect::Bounced { suppress: false }
         );
         assert_eq!(
-            untrusted(Kind::Feedback("abuse".to_owned())).effect(&claim(false, false)),
+            untrusted(Kind::Feedback("abuse".to_owned())).effect(&claim(false, false), 1),
             Effect::Complained { suppress: false }
         );
+    }
+    #[test]
+    fn a_shared_token_needs_an_authenticated_reporter_for_effects() {
+        for kind in [Kind::DeliveryStatus, Kind::Feedback("abuse".to_owned())] {
+            let mut report = report(kind);
+            assert!(report.trusts_recipients(1));
+            assert!(!report.trusts_recipients(0));
+            assert!(!report.trusts_recipients(2));
+            assert!(matches!(
+                report.effect(&claim(true, true), 2),
+                Effect::Bounced { suppress: false } | Effect::Complained { suppress: false }
+            ));
+            report.authenticated = true;
+            assert!(report.trusts_recipients(2));
+            report.trusted = false;
+            assert!(!report.trusts_recipients(1));
+            assert!(!report.trusts_recipients(2));
+        }
     }
 }

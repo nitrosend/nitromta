@@ -882,7 +882,7 @@ fn unpack_counts(packed: &[u8]) -> Result<Counts, CodecError> {
 }
 
 /// A judgment as its counts, then its verdict, 0 raised, 1 untested, 2
-/// held, 3 lowered, 4 set by an operator since, and the signal that held or
+/// held, 3 lowered, 4 set by an operator since, 5 promotion held, and the signal that held or
 /// lowered it, 0 deliveries, 1 deferrals, 2 throttles, 3 failures, 4
 /// complaints, in a byte each.
 fn pack_judgment(packed: &mut Vec<u8>, judgment: &Judgment) {
@@ -900,6 +900,7 @@ fn pack_judgment(packed: &mut Vec<u8>, judgment: &Judgment) {
         Verdict::Held(by) => (2, signal(by)),
         Verdict::Lowered(by) => (3, signal(by)),
         Verdict::Set => (4, 0),
+        Verdict::PromotionHeld => (5, 0),
     };
     packed.extend_from_slice(&[verdict, by]);
 }
@@ -923,6 +924,7 @@ fn unpack_judgment(packed: &mut &[u8]) -> Result<Judgment, CodecError> {
         2 => Verdict::Held(signal),
         3 => Verdict::Lowered(signal),
         4 => Verdict::Set,
+        5 => Verdict::PromotionHeld,
         _ => return Err(invalid()),
     };
     Ok(Judgment {
@@ -2846,6 +2848,25 @@ mod tests {
                 limits: Limits::default(),
                 tags: Vec::new(),
                 created: Some(NOW),
+            }),
+            Record::Egress(Egress {
+                id: EgressId(ids.next(NOW)),
+                account,
+                address: "203.0.113.9".parse().unwrap(),
+                helo: "held.example.test".to_owned(),
+                pool: None,
+                caps: Caps {
+                    daily: Some(500),
+                    warmed: Some(Warmed {
+                        day: 20_391,
+                        pool: Judgment {
+                            counts: Counts::default(),
+                            verdict: Verdict::PromotionHeld,
+                        },
+                        sites: BTreeMap::new(),
+                    }),
+                    ..Caps::default()
+                },
             }),
         ];
         let keys = Keyring::new(&[(1, [7; 32])]).unwrap();

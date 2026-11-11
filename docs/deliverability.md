@@ -132,9 +132,20 @@ echo '{"op":"put_cap","account":1,"address":"203.0.113.10","site":"Google","dail
   sudo -u nitromta nitromta admin --config /etc/nitromta/config.toml
 ```
 
-The engine cannot see what Postmaster Tools shows, so a clean day raises the
-cap again. Set it again each day until the rate falls, by hand or from a script
-of your own.
+The engine cannot see what Postmaster Tools shows. To keep clean SMTP replies
+from raising the cap while you investigate, disable promotion for this provider
+in the configuration and restart the engine:
+
+```toml
+[receivers.Google.warmup]
+promote = false
+```
+
+This holds automatic increases for Google on every sending IP. Mail continues
+under each IP's current cap, and adverse signals can still lower it. Other
+providers keep their own promotion settings. `nitromta list` shows the hold;
+set `promote = true` and restart when you want clean days to raise caps again.
+The default is `true`, inherited from `[receivers.defaults.warmup]`.
 
 ### Outlook.com and Hotmail
 
@@ -199,7 +210,11 @@ in the metrics after your first few. `reports_unmatched_total` counts the
 reports that found none of your deliveries, and a provider whose reports raise
 it is not reaching suppression, events or warmup.
 
-By default any report that finds its mail counts. To count only reports signed
+By default an unsigned report may count only for a message originally sent to
+one recipient. Reports for messages sent to several recipients must be signed
+by an enrolled reporter before they suppress or count: every recipient shares
+the message token. Other reports are kept as events, and a later authenticated
+copy can still apply its effects. To count only reports signed
 by providers you enrolled with, see
 [`[feedback] trusted`](compatibility.md#smtp).
 
@@ -211,6 +226,7 @@ replaces the one below it and leaves the rest:
 
 | Field | What it sets |
 |---|---|
+| `promote` | Whether clean days may raise caps; `false` keeps reductions but holds increases |
 | `ladder` | The daily caps, each above the one before |
 | `sample` | The replies in a day that give a receiver a cap of its own, if fewer than half its cap |
 | `complaints`, `failures`, `deferrals`, `throttles` | `[hold, lower]`, in basis points, where 100 is 1% and a hold of 0 means any |

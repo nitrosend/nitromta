@@ -387,6 +387,8 @@ pub enum Verdict {
     Lowered(Signal),
     /// Set by an operator since, in place of what the judgment made it.
     Set,
+    /// A receiver rule disables promotion; adverse signals may still lower it.
+    PromotionHeld,
 }
 
 /// One egress's caps, in place of `from`, the caps the change was decided

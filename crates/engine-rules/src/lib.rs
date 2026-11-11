@@ -49,6 +49,8 @@ pub struct Entry {
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct WarmupEntry {
+    /// Whether clean days may raise caps. False keeps automatic reductions.
+    pub promote: Option<bool>,
     /// Daily caps, rung by rung, each above the one before.
     pub ladder: Option<Vec<u64>>,
     /// The fewest replies in a day that judge a site on its own.
@@ -64,6 +66,7 @@ pub struct WarmupEntry {
 /// Warmup's ladder and thresholds at a site.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Warmup {
+    pub promote: bool,
     pub ladder: Arc<[u64]>,
     pub sample: u64,
     /// Of deliveries.
@@ -401,6 +404,13 @@ impl Rules {
             .map_or(&self.defaults.warmup, |provider| &provider.shaping.warmup)
     }
 
+    /// Each named provider's warmup, including one with no traffic yet.
+    pub fn provider_warmups(&self) -> impl Iterator<Item = (&Arc<str>, &Warmup)> {
+        self.providers
+            .iter()
+            .map(|provider| (&provider.name, &provider.shaping.warmup))
+    }
+
     /// The defaults' warmup, which an egress's own cap climbs and the sites
     /// pooled under it are judged by.
     pub fn default_warmup(&self) -> &Warmup {
@@ -557,6 +567,9 @@ fn merge(base: &mut Entry, entry: &Entry) {
     }
     if let Some(warmup) = &entry.warmup {
         let into = base.warmup.get_or_insert_with(WarmupEntry::default);
+        if let Some(promote) = warmup.promote {
+            into.promote = Some(promote);
+        }
         let fields = [
             (&mut into.complaints, warmup.complaints),
             (&mut into.failures, warmup.failures),
@@ -614,6 +627,10 @@ fn warmup(owner: &str, entry: &WarmupEntry, base: Option<&Warmup>) -> Result<War
         Ok(threshold)
     };
     Ok(Warmup {
+        promote: entry
+            .promote
+            .or(base.map(|base| base.promote))
+            .unwrap_or(true),
         ladder,
         sample,
         complaints: threshold(
@@ -786,8 +803,10 @@ mod tests {
             r#"
             [defaults.warmup]
             sample = 40
+            promote = false
 
             [Outlook.warmup]
+            promote = true
             ladder = [20, 60, 180]
             throttles = [50, 200]
             "#,
@@ -796,7 +815,11 @@ mod tests {
         let overridden = Rules::new(&overrides).unwrap();
         let defaults = overridden.default_warmup();
         assert_eq!((defaults.sample, &defaults.ladder), (40, &shipped.ladder));
+        assert!(shipped.promote);
+        assert!(!defaults.promote);
+        assert!(!overridden.warmup_of("Google").promote);
         let outlook = overridden.warmup_of("Outlook");
+        assert!(outlook.promote);
         assert_eq!(&*outlook.ladder, &[20, 60, 180]);
         assert_eq!(
             outlook.throttles,

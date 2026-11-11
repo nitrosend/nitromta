@@ -1,10 +1,11 @@
-# The one gate, as contributors run it: `cargo xtask check`.
+# The Rust gate and SDK matrix, also required at the exact release tag.
 name: check
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
@@ -26,3 +27,12 @@ jobs:
       - name: Install cargo-deny
         run: cargo install --locked cargo-deny
       - run: cargo xtask check
+      - name: Install the SDK matrix's runtimes and pinned Bundler
+        run: |
+          sudo apt-get update && sudo apt-get install -y ruby-dev python3-venv
+          node -e 'if (Number(process.versions.node.split(".")[0]) < 20) process.exit(1)'
+          bundler=$(awk '/^BUNDLED WITH$/ { getline; print $1 }' sdk/ruby/Gemfile.lock)
+          test -n "$bundler"
+          gem install --user-install --no-document bundler --version "$bundler"
+          ruby -e 'puts "#{Gem.user_dir}/bin"' >> "$GITHUB_PATH"
+      - run: cargo xtask sdk

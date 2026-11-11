@@ -233,6 +233,7 @@ pub(crate) fn judged(day: u64, judgment: &Judgment) -> Judged {
         Verdict::Held(by) => ("held", Some(signal(by))),
         Verdict::Lowered(by) => ("lowered", Some(signal(by))),
         Verdict::Set => ("set by the operator", None),
+        Verdict::PromotionHeld => ("promotion held by the operator", None),
     };
     let counts = judgment.counts;
     Judged {

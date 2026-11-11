@@ -13,7 +13,8 @@ engine. Each is pinned with every dependency it needs:
 `crates/engine/tests/sdk.rs`, which starts the engine's binary with the SES API
 on and capture mode, gives each script a key that may send and manage, and
 judges what it prints. It needs Node, Python 3 and Ruby with Bundler; the gate
-does not run it.
+does not run it. CI runs both commands, and a release builds only after
+both pass at its exact tag.
 
 ## The scenario
 

@@ -323,7 +323,7 @@ impl StoreOptions {
 
 /// The tenant whose message a report is about, and the deliveries it is
 /// about, each with its claim.
-type About = (Option<TenantId>, Vec<(Delivery, Claim)>);
+type About = (Option<TenantId>, u32, Vec<(Delivery, Claim)>);
 
 /// The tables holding personal data, as a key's scan reads them, in turn.
 const SEALED: [&str; 7] = [
@@ -2708,7 +2708,8 @@ impl<C: Borrow<Connection>> Store<C> {
         // message that had one when it names none.
         // A report about a tenant's message is that tenant's,
         // whatever recipients it names.
-        let (tenant, about) = self.about(report, only)?;
+        let (tenant, recipients, about) = self.about(report, only)?;
+        let trusted = report.trusts_recipients(recipients);
         let tenant = self.sealed_as(tenant);
         let db = self.db();
         let kept: Option<i64> = db
@@ -2768,7 +2769,7 @@ impl<C: Borrow<Connection>> Store<C> {
         // Whether this copy, after one kept before, applied any effect.
         let mut replaces = false;
         for (delivery, claim) in &about {
-            let effect = report.effect(claim);
+            let effect = report.effect(claim, recipients);
             if effect == Effect::None {
                 continue;
             }
@@ -2782,10 +2783,10 @@ impl<C: Borrow<Connection>> Store<C> {
                     "INSERT OR IGNORE INTO feedback_effects (delivery, report, trusted)
                      VALUES (?1, ?2, ?3)",
                 )?
-                .execute((key(delivery.id().0), &report.identity[..], report.trusted))?;
+                .execute((key(delivery.id().0), &report.identity[..], trusted))?;
             let applies = if first == 1 {
-                report.trusted
-            } else if report.trusted {
+                trusted
+            } else if trusted {
                 let promoted = self
                     .db()
                     .prepare_cached(
@@ -2900,7 +2901,7 @@ impl<C: Borrow<Connection>> Store<C> {
             .transpose()?
             .flatten()
         else {
-            return Ok((None, Vec::new()));
+            return Ok((None, 0, Vec::new()));
         };
         let mut deliveries = self.deliveries_of(&message)?;
         if let Some(only) = only {
@@ -2925,7 +2926,12 @@ impl<C: Borrow<Connection>> Store<C> {
                 Some((delivery, claim))
             })
             .collect();
-        Ok((message.origin.tenant, about))
+        let recipients = if only.is_some() {
+            1
+        } else {
+            message.recipients
+        };
+        Ok((message.origin.tenant, recipients, about))
     }
 
     /// A delivery, or a message's deliveries, as they stand.

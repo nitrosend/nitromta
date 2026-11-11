@@ -16,7 +16,11 @@ permissions:
   contents: read
 
 jobs:
+  check:
+    uses: ./.github/workflows/check.yml
+
   build:
+    needs: check
     strategy:
       matrix:
         include:
@@ -79,6 +83,7 @@ jobs:
             nitromta*.rpm
 
   macos:
+    needs: check
     runs-on: macos-15
     permissions:
       contents: read
@@ -191,7 +196,7 @@ jobs:
           mkdir -p tap/Formula && cp channels/homebrew/nitromta.rb tap/Formula/nitromta.rb
           git -C tap add Formula/nitromta.rb
           git -C tap -c user.name=auscaster -c user.email=hi@auscaster.com diff --cached --quiet || \
-            { git -C tap -c user.name=auscaster -c user.email=hi@auscaster.com commit -q -m "nitromta ${GITHUB_REF_NAME#v}"; git -C tap push -q; }
+            { git -C tap -c user.name=auscaster -c user.email=hi@auscaster.com commit -q -m "chore(nitromta): release ${GITHUB_REF_NAME#v}"; git -C tap push -q; }
       - name: Publish nitromta-bin to the AUR
         env:
           KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}

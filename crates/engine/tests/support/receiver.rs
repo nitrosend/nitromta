@@ -45,6 +45,8 @@ impl Connection {
 
 /// How the receiver answers.
 pub struct Script {
+    /// Whether EHLO offers the 8-bit MIME transport extension.
+    pub eight_bit_mime: bool,
     /// The reply to MAIL for each sender.
     pub mail: fn(&str) -> &'static str,
     /// The reply to RCPT for each recipient.
@@ -61,6 +63,7 @@ impl Default for Script {
     /// Every recipient taken, at once.
     fn default() -> Self {
         Self {
+            eight_bit_mime: true,
             mail: |_| "250 2.1.0 Ok",
             rcpt: |_| "250 2.1.5 Ok",
             content_delay: Duration::ZERO,
@@ -216,16 +219,17 @@ fn converse<S: Read + Write>(
             .unwrap_or_default()
             .to_ascii_uppercase();
         match verb.as_str() {
-            "EHLO" | "HELO" if offer_tls => {
-                say(
-                    reader.get_mut(),
-                    "250-receiver.test\r\n250-PIPELINING\r\n250-STARTTLS\r\n250 8BITMIME",
-                )?;
+            "EHLO" | "HELO" => {
+                let mut response = String::from("250-receiver.test\r\n");
+                if offer_tls {
+                    response.push_str("250-STARTTLS\r\n");
+                }
+                if script.eight_bit_mime {
+                    response.push_str("250-8BITMIME\r\n");
+                }
+                response.push_str("250 PIPELINING");
+                say(reader.get_mut(), &response)?;
             }
-            "EHLO" | "HELO" => say(
-                reader.get_mut(),
-                "250-receiver.test\r\n250-PIPELINING\r\n250 8BITMIME",
-            )?,
             "STARTTLS" if offer_tls => {
                 say(reader.get_mut(), "220 2.0.0 ready")?;
                 return Ok(true);

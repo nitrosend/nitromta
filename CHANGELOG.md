@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.3.0 - 2026-11-11
+
+### Fixed
+
+- A drained backlog no longer refuses new mail when the store has reusable
+  pages. Disk admission and `doctor` count that space while reserving room
+  for the write-ahead log. `store_reusable_bytes` exposes it.
+- A disk too full to check the store reports that the check could not finish
+  instead of calling the store damaged and recommending a backup restore.
+- Unsigned external feedback for a message sent to several recipients no
+  longer suppresses or counts against any of them. An authenticated copy can
+  still apply its effects once; reports for one-recipient messages and a
+  transport's own delivery-scoped reports keep their existing behaviour.
+- Outbound SMTP negotiates 8BITMIME. A receiver without it still takes 7-bit
+  mail; 8-bit content fails locally before MAIL, without suppressing an
+  address or counting the failure as the receiver's reputation signal.
+- Release builds require the Rust gate and the official SDK matrix to pass
+  at the release tag. The README capture example includes identity setup,
+  credentials and certificate trust.
+
+### Added
+
+- `[receivers.<Provider>.warmup] promote = false` holds automatic cap increases
+  for that provider while keeping automatic reductions. The hold is visible
+  in `nitromta list`; other providers continue warming independently.
+
 ## 0.2.2 - 2026-11-06
 
 ### Added

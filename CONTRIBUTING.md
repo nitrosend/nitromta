@@ -4,10 +4,11 @@ Thank you for helping. Issues and pull requests are welcome on GitHub.
 
 ## Before you open a pull request
 
-Run the gate, which CI runs too:
+Run the Rust gate and SDK matrix, which CI and releases require:
 
 ```sh
 cargo xtask check
+cargo xtask sdk
 ```
 
 [The gate](#the-gate), below, says what it checks and what it needs. A
@@ -30,8 +31,8 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 ## The gate
 
-`cargo xtask check` is the one gate. Contributors run it locally, CI runs the
-same command, and it stops at the first failure:
+`cargo xtask check` runs the Rust gate. Contributors and CI run the same
+command, and it stops at the first failure:
 
 1. **structure:** the repository matches `architecture.toml`, which declares
    every crate, what each owns and must not own, and its dependencies;
@@ -49,6 +50,9 @@ It needs rustup, which installs the toolchain `rust-toolchain.toml` names,
 cargo-deny (`cargo install --locked cargo-deny`), and libclang, with which the
 simulator's tests build SQLite's preupdate hook (Xcode's command line tools
 on macOS, `libclang-dev` on Debian).
+
+`cargo xtask sdk` separately runs the pinned [SDK matrix](sdk/README.md).
+CI requires both commands, including at the exact tag before a release builds.
 
 The engine's core is deterministic: its state machines receive time,
 randomness and I/O results from their driver, so the same code runs under

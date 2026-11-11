@@ -114,6 +114,10 @@ pub enum Output<T> {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Outcome {
     Delivered(Reply),
+    /// The content needs 8BITMIME, which this receiver did not advertise.
+    /// A permanent local failure (RFC 6152, section 3), before MAIL; the
+    /// content is never rewritten, so an existing signature stays intact.
+    NoEightBitMime,
     /// Refused permanently (5xx): the sender, the recipient or the message.
     Rejected(Reply),
     /// Refused for now (4xx).
@@ -175,6 +179,7 @@ pub struct Session<T> {
     input: Vec<u8>,
     tls: bool,
     pipelining: bool,
+    eight_bit_mime: bool,
     job: Option<Transaction<T>>,
     /// The envelope's commands, how many are sent, and their replies.
     envelope: Vec<Vec<u8>>,
@@ -206,6 +211,7 @@ impl<T> Session<T> {
             input: Vec::new(),
             tls: false,
             pipelining: false,
+            eight_bit_mime: false,
             job: None,
             envelope: Vec::new(),
             sent: 0,
@@ -350,6 +356,7 @@ impl<T> Session<T> {
                     })
                 };
                 self.pipelining = has("PIPELINING");
+                self.eight_bit_mime = has("8BITMIME");
                 if self.phase == Phase::Ehlo && has("STARTTLS") {
                     Self::send(out, "STARTTLS\r\n");
                     self.expect(now, Phase::StartTls);
@@ -402,11 +409,24 @@ impl<T> Session<T> {
         let Some(job) = &self.job else {
             return;
         };
+        // 8BITMIME also carries 7-bit content. On a capable receiver no
+        // extra content scan is needed; the bytes remain shared. Only a
+        // receiver without it needs the vectorized ASCII check.
+        if !self.eight_bit_mime && (!job.header.is_ascii() || !job.content.is_ascii()) {
+            self.finish_rest(&Outcome::NoEightBitMime, now.wall, false, out);
+            self.job = None;
+            return;
+        }
         self.envelope = Vec::with_capacity(job.recipients.len() + 2);
         self.envelope.push(
             format!(
-                "MAIL FROM:<{}>\r\n",
-                job.sender.as_ref().map_or("", Address::as_str)
+                "MAIL FROM:<{}>{}\r\n",
+                job.sender.as_ref().map_or("", Address::as_str),
+                if self.eight_bit_mime {
+                    " BODY=8BITMIME"
+                } else {
+                    ""
+                },
             )
             .into_bytes(),
         );
@@ -617,10 +637,11 @@ impl<T> Component for Session<T> {
             self.lost(Failure::TimedOut, now.wall, out);
             return None;
         }
-        if self.phase == Phase::Idle {
-            if self.job.is_some() {
-                self.start(now, out);
-            } else if self.quit {
+        if self.phase == Phase::Idle && self.job.is_some() {
+            self.start(now, out);
+        }
+        if self.phase == Phase::Idle && self.job.is_none() {
+            if self.quit {
                 self.quit(now, out);
             } else if !self.ready_reported {
                 self.ready_reported = true;
@@ -1155,5 +1176,64 @@ mod tests {
             sent(&out),
             "[X-Token: t\r\n][Subject: x\r\n\r\nbody\r\n].\r\n"
         );
+    }
+    #[test]
+    fn eight_bit_content_needs_the_receivers_capability_and_never_loses_its_bytes() {
+        let content = b"Subject: x\r\n\r\ncaf\xc3\xa9\r\n";
+        let mut without = ready(true);
+        let out = step(&mut without, 2, Input::Deliver(job(content)));
+        assert!(matches!(
+            out.as_slice(),
+            [
+                Output::Finished {
+                    outcome: Outcome::NoEightBitMime,
+                    own: false,
+                    ..
+                },
+                Output::Ready
+            ]
+        ));
+        assert!(without.is_idle());
+        assert_eq!(sent(&out), "", "no MAIL or DATA is sent");
+        // The same connection can immediately carry ordinary 7-bit mail.
+        let out = step(&mut without, 3, Input::Deliver(job(b"ascii\r\n")));
+        assert!(sent(&out).starts_with("MAIL FROM:<s@a.test>\r\n"));
+
+        let mut session = Session::new(config(false));
+        reply(&mut session, "220 mx.test ESMTP\r\n");
+        reply(
+            &mut session,
+            "250-mx.test\r\n250-PIPELINING\r\n250 8bitmime\r\n",
+        );
+        let input = job(content);
+        let shared = input.content.clone();
+        let out = step(&mut session, 2, Input::Deliver(input));
+        assert!(sent(&out).starts_with("MAIL FROM:<s@a.test> BODY=8BITMIME\r\n"));
+        let out = reply(&mut session, "250 ok\r\n250 ok\r\n354 go\r\n");
+        assert!(
+            matches!(&out[0], Output::SendContent(bytes) if bytes.as_ptr() == shared.as_ptr() && bytes == &shared)
+        );
+    }
+
+    #[test]
+    fn eight_bit_mime_is_negotiated_again_after_starttls() {
+        let mut session = Session::new(config(true));
+        reply(&mut session, "220 mx.test ESMTP\r\n");
+        reply(
+            &mut session,
+            "250-mx.test\r\n250-8BITMIME\r\n250 STARTTLS\r\n",
+        );
+        reply(&mut session, "220 go\r\n");
+        step(&mut session, 1, Input::TlsStarted);
+        reply(&mut session, "250-mx.test\r\n250 PIPELINING\r\n");
+        let out = step(&mut session, 2, Input::Deliver(job(b"\xff\r\n")));
+        assert!(matches!(
+            &out[0],
+            Output::Finished {
+                outcome: Outcome::NoEightBitMime,
+                ..
+            }
+        ));
+        assert_eq!(sent(&out), "");
     }
 }

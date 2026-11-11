@@ -1346,6 +1346,12 @@ impl Inner {
                 }
                 (Some(evidence), verdict)
             }
+            None if matches!(outcome, Outcome::NoEightBitMime) => (
+                Some(Evidence::local(
+                    "5.6.3 The message needs 8BITMIME, which the receiver does not offer",
+                )),
+                None,
+            ),
             None => (None, None),
         };
         let throttles = verdict
@@ -1356,7 +1362,7 @@ impl Inner {
             result => result,
         };
         // Its reply, read at `at`, counts on that day.
-        let replied = evidence.is_some().then_some(at);
+        let replied = reply(outcome).map(|_| at);
         self.finished(permit, result, (evidence, verdict), replied);
         if throttles {
             connection.throttled = true;
@@ -1475,7 +1481,7 @@ fn attempted(outcome: &Outcome) -> Attempted {
     }
     match outcome {
         Outcome::Delivered(_) => Attempted::Delivered,
-        Outcome::Rejected(_) => Attempted::Rejected,
+        Outcome::Rejected(_) | Outcome::NoEightBitMime => Attempted::Rejected,
         Outcome::Deferred(_) => Attempted::Deferred,
         Outcome::NotSent(_) => Attempted::NotSent,
         Outcome::Uncertain => Attempted::Uncertain,
@@ -1503,7 +1509,7 @@ fn reply(outcome: &Outcome) -> Option<&Reply> {
         | Outcome::Rejected(reply)
         | Outcome::Deferred(reply)
         | Outcome::NotSent(Failure::Refused(reply)) => Some(reply),
-        Outcome::NotSent(_) | Outcome::Uncertain => None,
+        Outcome::NotSent(_) | Outcome::Uncertain | Outcome::NoEightBitMime => None,
     }
 }
 

@@ -879,7 +879,7 @@ impl<'vfs> Pipeline<'vfs> {
                 identity,
                 evidence: Bytes::from_static(b"Reporting-MTA: dns; mx.sim.test"),
                 received_at: now,
-                authenticated: false,
+                authenticated: true,
                 trusted: true,
                 simulated: false,
             };

@@ -39,6 +39,25 @@ configuration file the systems ran with, and each matches the file in
 [`master.cf`](../bench/harness/images/postfix/master.cf), and NitroMTA's
 [`config.toml`](../bench/harness/images/nitromta/config.toml).
 
+The recorded commit, `9dcfb620`, belongs to the pre-publication history.
+The measured source can be reconstructed from public commit
+[`906fcd5496e5717ef70bdf5a09817d3ac04cb623`](https://github.com/nitrosend/nitromta/tree/906fcd5496e5717ef70bdf5a09817d3ac04cb623)
+and [`2026-11-02-source.patch`](results/2026-11-02-source.patch). The patch
+restores the workspace's version strings and one test assertion; it changes
+no production or harness logic and no third-party dependency. All 710 files
+under `crates`, `bench`, `rules` and `models`, plus `Cargo.toml`, `Cargo.lock`
+and `rust-toolchain.toml`, were compared with the measured commit and match
+after applying it. To run that source, save the patch outside the checkout:
+
+```sh
+git checkout 906fcd5496e5717ef70bdf5a09817d3ac04cb623
+git apply /path/to/2026-11-02-source.patch
+cargo harness quick
+```
+
+The new result will correctly mark the checkout modified. The original raw
+result above is unchanged.
+
 ## What is measured
 
 Each system's highest sustained rate: the load is offered at a fixed rate,
@@ -48,6 +67,11 @@ is refused, at least 99% of the offered rate is accepted, the 99th
 percentile of submission is at most a second and of delivery at most two,
 and every message arrives once, signed and intact.
 
+This result uses the `quick` profile: each search step offers load for ten
+seconds, to one receiver site with no added network delay. It measures the
+rate meeting these latency budgets in that workload; the longer session
+includes multiple rates, drains and cooldowns.
+
 - **The mail:** 16 KiB messages to one recipient each, signed with an
   RSA-2048 DKIM key, submitted over SMTP with STARTTLS on 64 connections
   and delivered over TLS to a sink that checks every signature. NitroMTA
@@ -55,6 +79,12 @@ and every message arrives once, signed and intact.
 - **The promise:** every system commits a message to disk before it
   accepts it. KumoMTA is configured to sync its spool before replying, as
   NitroMTA and Postfix do.
+  KumoMTA uses its RocksDB spool with `set_force_sync(true)`. Its
+  [documentation](https://docs.kumomta.com/reference/message/set_force_sync/)
+  warns that this forces database-wide flushes and can substantially reduce
+  performance. The ratio above is for this synchronous-acceptance contract;
+  `cargo harness quick --systems kumomta-async` measures its default
+  asynchronous durability separately.
 - **The machine:** each system gets 4 CPUs and 2 GiB of memory; the load
   generator and sink get the rest. A CPU gauge (SHA-256 throughput) is
   taken with every run, and a session whose gauges differ by more than a
