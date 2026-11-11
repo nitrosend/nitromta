@@ -111,3 +111,32 @@ KumoMTA's in about eleven minutes; later runs reuse them.
 [`bench/harness/README.md`](../bench/harness/README.md) describes the other
 profiles: many domains with one throttled, receivers at a distance, the
 backlog, the SES API against KumoMTA's HTTP injection, and the crash tests.
+
+## 0.3.0 release comparison
+
+On 11 November 2026, release candidate
+[`48a4e1a`](https://github.com/nitrosend/nitromta/commit/48a4e1a7fd4c1e382f7e4a4a341241c6c40138ab)
+was compared with `v0.2.2` on an otherwise idle c7gd.metal server running
+Ubuntu 24.04, with Docker's data and the queues on local NVMe. Each engine
+had four CPU cores and 2 GiB of memory. Both used the same harness, profiles,
+TLS, DKIM and synchronous-acceptance contract. The harness labelled the
+physical host durable and recorded the image and configuration digests.
+
+The smoke profile offers 2,000 messages/s for 30 seconds over 1,000 domains,
+with a separate 20,000-recipient backlog. All six timed repetitions accepted
+and delivered 60,000 messages each with every correctness check and latency
+budget met. CPU, writes, queued memory and p99 latency remained within the
+observed repetition spread. The quick profile searches the highest rate
+meeting its budgets. Each profile was repeated three times per version.
+
+| Metric, median of three repetitions | 0.2.2 | 0.3.0 |
+|---|---:|---:|
+| Sustained messages/s (quick) | 3250.000 | 3250.000 |
+| CPU ms/message (smoke) | 1.326 | 1.330 |
+| KiB written/message (smoke) | 75.277 | 74.933 |
+| Submission p99 ms (smoke) | 4.435 | 4.387 |
+| Delivery p99 ms (smoke) | 2.275 | 2.266 |
+
+Quick-profile rates were 3250, 3250, 3250 messages/s for 0.2.2 and 3250, 3282, 3250 for 0.3.0. The comparison detected no performance regression.
+
+Raw results: [0.2.2 smoke](results/2026-11-11-0.2.2-smoke.json), [0.3.0 smoke](results/2026-11-11-0.3.0-smoke.json), [0.2.2 quick](results/2026-11-11-0.2.2-quick.json), [0.3.0 quick](results/2026-11-11-0.3.0-quick.json).

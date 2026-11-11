@@ -17,7 +17,7 @@ It needs rustup and a container runtime with the `docker` command. It has been r
 cargo harness smoke
 ```
 
-This measures NitroMTA alone, for regressions. Each repetition builds a backlog of 20,000 recipients for its memory per queued recipient, then offers a fixed 2,000 messages a second for a minute, well below saturation. It reports CPU and bytes written per message, memory per queued recipient and p99 latency, against the last smoke run on the same machine and runtime. A cost is marked changed when its median moved further than the wider of the two runs' ranges. It takes about seven minutes once the images are built.
+This measures NitroMTA alone, for regressions. Each repetition builds a backlog of 20,000 recipients for its memory per queued recipient, then offers a fixed 2,000 messages a second for thirty seconds, well below saturation. It reports CPU and bytes written per message, memory per queued recipient and p99 latency, against the last smoke run on the same machine and runtime. A cost is marked changed when its median moved further than the wider of the two runs' ranges. It takes a few minutes once the images are built.
 
 ```sh
 cargo harness throttled

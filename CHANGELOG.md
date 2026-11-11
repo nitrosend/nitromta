@@ -19,6 +19,8 @@
 - Release builds require the Rust gate and the official SDK matrix to pass
   at the release tag. The README capture example includes identity setup,
   credentials and certificate trust.
+- Container releases publish the `latest` tag as well as the version tag,
+  so the unversioned image reference resolves to the current release.
 
 ### Added
 

@@ -66,7 +66,8 @@ its configuration, certificates and keys from `/etc/nitromta`.
 
 Each release publishes an image for both architectures,
 `ghcr.io/nitrosend/nitromta:<version>`, built from the same binaries, with
-its provenance signed by GitHub. It holds the binary alone, on glibc and the
+its provenance signed by GitHub. The `latest` tag follows the current release.
+It holds the binary alone, on glibc and the
 certificate authorities, and runs as its own user, uid 65532, with its store
 in `/var/lib/nitromta` and its configuration in `/etc/nitromta`, each a
 volume of its own. The steps below are the same, run in it:

@@ -1,0 +1,823 @@
+{
+  "schema": 1,
+  "profile": "smoke",
+  "command": [
+    "/home/ubuntu/qualification-harness",
+    "run",
+    "smoke"
+  ],
+  "started": "2026-11-11T10:59:37Z",
+  "finished": "2026-11-11T11:03:43Z",
+  "harness": {
+    "commit": "48a4e1a7fd4c1e382f7e4a4a341241c6c40138ab",
+    "modified": false
+  },
+  "environment": {
+    "os": "linux",
+    "arch": "aarch64",
+    "cpu": null,
+    "cores": 64,
+    "core_types": [],
+    "memory_bytes": 134768574464,
+    "kernel": "Linux 7.0.0-1014-aws",
+    "power": null,
+    "thermal": null,
+    "runtime": {
+      "Architecture": "aarch64",
+      "CgroupVersion": "2",
+      "Driver": "overlayfs",
+      "KernelVersion": "7.0.0-1014-aws",
+      "MemTotal": 134768574464,
+      "NCPU": 64,
+      "OperatingSystem": "Ubuntu 24.04.5 LTS",
+      "ServerVersion": "29.1.3"
+    }
+  },
+  "placement": {
+    "sut_cpus": "0-3",
+    "sut_memory_mib": 2048,
+    "tool_cpus": "4-63"
+  },
+  "images": {
+    "harness": {
+      "id": "sha256:97bb054d90129d9ecb1d430a649fa187dae59bb8c07d285fe985be7f1ba19352",
+      "sources": {},
+      "base": {}
+    },
+    "nitromta": {
+      "id": "sha256:db27f23d453b18ad003549dce38092047c529c2f87ea281528ae8da21be9e31a",
+      "sources": {},
+      "base": {}
+    },
+    "unbound": {
+      "id": "sha256:c00b24470e5e44155b11f0ec6ae77a13e5e817a18a1bffe8ab43f565b54e2d62",
+      "sources": {
+        "unbound": "f0cd7067d950921427c91ade4ecf060e944f88eb"
+      },
+      "base": {}
+    }
+  },
+  "configuration": {
+    "images/ceilings/Dockerfile": "60bd98cf965b52cc482e355628aec28bc307bb81144faf3dbc365f75b4a1ae68",
+    "images/ceilings/Dockerfile.dockerignore": "77d0631b454923ca428c73fe2613162d43544f9722f56ce53897f4122fa1ed95",
+    "images/harness/Dockerfile": "ea993215eacea4362233dfb15eb240f9f63a8a3ac19392e8b3d52b9111758c9d",
+    "images/harness/Dockerfile.dockerignore": "77d0631b454923ca428c73fe2613162d43544f9722f56ce53897f4122fa1ed95",
+    "images/nitromta/Dockerfile": "a3fc78e8d366cd5ee5ad87fad879720266cd4b9e3509591be6f18f8d3453644f",
+    "images/nitromta/Dockerfile.dockerignore": "77d0631b454923ca428c73fe2613162d43544f9722f56ce53897f4122fa1ed95",
+    "images/nitromta/config.toml": "e6dac53659f8a9bf4deac732c354369b6d9d536280de0d92564d011ef539137b",
+    "images/nitromta/start": "12c7514bd5cdce352bcc401a7ce9b0a9a417a3fb48b239360adb9f6dc15a1b67",
+    "images/unbound/Dockerfile": "ebe28e57b4813e3a53084ad184828c98d560953957da233525fdf53e897bb3b1"
+  },
+  "durability": {
+    "label": "durable",
+    "reason": "no hypervisor is visible, so a flush goes to the device"
+  },
+  "host_full_sync_us": null,
+  "capacity": 45137.4,
+  "ceilings": null,
+  "gauge_spread": 0.0010596612030298047,
+  "settings": {
+    "summary": "The engine alone, for regressions, in a few minutes: a small backlog for its memory per queued recipient, then half a minute at a fixed rate well below saturation, three times. Each run is compared with the last on the same machine; not a comparison between systems",
+    "systems": [
+      "nitromta"
+    ],
+    "repetitions": 3,
+    "placement": {
+      "sut_cpus": 4,
+      "sut_memory_mib": 2048,
+      "tool_cpus": 4,
+      "tool_memory_mib": 2048
+    },
+    "workload": {
+      "message_bytes": 16384,
+      "connections": 64,
+      "domains": 1000,
+      "recipients": 1,
+      "sites": 1,
+      "round_trip_ms": 0
+    },
+    "delivery": {
+      "connections": 64,
+      "retry_first_seconds": 10,
+      "retry_max_seconds": 60
+    },
+    "without": [],
+    "throttle": null,
+    "backlog": {
+      "messages": 20000,
+      "settle_seconds": 5.0,
+      "drain_seconds": 300.0,
+      "open_at_longest_retry": false
+    },
+    "fixed": {
+      "rate": 2000.0,
+      "seconds": 30.0
+    },
+    "crash": null,
+    "ceilings": false,
+    "search": {
+      "warmup_rate": 100.0,
+      "warmup_seconds": 5.0,
+      "start_rate": 250.0,
+      "step_seconds": 10.0,
+      "bisections": 3,
+      "drain_seconds": 30.0,
+      "headroom_seconds": 5.0,
+      "headroom": 2.0,
+      "cooldown_seconds": 0.0
+    },
+    "budgets": {
+      "submit_p99_ms": 10.0,
+      "delivery_p99_ms": 10.0,
+      "accepted_share": 0.99,
+      "backlog_anon_mib": null
+    }
+  },
+  "recipe": {
+    "base": {
+      "build": "rust:trixie",
+      "runtime": "debian:trixie-slim"
+    },
+    "sources": {
+      "kumomta": {
+        "url": "https://github.com/KumoCorp/kumomta",
+        "tag": "2026.09.29-b90d8bc1"
+      },
+      "lazyfs": {
+        "url": "https://github.com/dsrhaslab/lazyfs",
+        "tag": "0.3.1"
+      },
+      "opendkim": {
+        "url": "https://github.com/trusteddomainproject/OpenDKIM",
+        "tag": "rel-opendkim-2-11-0-Beta2"
+      },
+      "postfix": {
+        "url": "https://github.com/vdukhovni/postfix",
+        "tag": "v3.11.7"
+      },
+      "unbound": {
+        "url": "https://github.com/NLnetLabs/unbound",
+        "tag": "release-1.26.2"
+      }
+    },
+    "images": {
+      "ceilings": {
+        "sources": [],
+        "repository": true
+      },
+      "harness": {
+        "sources": [],
+        "repository": true
+      },
+      "kumomta": {
+        "sources": [
+          "kumomta"
+        ],
+        "repository": false
+      },
+      "lazyfs": {
+        "sources": [
+          "lazyfs"
+        ],
+        "repository": false
+      },
+      "nitromta": {
+        "sources": [],
+        "repository": true
+      },
+      "postfix": {
+        "sources": [
+          "postfix",
+          "opendkim"
+        ],
+        "repository": false
+      },
+      "unbound": {
+        "sources": [
+          "unbound"
+        ],
+        "repository": false
+      }
+    },
+    "systems": {
+      "kumomta": {
+        "summary": "KumoMTA with its RocksDB spool, every message saved with a synced write before the 250 reply",
+        "image": "kumomta",
+        "durability": "sync",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/kumomta",
+        "log": null,
+        "credentials": null,
+        "production": false,
+        "env": {
+          "FORCE_SYNC": "1"
+        }
+      },
+      "kumomta-async": {
+        "summary": "KumoMTA as it ships: the 250 reply follows a spool write that is not synced",
+        "image": "kumomta",
+        "durability": "async",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/kumomta",
+        "log": null,
+        "credentials": null,
+        "production": false,
+        "env": {
+          "FORCE_SYNC": "0"
+        }
+      },
+      "kumomta-http": {
+        "summary": "KumoMTA's HTTP injection API (/api/inject/v1) over HTTPS, each request with Basic authentication, every message saved with a synced write before its answer",
+        "image": "kumomta",
+        "durability": "sync",
+        "ingress": "kumomta",
+        "port": 8443,
+        "spool": "/var/spool/kumomta",
+        "log": null,
+        "credentials": null,
+        "production": false,
+        "env": {
+          "FORCE_SYNC": "1"
+        }
+      },
+      "nitromta": {
+        "summary": "NitroMTA's SMTP path: every acceptance committed with a synced write before the 250 reply",
+        "image": "nitromta",
+        "durability": "sync",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/nitromta",
+        "log": null,
+        "credentials": "/run/bench/credentials.json",
+        "production": true,
+        "env": {}
+      },
+      "nitromta-sealed": {
+        "summary": "NitroMTA's SMTP path, as nitromta, with personal data sealed under the installation's key",
+        "image": "nitromta",
+        "durability": "sync",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/nitromta",
+        "log": null,
+        "credentials": "/run/bench/credentials.json",
+        "production": true,
+        "env": {
+          "BENCH_ENCRYPTION": "installation"
+        }
+      },
+      "nitromta-ses": {
+        "summary": "NitroMTA's SES v2 API: SendEmail with raw content over HTTPS, each request SigV4-signed, every acceptance committed with a synced write before the 200 answer",
+        "image": "nitromta",
+        "durability": "sync",
+        "ingress": "ses",
+        "port": 8443,
+        "spool": "/var/spool/nitromta",
+        "log": null,
+        "credentials": "/run/bench/credentials.json",
+        "production": true,
+        "env": {}
+      },
+      "postfix": {
+        "summary": "Postfix, signing through the OpenDKIM milter, with its default queue durability: queue files are fsynced before the 250 reply",
+        "image": "postfix",
+        "durability": "sync",
+        "ingress": "smtp",
+        "port": 587,
+        "spool": "/var/spool/postfix",
+        "log": "/var/spool/postfix/maillog",
+        "credentials": null,
+        "production": false,
+        "env": {}
+      }
+    }
+  },
+  "runs": [
+    {
+      "system": "nitromta",
+      "repetition": 0,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 106.251,
+          "p50": 111.529,
+          "p95": 119.964,
+          "p99": 133.435,
+          "max": 195.614
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1658.195877178631
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 141
+      },
+      "sink_most_open": 128,
+      "hooks": {
+        "batches": 4539,
+        "repeated": 0,
+        "refused": 0,
+        "events": {
+          "accepted": 80501,
+          "deferred": 15,
+          "delivered": 80501
+        }
+      },
+      "throttled_sink": null,
+      "release": null,
+      "backlog": {
+        "recipients": 20000,
+        "idle_anon_mib": 35.18359375,
+        "fill_seconds": 6.278158,
+        "queued_anon_mib": 50.29296875,
+        "queued_memory_mib": 511.07421875,
+        "stop_seconds": 0.109547758,
+        "start_seconds": 0.392964223,
+        "restarted_anon_mib": 44.80859375,
+        "restarted_memory_mib": 54.203125,
+        "drain_seconds": 4.917787752,
+        "drain_recipients_per_second": 4067.0726368509613,
+        "drain_peak_per_second": 4000.2,
+        "drain_above_headroom": false,
+        "drain": {
+          "cpu_seconds": 2.582083,
+          "cpu_ms_per_message": 0.12909769511524424,
+          "memory_mib": 69.6875,
+          "peak_memory_mib": 70.87109375,
+          "written_mib": 122.80078125,
+          "written_kib_per_message": 6.287085645717714
+        },
+        "drain_peak_memory_mib": 70.87109375,
+        "drain_by_source": [
+          {
+            "address": "10.89.0.10",
+            "recipients": 9990,
+            "last_seconds": 3.53159
+          },
+          {
+            "address": "10.89.0.11",
+            "recipients": 10011,
+            "last_seconds": 0.658252
+          }
+        ],
+        "missing": 0
+      },
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 1.714,
+          "p50": 2.303,
+          "p95": 2.749,
+          "p99": 2.902,
+          "max": 3.766
+        },
+        "delivery_ms": {
+          "min": 0.2,
+          "p50": 0.222,
+          "p95": 0.314,
+          "p99": 0.375,
+          "max": 0.561
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.053808759,
+        "usage": {
+          "cpu_seconds": 0.769793,
+          "cpu_ms_per_message": 1.5395859999999997,
+          "memory_mib": 73.875,
+          "peak_memory_mib": 74.125,
+          "written_mib": 61.32421875,
+          "written_kib_per_message": 125.592
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 2000.0,
+          "seconds": 30.0,
+          "attempted": 60000,
+          "accepted": 60000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 60000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.404,
+            "p50": 2.634,
+            "p95": 3.855,
+            "p99": 4.429,
+            "max": 7.787
+          },
+          "delivery_ms": {
+            "min": 0.198,
+            "p50": 0.724,
+            "p95": 1.584,
+            "p99": 2.285,
+            "max": 4.222
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.061026367,
+          "usage": {
+            "cpu_seconds": 80.598054,
+            "cpu_ms_per_message": 1.3433009,
+            "memory_mib": 68.97265625,
+            "peak_memory_mib": 76.44140625,
+            "written_mib": 4384.81640625,
+            "written_kib_per_message": 74.8342
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 2000.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "nitromta",
+      "repetition": 1,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 106.464,
+          "p50": 111.11,
+          "p95": 119.84,
+          "p99": 127.407,
+          "max": 203.875
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1657.6025014388638
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 140
+      },
+      "sink_most_open": 128,
+      "hooks": {
+        "batches": 4282,
+        "repeated": 0,
+        "refused": 0,
+        "events": {
+          "accepted": 80501,
+          "deferred": 13,
+          "delivered": 80501
+        }
+      },
+      "throttled_sink": null,
+      "release": null,
+      "backlog": {
+        "recipients": 20000,
+        "idle_anon_mib": 24.75390625,
+        "fill_seconds": 6.227087,
+        "queued_anon_mib": 38.29296875,
+        "queued_memory_mib": 502.1875,
+        "stop_seconds": 0.118652621,
+        "start_seconds": 0.385388154,
+        "restarted_anon_mib": 48.86328125,
+        "restarted_memory_mib": 59.234375,
+        "drain_seconds": 11.389406552,
+        "drain_recipients_per_second": 1756.1055449801104,
+        "drain_peak_per_second": 4000.2,
+        "drain_above_headroom": false,
+        "drain": {
+          "cpu_seconds": 2.546876,
+          "cpu_ms_per_message": 0.12733743312834359,
+          "memory_mib": 75.78125,
+          "peak_memory_mib": 78.8046875,
+          "written_mib": 133.04296875,
+          "written_kib_per_message": 6.811459427028648
+        },
+        "drain_peak_memory_mib": 78.8046875,
+        "drain_by_source": [
+          {
+            "address": "10.89.0.10",
+            "recipients": 9993,
+            "last_seconds": 1.10938
+          },
+          {
+            "address": "10.89.0.11",
+            "recipients": 10008,
+            "last_seconds": 1.271988
+          }
+        ],
+        "missing": 0
+      },
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 1.384,
+          "p50": 1.888,
+          "p95": 2.342,
+          "p99": 2.433,
+          "max": 2.718
+        },
+        "delivery_ms": {
+          "min": 0.197,
+          "p50": 0.216,
+          "p95": 0.295,
+          "p99": 0.374,
+          "max": 0.579
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.039681805,
+        "usage": {
+          "cpu_seconds": 0.753376,
+          "cpu_ms_per_message": 1.506752,
+          "memory_mib": 78.74609375,
+          "peak_memory_mib": 78.8046875,
+          "written_mib": 62.75,
+          "written_kib_per_message": 128.512
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 2000.0,
+          "seconds": 30.0,
+          "attempted": 60000,
+          "accepted": 60000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 60000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.316,
+            "p50": 2.528,
+            "p95": 3.773,
+            "p99": 4.383,
+            "max": 6.261
+          },
+          "delivery_ms": {
+            "min": 0.196,
+            "p50": 0.704,
+            "p95": 1.536,
+            "p99": 2.251,
+            "max": 4.285
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.068203003,
+          "usage": {
+            "cpu_seconds": 79.677341,
+            "cpu_ms_per_message": 1.3279556833333332,
+            "memory_mib": 80.63671875,
+            "peak_memory_mib": 80.98828125,
+            "written_mib": 4730.08203125,
+            "written_kib_per_message": 80.72673333333333
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 2000.0,
+      "limited_by": null,
+      "error": null
+    },
+    {
+      "system": "nitromta",
+      "repetition": 2,
+      "durability": "sync",
+      "probe": {
+        "writes": 1000,
+        "sync_us": {
+          "min": 106.627,
+          "p50": 111.854,
+          "p95": 121.13,
+          "p99": 136.26,
+          "max": 190.489
+        },
+        "filesystem": "ext4",
+        "write_cache": "write through",
+        "virtualisation": [],
+        "hash_mb_s": 1659.3589984996838
+      },
+      "sink_sessions": {
+        "TLSv1_3 TLS13_AES_256_GCM_SHA384": 145
+      },
+      "sink_most_open": 128,
+      "hooks": {
+        "batches": 3899,
+        "repeated": 0,
+        "refused": 0,
+        "events": {
+          "accepted": 80501,
+          "deferred": 8,
+          "delivered": 80501
+        }
+      },
+      "throttled_sink": null,
+      "release": null,
+      "backlog": {
+        "recipients": 20000,
+        "idle_anon_mib": 33.3359375,
+        "fill_seconds": 6.249612,
+        "queued_anon_mib": 47.26171875,
+        "queued_memory_mib": 503.43359375,
+        "stop_seconds": 0.130495897,
+        "start_seconds": 0.399049731,
+        "restarted_anon_mib": 42.98828125,
+        "restarted_memory_mib": 52.86328125,
+        "drain_seconds": 13.5646577,
+        "drain_recipients_per_second": 1474.4935288709867,
+        "drain_peak_per_second": 2005.4,
+        "drain_above_headroom": false,
+        "drain": {
+          "cpu_seconds": 2.543066,
+          "cpu_ms_per_message": 0.12714694265286736,
+          "memory_mib": 68.12890625,
+          "peak_memory_mib": 68.88671875,
+          "written_mib": 121.06640625,
+          "written_kib_per_message": 6.198290085495725
+        },
+        "drain_peak_memory_mib": 68.88671875,
+        "drain_by_source": [
+          {
+            "address": "10.89.0.10",
+            "recipients": 10027,
+            "last_seconds": 5.732277
+          },
+          {
+            "address": "10.89.0.11",
+            "recipients": 9974,
+            "last_seconds": 0.649101
+          }
+        ],
+        "missing": 0
+      },
+      "crash": null,
+      "warmup": {
+        "offered_rate": 100.0,
+        "seconds": 5.0,
+        "attempted": 500,
+        "accepted": 500,
+        "accepted_rate": 100.0,
+        "refused": {},
+        "delivered": 500,
+        "missing": 0,
+        "held": 0,
+        "unacknowledged": 0,
+        "duplicates": 0,
+        "unsigned": 0,
+        "altered": 0,
+        "plaintext": 0,
+        "unidentified": 0,
+        "submit_ms": {
+          "min": 2.115,
+          "p50": 2.658,
+          "p95": 3.074,
+          "p99": 3.196,
+          "max": 3.423
+        },
+        "delivery_ms": {
+          "min": 0.196,
+          "p50": 0.215,
+          "p95": 0.289,
+          "p99": 0.326,
+          "max": 0.398
+        },
+        "throttled_delivery_ms": null,
+        "drain_seconds": 0.043610088,
+        "usage": {
+          "cpu_seconds": 0.750747,
+          "cpu_ms_per_message": 1.501494,
+          "memory_mib": 71.078125,
+          "peak_memory_mib": 71.9765625,
+          "written_mib": 61.34375,
+          "written_kib_per_message": 125.632
+        },
+        "misses": [],
+        "errors": []
+      },
+      "steps": [
+        {
+          "offered_rate": 2000.0,
+          "seconds": 30.0,
+          "attempted": 60000,
+          "accepted": 60000,
+          "accepted_rate": 2000.0,
+          "refused": {},
+          "delivered": 60000,
+          "missing": 0,
+          "held": 0,
+          "unacknowledged": 0,
+          "duplicates": 0,
+          "unsigned": 0,
+          "altered": 0,
+          "plaintext": 0,
+          "unidentified": 0,
+          "submit_ms": {
+            "min": 1.298,
+            "p50": 2.499,
+            "p95": 3.809,
+            "p99": 4.387,
+            "max": 6.752
+          },
+          "delivery_ms": {
+            "min": -0.004,
+            "p50": 0.686,
+            "p95": 1.538,
+            "p99": 2.266,
+            "max": 4.455
+          },
+          "throttled_delivery_ms": null,
+          "drain_seconds": 0.058138756,
+          "usage": {
+            "cpu_seconds": 79.794173,
+            "cpu_ms_per_message": 1.3299028833333333,
+            "memory_mib": 74.95703125,
+            "peak_memory_mib": 74.95703125,
+            "written_mib": 4390.59375,
+            "written_kib_per_message": 74.9328
+          },
+          "misses": [],
+          "errors": []
+        }
+      ],
+      "sustained_rate": 2000.0,
+      "limited_by": null,
+      "error": null
+    }
+  ],
+  "summary": [
+    {
+      "system": "nitromta",
+      "durability": "sync",
+      "rates": [
+        2000.0,
+        2000.0,
+        2000.0
+      ],
+      "median_rate": 2000.0,
+      "ratios": {},
+      "cpu_ms_per_message": [
+        1.3433009,
+        1.3279556833333332,
+        1.3299028833333333
+      ],
+      "submit_p99_ms": [
+        4.429,
+        4.383,
+        4.387
+      ],
+      "delivery_p99_ms": [
+        2.285,
+        2.251,
+        2.266
+      ]
+    }
+  ],
+  "limitations": [
+    "Each system's durability is set in its configuration and inspected in its source, but not yet proven by a crash test.",
+    "The quick profile measures each system for minutes on one machine in one session: its ratios hold for that machine, labelled with it; sustained runs, the million-recipient backlog and the aged store belong to the full profile, which is not built yet."
+  ]
+}

@@ -143,7 +143,8 @@ jobs:
           echo "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           docker buildx create --use
           docker buildx build --platform linux/amd64,linux/arm64 \
-            --tag "$image:$version" --push --metadata-file metadata.json packaging
+            --tag "$image:$version" --tag "$image:latest" \
+            --push --metadata-file metadata.json packaging
           echo "image=$image" >> "$GITHUB_OUTPUT"
           echo "digest=$(jq -r '."containerimage.digest"' metadata.json)" >> "$GITHUB_OUTPUT"
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2

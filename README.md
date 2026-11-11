@@ -68,7 +68,15 @@ export AWS_SECRET_ACCESS_KEY='<the printed secret>'
 export AWS_CA_BUNDLE=./tls.crt
 ```
 
-Then send with your SES v2 SDK (`python3 -m pip install boto3` for this example):
+For the Python example, install the SDK in a virtual environment:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install boto3
+```
+
+Then send with your SES v2 SDK:
 
 ```python
 import boto3
